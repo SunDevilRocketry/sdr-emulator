@@ -34,13 +34,20 @@ def set_status_led(led_color: int):
     
     # Open, resize (optional), and convert the new image
     img = Image.open(current_image_path)
-    initial_img = initial_img.resize((1435, 681), Image.Resampling.LANCZOS)
+    img = img.resize((1435, 681), Image.Resampling.LANCZOS)
     tk_image = ImageTk.PhotoImage(img) # Update the global PhotoImage reference
 
     # Configure the label to use the new image
     image_label.config(image=tk_image)
     # The label needs to keep a local reference as well if the global one wasn't enough in complex scenarios
     image_label.image = tk_image
+
+def rotate_status_led_test():
+    rotate_status_led_test.i = (rotate_status_led_test.i + 1) % 8
+    set_status_led(rotate_status_led_test.i)
+    root.after(4000, rotate_status_led_test)  # 4 seconds
+
+rotate_status_led_test.i = -1
 
 # Determine fw repository root
 script_path = Path(__file__).resolve()
@@ -53,6 +60,9 @@ current_image_path = str(repo_root) + "/emulator/resources/fc-power-off.png"
 # Main Tkinter setup
 root = tk.Tk()
 root.title("SDR HW Emulator")
+
+# Start after 10 seconds
+root.after(10_000, rotate_status_led_test)
 
 # Initial image setup (using PIL for flexibility)
 initial_img = Image.open(current_image_path)
