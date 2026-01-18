@@ -34,8 +34,9 @@
 uint64_t timers_start_time = 0;
 
 /*------------------------------------------------------------------------------
- Static Procedure Prototype                                                   
+ Static Procedure Prototypes                                                   
 ------------------------------------------------------------------------------*/
+
 static uint64_t get_current_time
     (
     void
@@ -44,6 +45,7 @@ static uint64_t get_current_time
 /*------------------------------------------------------------------------------
  HAL interfaces                                                     
 ------------------------------------------------------------------------------*/
+
 uint32_t HAL_GetTick() {
     return get_current_time - timers_start_time;
 }
