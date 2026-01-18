@@ -27,6 +27,7 @@
 #include <stdint.h>
 
 #include "emulator.h"
+#include "stm32h755xx.h"
 
 /*------------------------------------------------------------------------------
  Constants                                                       
@@ -54,6 +55,9 @@ uint32_t HAL_GetUIDw2(void) {
     memcpy(&buf, DEVICE_ID + 8, 4);
     return buf;
 }
+
+void HAL_NVIC_DisableIRQ(IRQn_Type IRQn) {}
+void HAL_NVIC_EnableIRQ(IRQn_Type IRQn) {}
 
 /*------------------------------------------------------------------------------
  Procedures                                                     

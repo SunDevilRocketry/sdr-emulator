@@ -27,6 +27,7 @@
 #include <stdio.h>
 
 #include "emulator.h"
+#include "stm32h7xx_hal.h"
 
 /*------------------------------------------------------------------------------
  Global Variables                                                     
@@ -47,7 +48,7 @@ static uint64_t get_current_time
 ------------------------------------------------------------------------------*/
 
 uint32_t HAL_GetTick() {
-    return get_current_time - timers_start_time;
+    return get_current_time() - timers_start_time;
 }
 
 void HAL_Delay(uint32_t delay_time) {
@@ -55,6 +56,20 @@ void HAL_Delay(uint32_t delay_time) {
     req.tv_sec = delay_time / 1000; /* seconds */
     req.tv_nsec = (delay_time % 1000) * 1000000L; /* milliseconds to nanoseconds */
     nanosleep(&req, NULL);
+}
+
+HAL_StatusTypeDef HAL_TIM_PWM_Start
+    (
+    TIM_HandleTypeDef *htim, 
+    uint32_t Channel
+    )
+{
+    return HAL_OK;
+}
+
+HAL_StatusTypeDef HAL_TIM_PWM_Stop(TIM_HandleTypeDef *htim, uint32_t Channel)
+{
+    return HAL_OK;
 }
 
 /*------------------------------------------------------------------------------
