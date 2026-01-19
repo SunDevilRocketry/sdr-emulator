@@ -25,15 +25,21 @@
 ------------------------------------------------------------------------------*/
 #include <string.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
+#include <time.h>
+
+#include <stddef.h>
 
 #include "emulator.h"
 #include "stm32h755xx.h"
+
+#include <stddef.h>
 
 /*------------------------------------------------------------------------------
  Constants                                                       
@@ -108,11 +114,39 @@ if (mkfifo(GUI_PIPE, 0666) == -1) {
         printf("Emulator Init: Named pipe '%s' created.\n", GUI_PIPE);
     }
 
-GUI_Pipe_FD = open(GUI_PIPE, O_WRONLY);
-if (GUI_Pipe_FD == -1) {
+GUI_Pipe_FD = open(GUI_PIPE, O_WRONLY | O_NONBLOCK);
+if (GUI_Pipe_FD == -1) 
+    {
     perror("open error");
     return 1;
-}
+    }
+else
+    {
+    printf("Emulator Init: Pipe opened successfully!\n");
+    }
+
+
+/*------------------------------------------------------------------------------
+ Start GUI and wait                                                  
+------------------------------------------------------------------------------*/
+pid_t pid;
+pid = fork();
+
+if ( pid < 0 ) 
+    {
+    fprintf(stderr, "Emulator Init: GUI Fork failed!\n");
+    return 1;
+    } 
+else if ( pid == 0 ) 
+    {
+    execv("python ../../../../emulator/gui.py", NULL);
+    exit(0);
+    } 
+else {
+    printf("Emulator Init: GUI Fork success. Waiting for the GUI to initialize before continuing.\n");
+    sleep(5);
+    printf("Emulator Init: Continuing with startup.\n");
+    }
 
 /*------------------------------------------------------------------------------
  Once setup is complete, run the firmware                                                    

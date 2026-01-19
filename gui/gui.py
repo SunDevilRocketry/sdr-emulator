@@ -11,6 +11,7 @@ current_image_path = None
 image_label = None  # We will store the label here
 tk_image = None     # We MUST store a global reference to the PhotoImage object
 fc_buzzer = buzzer.Buzzer()
+emulator_pipe = None
 
 def set_status_led(led_color: int):
     global current_image_path, tk_image
@@ -43,15 +44,35 @@ def set_status_led(led_color: int):
     # The label needs to keep a local reference as well if the global one wasn't enough in complex scenarios
     image_label.image = tk_image
 
-def rotate_status_led_test():
-    rotate_status_led_test.i = (rotate_status_led_test.i + 1) % 8
-    set_status_led(rotate_status_led_test.i)
-    root.after(4000, rotate_status_led_test)  # 4 seconds
-
-rotate_status_led_test.i = -1
-
 def pipe_handler():
-    
+    in_str = emulator_pipe.readline()
+    while(in_str != ''):
+        if in_str.startswith('LED: '):
+            match in_str:
+                case 'LED: OFF':
+                    set_status_led(0)
+                case 'LED: GREEN':
+                    set_status_led(1)
+                case 'LED: RED':
+                    set_status_led(2)
+                case 'LED: BLUE':
+                    set_status_led(3)
+                case 'LED: CYAN':
+                    set_status_led(4)
+                case 'LED: PURPLE':
+                    set_status_led(5)
+                case 'LED: YELLOW':
+                    set_status_led(6)
+                case 'LED: WHITE':
+                    set_status_led(7)
+        else:
+            match in_str:
+                case 'BUZZER: ON':
+                    fc_buzzer.start_tone()
+                case 'BUZZER: OFF':
+                    fc_buzzer.stop_tone()
+        in_str = emulator_pipe.readline()
+    root.after(100, pipe_handler)
 
 # Determine fw repository root
 script_path = Path(__file__).resolve()
@@ -61,12 +82,15 @@ repo_root = script_dir.parent.parent
 # Pick initial image
 current_image_path = str(repo_root) + "/emulator/resources/fc-power-off.png"
 
+# Open pipe
+emulator_pipe = open(str(repo_root) + "/emulator/resources/gui-pipe", "r")
+
 # Main Tkinter setup
 root = tk.Tk()
 root.title("SDR HW Emulator")
 
 # Start after 10 seconds
-root.after(10_000, rotate_status_led_test)
+#root.after(10_000, rotate_status_led_test)
 
 # Initial image setup (using PIL for flexibility)
 initial_img = Image.open(current_image_path)
@@ -77,14 +101,8 @@ tk_image = ImageTk.PhotoImage(initial_img)
 image_label = tk.Label(root, image=tk_image)
 image_label.pack()
 
-## TEST
-# fc_buzzer.start_tone()
-# time.sleep(0.1)
-# fc_buzzer.stop_tone()
-# time.sleep(0.1)
-# fc_buzzer.start_tone()
-# time.sleep(0.1)
-# fc_buzzer.stop_tone()
+# Set up pipe handler
+root.after(100, pipe_handler)
 
 # Start the Tkinter event loop
 root.mainloop()
