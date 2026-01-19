@@ -25,6 +25,12 @@
 ------------------------------------------------------------------------------*/
 #include <string.h>
 #include <stdint.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <stdio.h>
+#include <errno.h>
+#include <unistd.h>
 
 #include "emulator.h"
 #include "stm32h755xx.h"
@@ -32,7 +38,13 @@
 /*------------------------------------------------------------------------------
  Constants                                                       
 ------------------------------------------------------------------------------*/
+#define GUI_PIPE "../../../../emulator/resources/gui-pipe"
 const char DEVICE_ID[] = "SW_EMULATOR";
+
+/*------------------------------------------------------------------------------
+ Globals                                                       
+------------------------------------------------------------------------------*/
+int GUI_Pipe_FD;
 
 /*------------------------------------------------------------------------------
  HAL interfaces                                                       
@@ -84,8 +96,47 @@ int main
 emulator_start_timers();
 
 /*------------------------------------------------------------------------------
+ Open pipe for IPC                                                  
+------------------------------------------------------------------------------*/
+if (mkfifo(GUI_PIPE, 0666) == -1) {
+        if (errno != EEXIST) {
+            perror("Emulator Init: Could not create pipe.");
+            return 1;
+        }
+        printf("Emulator Init: Named pipe '%s' already exists.\n", GUI_PIPE);
+    } else {
+        printf("Emulator Init: Named pipe '%s' created.\n", GUI_PIPE);
+    }
+
+GUI_Pipe_FD = open(GUI_PIPE, O_WRONLY);
+if (GUI_Pipe_FD == -1) {
+    perror("open error");
+    return 1;
+}
+
+/*------------------------------------------------------------------------------
  Once setup is complete, run the firmware                                                    
 ------------------------------------------------------------------------------*/
 main_fut();
 
 } /* main */
+
+
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		guipipe_put                                                            *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Write some string to the GUI pipe.                                     *
+*                                                                              *
+*******************************************************************************/
+void guipipe_put
+    (
+    const char* message,
+    size_t size
+    )
+{
+write(GUI_Pipe_FD, message, size);
+
+} /* guipipe_put */

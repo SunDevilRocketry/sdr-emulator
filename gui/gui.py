@@ -10,6 +10,7 @@ repo_root = None
 current_image_path = None
 image_label = None  # We will store the label here
 tk_image = None     # We MUST store a global reference to the PhotoImage object
+fc_buzzer = buzzer.Buzzer()
 
 def set_status_led(led_color: int):
     global current_image_path, tk_image
@@ -49,6 +50,9 @@ def rotate_status_led_test():
 
 rotate_status_led_test.i = -1
 
+def pipe_handler():
+    
+
 # Determine fw repository root
 script_path = Path(__file__).resolve()
 script_dir = script_path.parent
@@ -74,7 +78,6 @@ image_label = tk.Label(root, image=tk_image)
 image_label.pack()
 
 ## TEST
-# fc_buzzer = buzzer.Buzzer()
 # fc_buzzer.start_tone()
 # time.sleep(0.1)
 # fc_buzzer.stop_tone()
