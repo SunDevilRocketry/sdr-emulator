@@ -104,49 +104,49 @@ emulator_start_timers();
 /*------------------------------------------------------------------------------
  Open pipe for IPC                                                  
 ------------------------------------------------------------------------------*/
-if (mkfifo(GUI_PIPE, 0666) == -1) {
-        if (errno != EEXIST) {
-            perror("Emulator Init: Could not create pipe.");
-            return 1;
-        }
-        printf("Emulator Init: Named pipe '%s' already exists.\n", GUI_PIPE);
-    } else {
-        printf("Emulator Init: Named pipe '%s' created.\n", GUI_PIPE);
-    }
+// if (mkfifo(GUI_PIPE, 0666) == -1) {
+//         if (errno != EEXIST) {
+//             perror("Emulator Init: Could not create pipe.");
+//             return 1;
+//         }
+//         printf("Emulator Init: Named pipe '%s' already exists.\n", GUI_PIPE);
+//     } else {
+//         printf("Emulator Init: Named pipe '%s' created.\n", GUI_PIPE);
+//     }
 
-GUI_Pipe_FD = open(GUI_PIPE, O_WRONLY | O_NONBLOCK);
-if (GUI_Pipe_FD == -1) 
-    {
-    perror("open error");
-    return 1;
-    }
-else
-    {
-    printf("Emulator Init: Pipe opened successfully!\n");
-    }
+// GUI_Pipe_FD = open(GUI_PIPE, O_WRONLY | O_NONBLOCK);
+// if (GUI_Pipe_FD == -1) 
+//     {
+//     perror("open error");
+//     return 1;
+//     }
+// else
+//     {
+//     printf("Emulator Init: Pipe opened successfully!\n");
+//     }
 
 
 /*------------------------------------------------------------------------------
  Start GUI and wait                                                  
 ------------------------------------------------------------------------------*/
-pid_t pid;
-pid = fork();
+// pid_t pid;
+// pid = fork();
 
-if ( pid < 0 ) 
-    {
-    fprintf(stderr, "Emulator Init: GUI Fork failed!\n");
-    return 1;
-    } 
-else if ( pid == 0 ) 
-    {
-    execv("python ../../../../emulator/gui.py", NULL);
-    exit(0);
-    } 
-else {
-    printf("Emulator Init: GUI Fork success. Waiting for the GUI to initialize before continuing.\n");
-    sleep(5);
-    printf("Emulator Init: Continuing with startup.\n");
-    }
+// if ( pid < 0 ) 
+//     {
+//     fprintf(stderr, "Emulator Init: GUI Fork failed!\n");
+//     return 1;
+//     } 
+// else if ( pid == 0 ) 
+//     {
+//     execv("python ../../../../emulator/gui.py", NULL);
+//     exit(0);
+//     } 
+// else {
+//     printf("Emulator Init: GUI Fork success. Waiting for the GUI to initialize before continuing.\n");
+//     sleep(5);
+//     printf("Emulator Init: Continuing with startup.\n");
+//     }
 
 /*------------------------------------------------------------------------------
  Once setup is complete, run the firmware                                                    
@@ -171,6 +171,6 @@ void guipipe_put
     size_t size
     )
 {
-write(GUI_Pipe_FD, message, size);
+// write(GUI_Pipe_FD, message, size);
 
 } /* guipipe_put */
