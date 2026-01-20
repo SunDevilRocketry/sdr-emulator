@@ -27,12 +27,17 @@
 
 #include "emulator.h"
 #include "stm32h7xx_hal.h"
+#include "init.h"
+#include "main.h"
+#include "sdr_pin_defines_A0002.h"
+
+/*------------------------------------------------------------------------------
+ Globals                                                       
+------------------------------------------------------------------------------*/
 
 /*------------------------------------------------------------------------------
  HAL interfaces                                                       
 ------------------------------------------------------------------------------*/
-void PWM123_TIM_Init() {}
-void PWM4_TIM_Init() {}
 void BUZZER_TIM_Init() {}
 void FLASH_SPI_Init() {}
 void IMU_GPS_I2C_Init() {}
@@ -43,6 +48,8 @@ void GPIO_Init() {}
 void SystemClock_Config() {}
 void PeriphCommonClock_Config() {}
 HAL_StatusTypeDef HAL_Init() { return HAL_OK; }
+
+/* HTIM inits are in emulator_timer.c */
 
 /*------------------------------------------------------------------------------
  Procedures                                                     

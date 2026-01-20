@@ -34,6 +34,18 @@
 ------------------------------------------------------------------------------*/
 uint64_t timers_start_time = 0;
 
+/* pointers to htim instance CCRs for easy reading */
+volatile uint32_t* servo_1_pulse = NULL;
+volatile uint32_t* servo_2_pulse = NULL;
+volatile uint32_t* servo_3_pulse = NULL;
+volatile uint32_t* servo_4_pulse = NULL;
+
+TIM_TypeDef htim2_instance;
+TIM_TypeDef htim3_instance;
+
+extern TIM_HandleTypeDef  htim2;   /* PWM 4 Timer */
+extern TIM_HandleTypeDef  htim3;   /* PWM 1,2,3 Timer */
+
 /*------------------------------------------------------------------------------
  Static Procedure Prototypes                                                   
 ------------------------------------------------------------------------------*/
@@ -46,6 +58,20 @@ static uint64_t get_current_time
 /*------------------------------------------------------------------------------
  HAL interfaces                                                     
 ------------------------------------------------------------------------------*/
+
+void PWM123_TIM_Init() 
+{
+htim3.Instance = &htim3_instance;
+servo_1_pulse = &(htim3.Instance->CCR4);
+servo_2_pulse = &(htim3.Instance->CCR3);
+servo_3_pulse = &(htim3.Instance->CCR1);
+}
+
+void PWM4_TIM_Init() 
+{
+htim2.Instance = &htim2_instance;
+servo_4_pulse = &(htim2.Instance->CCR1);
+}
 
 uint32_t HAL_GetTick() {
     return get_current_time() - timers_start_time;

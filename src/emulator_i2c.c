@@ -28,12 +28,17 @@
 #include "emulator.h"
 #include "stm32h7xx_hal.h"
 #include "baro.h"
+#include "imu.h"
 #include "sdr_pin_defines_A0002.h"
 
 /*------------------------------------------------------------------------------
  Procedure prototypes                                                       
 ------------------------------------------------------------------------------*/
 static HAL_StatusTypeDef baro_read_handler(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, uint16_t MemAddress,
+                                    uint16_t MemAddSize, uint8_t *pData, uint16_t Size, uint32_t Timeout);
+static HAL_StatusTypeDef imu_read_handler(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, uint16_t MemAddress,
+                                    uint16_t MemAddSize, uint8_t *pData, uint16_t Size, uint32_t Timeout);
+static HAL_StatusTypeDef mag_read_handler(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, uint16_t MemAddress,
                                     uint16_t MemAddSize, uint8_t *pData, uint16_t Size, uint32_t Timeout);
 
 /*------------------------------------------------------------------------------
@@ -50,6 +55,16 @@ HAL_StatusTypeDef HAL_I2C_Mem_Read(I2C_HandleTypeDef *hi2c, uint16_t DevAddress,
 if( hi2c == &( BARO_I2C ) )
     {
     return baro_read_handler( hi2c, DevAddress, MemAddress, MemAddSize, pData, Size, Timeout);
+    }
+else if( ( hi2c == &( IMU_I2C ) ) 
+   && ( DevAddress == IMU_ADDR ) )
+    {
+    return imu_read_handler( hi2c, DevAddress, MemAddress, MemAddSize, pData, Size, Timeout);
+    }
+else if( ( hi2c == &( IMU_I2C ) ) 
+   && ( DevAddress == IMU_MAG_ADDR ) )
+    {
+    return mag_read_handler( hi2c, DevAddress, MemAddress, MemAddSize, pData, Size, Timeout);
     }
 
     return HAL_OK;
@@ -77,6 +92,47 @@ static HAL_StatusTypeDef baro_read_handler(I2C_HandleTypeDef *hi2c, uint16_t Dev
     if( MemAddress == BARO_REG_ERR_REG )
         {
         *pData = 0x00; /* Clear the error register */
+        return HAL_OK;
+        }
+    
+    return HAL_OK;
+}
+
+static HAL_StatusTypeDef imu_read_handler(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, uint16_t MemAddress,
+                                    uint16_t MemAddSize, uint8_t *pData, uint16_t Size, uint32_t Timeout)
+{
+    /* imperfect approximation, but delay a bit like the real FC */
+    HAL_Delay( (uint8_t)(0.4 * Size) );
+
+    if( MemAddress == IMU_REG_CHIP_ID )
+        {
+        *pData = IMU_ID;
+        return HAL_OK;
+        }
+    if( MemAddress == IMU_REG_INTERNAL_STATUS )
+        {
+        *pData = 0x01; /* First bit needs to be set */
+        return HAL_OK;
+        }
+    
+    return HAL_OK;
+}
+
+
+static HAL_StatusTypeDef mag_read_handler(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, uint16_t MemAddress,
+                                    uint16_t MemAddSize, uint8_t *pData, uint16_t Size, uint32_t Timeout)
+{
+    /* imperfect approximation, but delay a bit like the real FC */
+    HAL_Delay( (uint8_t)(0.4 * Size) );
+
+    if( MemAddress == MAG_REG_CHIP_ID )
+        {
+        *pData = MAG_ID;
+        return HAL_OK;
+        }
+    if( MemAddress == IMU_REG_INTERNAL_STATUS )
+        {
+        *pData = 0x01; /* First bit needs to be set */
         return HAL_OK;
         }
     

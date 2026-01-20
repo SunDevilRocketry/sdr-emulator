@@ -36,7 +36,9 @@
 ------------------------------------------------------------------------------*/
 
 void HAL_GPIO_WritePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIO_PinState PinState) {
-    if( GPIOx == STATUS_GPIO_PORT )
+    if( ( GPIOx == STATUS_GPIO_PORT ) 
+     && ( GPIO_Pin & ( STATUS_G_PIN | STATUS_R_PIN | STATUS_B_PIN ) )
+     && ( PinState == GPIO_PIN_RESET ) )
         {
         // ETS TEMP: Replace with IPC to GUI
         printf("LED color changed to: ");
@@ -74,6 +76,13 @@ void HAL_GPIO_WritePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIO_PinState Pin
                 printf("-=Indeterminate=-\n");
                 break;
             }
+        }
+    if( ( GPIOx == STATUS_GPIO_PORT ) 
+     && ( GPIO_Pin & ( STATUS_G_PIN | STATUS_R_PIN | STATUS_B_PIN ) )
+     && ( PinState == GPIO_PIN_SET ) )
+        {
+        printf("LED Reset\n");
+        guipipe_put("LED: RESET\n", 11);
         }
 }
 
