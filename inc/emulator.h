@@ -78,6 +78,8 @@ void emulator_start_timers
     void
     );
 
+void emulator_buzzer_beep_request(uint32_t duration);
+
 #ifdef __cplusplus
 }
 #endif

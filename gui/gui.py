@@ -57,7 +57,7 @@ def pipe_handler():
     global read_buffer
     
     latest_led_color = None
-    latest_buzzer_status = None
+    latest_buzzer_time = None
     
     try:
         # Read whatever data is available (non-blocking)
@@ -98,16 +98,16 @@ def pipe_handler():
                         latest_led_color = 6
                     case 'LED: WHITE':
                         latest_led_color = 7
-            elif in_str == 'BUZZER: ON':
-                latest_buzzer_status = 1
-                # fc_buzzer.start_tone()
-            elif in_str == 'BUZZER: OFF':
-                latest_buzzer_status = 0
-                # fc_buzzer.stop_tone()
+            elif in_str.startswith('BUZZ: '):
+                latest_buzzer_time = int(in_str[6:])
         
         # Update UI if we got new values
         if latest_led_color is not None:
             set_status_led(latest_led_color)
+
+        if latest_buzzer_time is not None:
+            fc_buzzer.beep_buzzer(duration=(latest_buzzer_time / 1000))
+
             
     except BlockingIOError:
         # No data available right now, that's fine
