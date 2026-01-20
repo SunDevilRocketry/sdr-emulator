@@ -4,6 +4,7 @@ from pathlib import Path
 import time
 import os
 import buzzer
+import platform
 
 # Global variables
 repo_root = None
@@ -12,6 +13,9 @@ image_label = None  # We will store the label here
 tk_image = None     # We MUST store a global reference to the PhotoImage object
 fc_buzzer = buzzer.Buzzer()
 emulator_pipe = None
+
+frame_x_size = int(1435 / 2)
+frame_y_size = int(681 / 2)
 
 def set_status_led(led_color: int):
     global current_image_path, tk_image
@@ -36,7 +40,7 @@ def set_status_led(led_color: int):
     
     # Open, resize (optional), and convert the new image
     img = Image.open(current_image_path)
-    img = img.resize((1435, 681), Image.Resampling.LANCZOS)
+    img = img.resize((frame_x_size, frame_y_size), Image.Resampling.LANCZOS)
     tk_image = ImageTk.PhotoImage(img) # Update the global PhotoImage reference
 
     # Configure the label to use the new image
@@ -45,7 +49,8 @@ def set_status_led(led_color: int):
     image_label.image = tk_image
 
 def pipe_handler():
-    in_str = emulator_pipe.readline()
+    in_str = emulator_pipe.readline().rstrip("\n")
+    print(in_str)
     while(in_str != ''):
         if in_str.startswith('LED: '):
             match in_str:
@@ -66,13 +71,13 @@ def pipe_handler():
                 case 'LED: WHITE':
                     set_status_led(7)
         else:
-            match in_str:
-                case 'BUZZER: ON':
-                    fc_buzzer.start_tone()
-                case 'BUZZER: OFF':
-                    fc_buzzer.stop_tone()
-        in_str = emulator_pipe.readline()
-    root.after(100, pipe_handler)
+            if in_str == 'BUZZER: ON':
+                fc_buzzer.start_tone()
+            elif in_str == 'BUZZER: OFF':
+                fc_buzzer.stop_tone()
+        in_str = emulator_pipe.readline().rstrip("\n")
+        print(in_str)
+    root.after(10, pipe_handler)
 
 # Determine fw repository root
 script_path = Path(__file__).resolve()
@@ -94,7 +99,7 @@ root.title("SDR HW Emulator")
 
 # Initial image setup (using PIL for flexibility)
 initial_img = Image.open(current_image_path)
-initial_img = initial_img.resize((1435, 681), Image.Resampling.LANCZOS)
+initial_img = initial_img.resize((frame_x_size, frame_y_size), Image.Resampling.LANCZOS)
 tk_image = ImageTk.PhotoImage(initial_img)
 
 # Create a Label widget to display the image

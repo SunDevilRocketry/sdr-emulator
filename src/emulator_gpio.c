@@ -41,35 +41,35 @@ void HAL_GPIO_WritePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIO_PinState Pin
      && ( PinState == GPIO_PIN_RESET ) )
         {
         // ETS TEMP: Replace with IPC to GUI
-        printf("LED color changed to: ");
+        //printf("LED color changed to: ");
         switch (GPIO_Pin) 
             {
             case STATUS_G_PIN:
-                printf("GREEN\n");
+                //printf("GREEN\n");
                 guipipe_put("LED: GREEN\n", 11);
                 break;
             case STATUS_R_PIN:
-                printf("RED\n");
+                //printf("RED\n");
                 guipipe_put("LED: RED\n", 9);
                 break;
             case STATUS_B_PIN:
-                printf("BLUE\n");
+                //printf("BLUE\n");
                 guipipe_put("LED: BLUE\n", 10);
                 break;
             case STATUS_G_PIN | STATUS_R_PIN:
-                printf("YELLOW\n");
+                //printf("YELLOW\n");
                 guipipe_put("LED: YELLOW\n", 12);
                 break;
             case STATUS_G_PIN | STATUS_B_PIN:
-                printf("CYAN\n");
+                //printf("CYAN\n");
                 guipipe_put("LED: CYAN\n", 10);
                 break;
             case STATUS_R_PIN | STATUS_B_PIN:
-                printf("PURPLE\n");
+                //printf("PURPLE\n");
                 guipipe_put("LED: PURPLE\n", 12);
                 break;
             case STATUS_R_PIN | STATUS_G_PIN | STATUS_B_PIN:
-                printf("WHITE\n");
+                //printf("WHITE\n");
                 guipipe_put("LED: WHITE\n", 11);
                 break;
             default:
@@ -81,7 +81,7 @@ void HAL_GPIO_WritePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIO_PinState Pin
      && ( GPIO_Pin & ( STATUS_G_PIN | STATUS_R_PIN | STATUS_B_PIN ) )
      && ( PinState == GPIO_PIN_SET ) )
         {
-        printf("LED Reset\n");
+        //printf("LED Reset\n");
         guipipe_put("LED: RESET\n", 11);
         }
 }
