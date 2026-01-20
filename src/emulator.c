@@ -28,6 +28,9 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <sys/stat.h>
 #include <stdio.h>
 #include <errno.h>
@@ -44,13 +47,22 @@
 /*------------------------------------------------------------------------------
  Constants                                                       
 ------------------------------------------------------------------------------*/
-#define GUI_PIPE "../../../../emulator/resources/gui-pipe"
 const char DEVICE_ID[] = "SW_EMULATOR";
+#define GUI_SOCK_PORT 5100
 
 /*------------------------------------------------------------------------------
  Globals                                                       
 ------------------------------------------------------------------------------*/
-int GUI_Pipe_FD;
+int gui_sock_fd;
+int gui_connection_fd;
+
+/*------------------------------------------------------------------------------
+ Static Prototypes                                                       
+------------------------------------------------------------------------------*/
+static void guisock_open
+    (
+    void
+    );
 
 /*------------------------------------------------------------------------------
  HAL interfaces                                                       
@@ -102,51 +114,48 @@ int main
 emulator_start_timers();
 
 /*------------------------------------------------------------------------------
- Open pipe for IPC                                                  
+ Open socket for IPC                                                  
 ------------------------------------------------------------------------------*/
-// if (mkfifo(GUI_PIPE, 0666) == -1) {
-//         if (errno != EEXIST) {
-//             perror("Emulator Init: Could not create pipe.");
-//             return 1;
-//         }
-//         printf("Emulator Init: Named pipe '%s' already exists.\n", GUI_PIPE);
-//     } else {
-//         printf("Emulator Init: Named pipe '%s' created.\n", GUI_PIPE);
-//     }
-
-// GUI_Pipe_FD = open(GUI_PIPE, O_WRONLY | O_NONBLOCK);
-// if (GUI_Pipe_FD == -1) 
-//     {
-//     perror("open error");
-//     return 1;
-//     }
-// else
-//     {
-//     printf("Emulator Init: Pipe opened successfully!\n");
-//     }
-
+guisock_open();
+printf("Emulator Init: GUI socket opened successfully.\n");
 
 /*------------------------------------------------------------------------------
  Start GUI and wait                                                  
 ------------------------------------------------------------------------------*/
-// pid_t pid;
-// pid = fork();
+pid_t pid;
+pid = fork();
 
-// if ( pid < 0 ) 
-//     {
-//     fprintf(stderr, "Emulator Init: GUI Fork failed!\n");
-//     return 1;
-//     } 
-// else if ( pid == 0 ) 
-//     {
-//     execv("python ../../../../emulator/gui.py", NULL);
-//     exit(0);
-//     } 
-// else {
-//     printf("Emulator Init: GUI Fork success. Waiting for the GUI to initialize before continuing.\n");
-//     sleep(5);
-//     printf("Emulator Init: Continuing with startup.\n");
-//     }
+if ( pid < 0 ) 
+    {
+    fprintf(stderr, "Emulator Init: GUI Fork failed!\n");
+    return 1;
+    } 
+else if ( pid == 0 ) 
+    {
+    execlp("python", "python", "../../../../emulator/gui/gui.py", (char *) NULL);
+    exit(0);
+    } 
+else {
+    printf("Emulator Init: GUI Fork success. Waiting for the GUI to initialize before continuing.\n");
+    sleep(2);
+    printf("Emulator Init: Continuing with startup.\n");
+    }
+
+/*------------------------------------------------------------------------------
+ Attempt to open connection                                                  
+------------------------------------------------------------------------------*/
+struct sockaddr_in client_address;
+socklen_t addrlen = sizeof(client_address);
+
+while ( (gui_connection_fd = accept(gui_sock_fd, (struct sockaddr *)&client_address, &addrlen) ) < 0) 
+    {
+    printf("Emulator Init: Socket accept failed.\n");
+    printf("Emulator Init: Retrying...\n");
+    sleep(1);
+    } 
+printf("Emulator Init: Socket connected to GUI client.\n");
+printf("    [DEBUG] IP: %s\n", inet_ntoa(client_address.sin_addr));
+printf("    [DEBUG] Port: %d\n", ntohs(client_address.sin_port));
 
 /*------------------------------------------------------------------------------
  Once setup is complete, run the firmware                                                    
@@ -159,18 +168,64 @@ main_fut();
 /*******************************************************************************
 *                                                                              *
 * PROCEDURE:                                                                   * 
-* 		guipipe_put                                                            *
+* 		guisock_open                                                           *
 *                                                                              *
 * DESCRIPTION:                                                                 * 
-*       Write some string to the GUI pipe.                                     *
+*       Start the GUI socket.                                                  *
 *                                                                              *
 *******************************************************************************/
-void guipipe_put
+static void guisock_open
+    (
+    void
+    )
+{
+
+struct sockaddr_in sock_addr; 
+
+if ( ( gui_sock_fd = socket( AF_INET, SOCK_STREAM, 0 ) ) < 0 ) 
+    {
+    perror("Emulator Init: Error while creating the socket\n");
+    exit(1);
+    }
+
+memset( &sock_addr, 0, sizeof(sock_addr) ); 
+
+sock_addr.sin_family = AF_INET;
+
+sock_addr.sin_port = htons( GUI_SOCK_PORT );
+
+sock_addr.sin_addr.s_addr = htonl( INADDR_ANY ); /* allow the emulator to accept a connection on any interface */
+
+if ( bind( gui_sock_fd, (struct sockaddr *) &sock_addr, sizeof( sock_addr ) ) < 0 ) 
+    {
+    perror("Emulator Init: Error in binding GUI socket.\n");
+    exit(1);
+    } 
+
+if (listen(gui_sock_fd, 1) < 0) {
+    perror("Emulator Init: Socket listen failed.\n");
+    exit(1);
+}
+printf("Emulator Init: Socket is now listening on port %d.\n", GUI_SOCK_PORT);
+
+} /* guisock_open */
+
+
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		guisock_put                                                            *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Write some string to the GUI socket.                                   *
+*                                                                              *
+*******************************************************************************/
+void guisock_put
     (
     const char* message,
     size_t size
     )
 {
-// write(GUI_Pipe_FD, message, size);
+write( gui_connection_fd, message, size );
 
-} /* guipipe_put */
+} /* guisock_put */

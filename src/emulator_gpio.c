@@ -46,31 +46,31 @@ void HAL_GPIO_WritePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIO_PinState Pin
             {
             case STATUS_G_PIN:
                 //printf("GREEN\n");
-                guipipe_put("LED: GREEN\n", 11);
+                guisock_put("LED: GREEN\n", 11);
                 break;
             case STATUS_R_PIN:
                 //printf("RED\n");
-                guipipe_put("LED: RED\n", 9);
+                guisock_put("LED: RED\n", 9);
                 break;
             case STATUS_B_PIN:
                 //printf("BLUE\n");
-                guipipe_put("LED: BLUE\n", 10);
+                guisock_put("LED: BLUE\n", 10);
                 break;
             case STATUS_G_PIN | STATUS_R_PIN:
                 //printf("YELLOW\n");
-                guipipe_put("LED: YELLOW\n", 12);
+                guisock_put("LED: YELLOW\n", 12);
                 break;
             case STATUS_G_PIN | STATUS_B_PIN:
                 //printf("CYAN\n");
-                guipipe_put("LED: CYAN\n", 10);
+                guisock_put("LED: CYAN\n", 10);
                 break;
             case STATUS_R_PIN | STATUS_B_PIN:
                 //printf("PURPLE\n");
-                guipipe_put("LED: PURPLE\n", 12);
+                guisock_put("LED: PURPLE\n", 12);
                 break;
             case STATUS_R_PIN | STATUS_G_PIN | STATUS_B_PIN:
                 //printf("WHITE\n");
-                guipipe_put("LED: WHITE\n", 11);
+                guisock_put("LED: WHITE\n", 11);
                 break;
             default:
                 printf("-=Indeterminate=-\n");
@@ -82,7 +82,7 @@ void HAL_GPIO_WritePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIO_PinState Pin
      && ( PinState == GPIO_PIN_SET ) )
         {
         //printf("LED Reset\n");
-        guipipe_put("LED: RESET\n", 11);
+        guisock_put("LED: RESET\n", 11);
         }
 }
 

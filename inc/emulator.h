@@ -66,7 +66,7 @@ extern "C" {
 int main_fut(void);
 
 /* emulator.h */
-void guipipe_put
+void guisock_put
     (
     const char* message,
     size_t size
