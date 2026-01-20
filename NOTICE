@@ -1,0 +1,11 @@
+This larger work, the Sun Devil Rocketry Firmware Emulator, uses the BSD-3-Clause License. Some dependencies are licensed under different terms, and are included below.
+
+Python Imaging Library (PIL): MIT-CMU License
+    Copyright (c) 1997-2011 by Secret Labs AB
+    Copyright (c) 1995-2011 by Fredrik Lundh and contributors
+
+Sounddevice: MIT License
+    Copyright (c) 2015-2025 Matthias Geier
+
+NumPy: A custom license for the project can be found at https://numpy.org/doc/stable/license.html
+    Copyright (c) 2005-2025, NumPy Developers
