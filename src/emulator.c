@@ -59,6 +59,7 @@ int gui_sock_fd;
 int gui_connection_fd;
 
 extern volatile bool ignite_flag;
+volatile bool irq_enabled = true;
 
 /*------------------------------------------------------------------------------
  Static Prototypes                                                       
@@ -95,8 +96,9 @@ uint32_t HAL_GetUIDw2(void) {
     return buf;
 }
 
-void HAL_NVIC_DisableIRQ(IRQn_Type IRQn) {}
-void HAL_NVIC_EnableIRQ(IRQn_Type IRQn) {}
+/* checked by emulator_uart and emulator_i2c before mocking ISRs */
+void HAL_NVIC_DisableIRQ(IRQn_Type IRQn) {irq_enabled = false;}
+void HAL_NVIC_EnableIRQ(IRQn_Type IRQn) {irq_enabled = true;}
 
 /*------------------------------------------------------------------------------
  Procedures                                                     
@@ -169,6 +171,10 @@ printf("    [DEBUG] Port: %d\n", ntohs(client_address.sin_port));
 printf("Emulator Init: Opening socket listener.\n");
 pthread_t socket_thread;
 pthread_create( &socket_thread, NULL, sock_listener, NULL );
+
+printf("Emulator Init: Opening I2c interrupt listener.\n");
+pthread_t it_thread;
+pthread_create( &it_thread, NULL, emulator_i2c_it_listener, NULL );
 
 /*------------------------------------------------------------------------------
  Register Default Error Callback                                                   

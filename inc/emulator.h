@@ -86,6 +86,12 @@ void emulator_setup_error
     void
     );
 
+/* emulator_i2c.c */
+void* emulator_i2c_it_listener
+    (
+    void* arg
+    );
+
 #ifdef __cplusplus
 }
 #endif

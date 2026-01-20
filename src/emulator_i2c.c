@@ -24,12 +24,29 @@
 ------------------------------------------------------------------------------*/
 #include <string.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "emulator.h"
 #include "stm32h7xx_hal.h"
 #include "baro.h"
 #include "imu.h"
 #include "sdr_pin_defines_A0002.h"
+
+/*------------------------------------------------------------------------------
+ Globals                                                       
+------------------------------------------------------------------------------*/
+extern volatile bool irq_enabled;
+
+volatile bool imu_data_it_flag = false;
+volatile bool baro_data_it_flag = false;
+volatile bool mag_data_it_flag = false;
+
+static uint8_t* imu_data_ptr;
+static uint8_t* baro_data_ptr;
+static uint8_t* mag_data_ptr;
+static uint16_t imu_data_size = 0;
+static uint16_t baro_data_size = 0;
+static uint16_t mag_data_size = 0;
 
 /*------------------------------------------------------------------------------
  Procedure prototypes                                                       
@@ -40,6 +57,9 @@ static HAL_StatusTypeDef imu_read_handler(I2C_HandleTypeDef *hi2c, uint16_t DevA
                                     uint16_t MemAddSize, uint8_t *pData, uint16_t Size, uint32_t Timeout);
 static HAL_StatusTypeDef mag_read_handler(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, uint16_t MemAddress,
                                     uint16_t MemAddSize, uint8_t *pData, uint16_t Size, uint32_t Timeout);
+static void baro_read_handler_IT();
+static void imu_read_handler_IT();
+static void mag_read_handler_IT();
 
 /*------------------------------------------------------------------------------
  HAL interfaces                                                       
@@ -72,12 +92,79 @@ else if( ( hi2c == &( IMU_I2C ) )
 
 HAL_StatusTypeDef HAL_I2C_Mem_Read_IT(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, uint16_t MemAddress,
                                     uint16_t MemAddSize, uint8_t *pData, uint16_t Size) {
+if( hi2c == &( BARO_I2C ) )
+    {
+    baro_data_it_flag = true;
+    baro_data_ptr = pData;
+    baro_data_size = Size;
     return HAL_OK;
+    }
+else if( ( hi2c == &( IMU_I2C ) ) 
+   && ( DevAddress == IMU_ADDR ) )
+    {
+    imu_data_it_flag = true;
+    imu_data_ptr = pData;
+    imu_data_size = Size;
+    return HAL_OK;
+    }
+else if( ( hi2c == &( IMU_I2C ) ) 
+   && ( DevAddress == IMU_MAG_ADDR ) )
+    {
+    mag_data_it_flag = true;
+    mag_data_ptr = pData;
+    mag_data_size = Size;
+    return HAL_OK;
+    }
+
+return HAL_OK;
 }
 
 /*------------------------------------------------------------------------------
  Procedures                                                     
 ------------------------------------------------------------------------------*/
+
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		emulator_i2c_it_listener                                               *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Listen for and fulfill i2c IT I/O.                                     *
+*                                                                              *
+*******************************************************************************/
+void* emulator_i2c_it_listener
+    (
+    void* arg
+    )
+{
+bool listening = true;
+
+while ( listening )
+    {
+    if ( irq_enabled )
+        {
+        /* Check each flag and call their handlers */
+        if ( imu_data_it_flag )
+            {
+            imu_read_handler_IT();
+            }
+        if ( baro_data_it_flag )
+            {
+            baro_read_handler_IT();
+            }
+        if ( mag_data_it_flag )
+            {
+            mag_read_handler_IT();
+            }
+        }
+    HAL_Delay(2);
+    }
+
+    return 0;
+}
+
+/* Blocking helpers -- used for init */
+
 static HAL_StatusTypeDef baro_read_handler(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, uint16_t MemAddress,
                                     uint16_t MemAddSize, uint8_t *pData, uint16_t Size, uint32_t Timeout)
 {
@@ -137,4 +224,23 @@ static HAL_StatusTypeDef mag_read_handler(I2C_HandleTypeDef *hi2c, uint16_t DevA
         }
     
     return HAL_OK;
+}
+
+/* Interrupt helpers -- used for data retrieval */
+static void baro_read_handler_IT()
+{
+memset(baro_data_ptr, 0, baro_data_size);
+baro_IT_handler();
+}
+
+static void imu_read_handler_IT()
+{
+memset(imu_data_ptr, 0, imu_data_size);
+imu_it_handler(); 
+}
+
+static void mag_read_handler_IT()
+{
+memset(mag_data_ptr, 0, mag_data_size);
+imu_it_handler();
 }
