@@ -80,6 +80,12 @@ void emulator_start_timers
 
 void emulator_buzzer_beep_request(uint32_t duration);
 
+/* emulator_error.c */
+void emulator_setup_error
+    (
+    void
+    );
+
 #ifdef __cplusplus
 }
 #endif

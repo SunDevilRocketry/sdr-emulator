@@ -24,6 +24,7 @@
  Includes                                                         
 ------------------------------------------------------------------------------*/
 #include <string.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -43,6 +44,7 @@
 #include "stm32h755xx.h"
 
 #include <stddef.h>
+#include <pthread.h>
 
 /*------------------------------------------------------------------------------
  Constants                                                       
@@ -56,12 +58,19 @@ const char DEVICE_ID[] = "SW_EMULATOR";
 int gui_sock_fd;
 int gui_connection_fd;
 
+extern volatile bool ignite_flag;
+
 /*------------------------------------------------------------------------------
  Static Prototypes                                                       
 ------------------------------------------------------------------------------*/
 static void guisock_open
     (
     void
+    );
+
+static void* sock_listener
+    (
+    void* arg
     );
 
 /*------------------------------------------------------------------------------
@@ -122,22 +131,22 @@ printf("Emulator Init: GUI socket opened successfully.\n");
 /*------------------------------------------------------------------------------
  Start GUI and wait                                                  
 ------------------------------------------------------------------------------*/
-pid_t pid;
-pid = fork();
+pid_t gui_pid;
+gui_pid = fork();
 
-if ( pid < 0 ) 
+if ( gui_pid < 0 ) 
     {
     fprintf(stderr, "Emulator Init: GUI Fork failed!\n");
     return 1;
     } 
-else if ( pid == 0 ) 
+else if ( gui_pid == 0 ) 
     {
     execlp("python", "python", "../../../../emulator/gui/gui.py", (char *) NULL);
     exit(0);
     } 
 else {
     printf("Emulator Init: GUI Fork success. Waiting for the GUI to initialize before continuing.\n");
-    sleep(2);
+    sleep(5);
     printf("Emulator Init: Continuing with startup.\n");
     }
 
@@ -157,9 +166,20 @@ printf("Emulator Init: Socket connected to GUI client.\n");
 printf("    [DEBUG] IP: %s\n", inet_ntoa(client_address.sin_addr));
 printf("    [DEBUG] Port: %d\n", ntohs(client_address.sin_port));
 
+printf("Emulator Init: Opening socket listener.\n");
+pthread_t socket_thread;
+pthread_create( &socket_thread, NULL, sock_listener, NULL );
+
+/*------------------------------------------------------------------------------
+ Register Default Error Callback                                                   
+------------------------------------------------------------------------------*/
+printf("Emulator Init: Registering default error handler.\n");
+emulator_setup_error();
+
 /*------------------------------------------------------------------------------
  Once setup is complete, run the firmware                                                    
 ------------------------------------------------------------------------------*/
+printf("Emulator Init: Starting firmware.\n");
 main_fut();
 
 } /* main */
@@ -209,6 +229,56 @@ if (listen(gui_sock_fd, 1) < 0) {
 printf("Emulator Init: Socket is now listening on port %d.\n", GUI_SOCK_PORT);
 
 } /* guisock_open */
+
+
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		sock_listener                                                          *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Listen on the socket for events.                                       *
+*                                                                              *
+*******************************************************************************/
+static void* sock_listener
+    (
+    void* arg
+    )
+{
+bool sock_listen = true;
+char buf[256];
+
+printf("Emulator Init: Socket listener running.\n");
+
+while (sock_listen)
+    {
+    /* Read up to 256 bytes from the socket at a time */
+    int bytes_read = 0;
+    bytes_read = read( gui_connection_fd, buf, sizeof( buf ) );
+
+    /* If there's content in the socket, tokenize it based on newlines*/
+    if ( bytes_read > 0 )
+        {
+        char* token = strtok(buf, "\n");
+
+        while ( token != NULL )
+            {
+            /* Handle each command here */
+            if ( !strncmp( token, "ignite", 6 ) )
+                {
+                ignite_flag = true;
+                }
+
+            token = strtok( NULL, "\n" );
+            }
+        }
+    /* Do not busy wait. Delay to allow the buffer to refill. */
+    usleep(100000); /* 100000 microseconds -> 100 ms */
+    }
+
+    return 0;
+
+} /* sock_listener */
 
 
 /*******************************************************************************

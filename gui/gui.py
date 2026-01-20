@@ -18,6 +18,7 @@ emulator_file = None
 host = "127.0.0.1"
 port = 5100
 read_buffer = ""
+ignition = False
 
 frame_x_size = int(1435 / 2)
 frame_y_size = int(681 / 2)
@@ -118,6 +119,15 @@ def pipe_handler():
     # Schedule next check
     root.after(10, pipe_handler)
 
+def ignite():
+    global ignition
+
+    if not ignition:
+        ignition = True
+        emulator_file.write("ignite\n")
+        emulator_file.flush()
+        ignition_button.config(text="Ignition signal sent")
+
 # Determine fw repository root
 script_path = Path(__file__).resolve()
 script_dir = script_path.parent
@@ -130,7 +140,7 @@ current_image_path = str(repo_root) + "/emulator/resources/fc-power-off.png"
 time.sleep(1)
 emulator_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 emulator_socket.connect((host, port))
-emulator_file = emulator_socket.makefile('r', encoding='utf-8')
+emulator_file = emulator_socket.makefile('rw', encoding='utf-8')
 
 # Main Tkinter setup
 root = tk.Tk()
@@ -147,6 +157,10 @@ tk_image = ImageTk.PhotoImage(initial_img)
 # Create a Label widget to display the image
 image_label = tk.Label(root, image=tk_image)
 image_label.pack()
+
+# Initial IGN button setup
+ignition_button = tk.Button(root, text="Ignite", command=ignite, bg="maroon", fg="white")
+ignition_button.pack()
 
 # Set up pipe handler
 root.after(100, pipe_handler)

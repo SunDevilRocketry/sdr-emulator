@@ -25,11 +25,17 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #include "emulator.h"
 #include "main.h"
 #include "stm32h7xx_hal.h"
 #include "sdr_pin_defines_A0002.h"
+
+/*------------------------------------------------------------------------------
+ Globals                                                       
+------------------------------------------------------------------------------*/
+volatile bool ignite_flag = false;
 
 /*------------------------------------------------------------------------------
  HAL interfaces                                                       
@@ -87,6 +93,11 @@ void HAL_GPIO_WritePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIO_PinState Pin
 }
 
 GPIO_PinState HAL_GPIO_ReadPin(const GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin) {
+    if ( ( GPIOx == SWITCH_GPIO_PORT )
+      && ( GPIO_Pin == SWITCH_PIN) )
+        {
+        return (GPIO_PinState)ignite_flag;
+        }
     return GPIO_PIN_RESET;
 }
 
