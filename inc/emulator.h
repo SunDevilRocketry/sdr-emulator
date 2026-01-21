@@ -32,10 +32,12 @@ extern "C" {
  Standard Includes                                                                    
 ------------------------------------------------------------------------------*/
 #include <stdint.h>
+#include <stdbool.h>
 
 /*------------------------------------------------------------------------------
  Project Includes  
 ------------------------------------------------------------------------------*/
+
 
 /*------------------------------------------------------------------------------
  Macros  
@@ -120,6 +122,12 @@ uint32_t emulator_flash_block_erase
     (
     uint32_t      flash_block_num, /* Block of flash to erase */
 	uint32_t      size             /* Size of block           */
+    );
+
+/* emulator_uart.c */
+bool emulator_prompt_and_open_serial_port
+    (
+    void
     );
 
 #ifdef __cplusplus

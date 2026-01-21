@@ -36,6 +36,7 @@
  Globals                                                       
 ------------------------------------------------------------------------------*/
 volatile bool ignite_flag = false;
+extern int serial_port; /* DO NOT MODIFY IN THIS FILE */
 
 /*------------------------------------------------------------------------------
  HAL interfaces                                                       
@@ -98,6 +99,12 @@ GPIO_PinState HAL_GPIO_ReadPin(const GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin) {
         {
         return (GPIO_PinState)ignite_flag;
         }
+    if ( ( GPIOx == USB_DETECT_GPIO_PORT )
+      && ( GPIO_Pin ==  USB_DETECT_PIN) )
+        {
+        return ( serial_port <= 0 );
+        }
+
     return GPIO_PIN_RESET;
 }
 

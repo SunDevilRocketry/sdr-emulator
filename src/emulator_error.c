@@ -103,7 +103,7 @@ static void emulator_error_handler
     )
 {
 printf( "\nEmulator: A terminal error has been reached.\n" );
-printf( "    [DEBUG]: Integer error code - %d.\n", error_code );
+printf( "Emulator: FW-reported error code - %d.\n", error_code );
 print_stack_trace();
 printf( "\nEmulator: The emulator will now exit.\n");
 exit(0);

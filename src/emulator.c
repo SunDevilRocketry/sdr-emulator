@@ -187,9 +187,22 @@ printf("Emulator Init: Registering default error handler.\n");
 emulator_setup_error();
 
 /*------------------------------------------------------------------------------
+ Select COM port
+------------------------------------------------------------------------------*/
+if ( emulator_prompt_and_open_serial_port() )
+    {
+    printf("Emulator Init: Serial connection OK.\n");
+    }
+else
+    {
+    printf("Emulator Init: Serial connection failed. Continuing without.\n");
+    }
+
+/*------------------------------------------------------------------------------
  Once setup is complete, run the firmware                                                    
 ------------------------------------------------------------------------------*/
 printf("Emulator Init: Starting firmware.\n");
+sleep(10);
 main_fut();
 
 } /* main */
