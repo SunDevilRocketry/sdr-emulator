@@ -31,12 +31,11 @@ extern "C" {
 /*------------------------------------------------------------------------------
  Standard Includes                                                                    
 ------------------------------------------------------------------------------*/
-
+#include <stdint.h>
 
 /*------------------------------------------------------------------------------
  Project Includes  
 ------------------------------------------------------------------------------*/
-
 
 /*------------------------------------------------------------------------------
  Macros  
@@ -90,6 +89,37 @@ void emulator_setup_error
 void* emulator_i2c_it_listener
     (
     void* arg
+    );
+
+/* emulator_spi.c */
+void emulator_flash_init
+    (
+    void
+    );
+
+uint32_t emulator_flash_write
+    (
+    uint8_t* data,
+    uint32_t address,
+    uint16_t size
+    );
+
+uint32_t emulator_flash_read
+    (
+    uint8_t* data,
+    uint32_t address,
+    uint16_t size
+    );
+
+uint32_t emulator_flash_erase
+    (
+    void
+    );
+
+uint32_t emulator_flash_block_erase
+    (
+    uint32_t      flash_block_num, /* Block of flash to erase */
+	uint32_t      size             /* Size of block           */
     );
 
 #ifdef __cplusplus

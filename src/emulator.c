@@ -118,11 +118,15 @@ int main
     void
     )
 {
-
 /*------------------------------------------------------------------------------
  Start software timers                                                    
 ------------------------------------------------------------------------------*/
 emulator_start_timers();
+
+/*------------------------------------------------------------------------------
+ Check for flash and create the blank file if it doesn't exist                                                  
+------------------------------------------------------------------------------*/
+emulator_flash_init();
 
 /*------------------------------------------------------------------------------
  Open socket for IPC                                                  
@@ -148,7 +152,7 @@ else if ( gui_pid == 0 )
     } 
 else {
     printf("Emulator Init: GUI Fork success. Waiting for the GUI to initialize before continuing.\n");
-    sleep(5);
+    sleep(4);
     printf("Emulator Init: Continuing with startup.\n");
     }
 
