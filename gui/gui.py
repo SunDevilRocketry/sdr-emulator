@@ -26,23 +26,22 @@ frame_y_size = int(681 / 2)
 def set_status_led(led_color: int):
     global current_image_path, tk_image
 
-    match led_color:
-        case 0: # LED_NONE
-            current_image_path = str(repo_root) + "/emulator/resources/fc-status-none.png"
-        case 1: # LED_GREEN
-            current_image_path = str(repo_root) + "/emulator/resources/fc-status-g.png"
-        case 2: # LED_RED
-            current_image_path = str(repo_root) + "/emulator/resources/fc-status-r.png"
-        case 3: # LED_BLUE
-            current_image_path = str(repo_root) + "/emulator/resources/fc-status-b.png"
-        case 4: # LED_CYAN
-            current_image_path = str(repo_root) + "/emulator/resources/fc-status-c.png"
-        case 5: # LED_PURPLE
-            current_image_path = str(repo_root) + "/emulator/resources/fc-status-p.png"
-        case 6: # LED_YELLOW
-            current_image_path = str(repo_root) + "/emulator/resources/fc-status-y.png"
-        case 7: # LED_WHITE
-            current_image_path = str(repo_root) + "/emulator/resources/fc-status-w.png"
+    if led_color == 0:  # LED_NONE
+        current_image_path = str(repo_root) + "/emulator/resources/fc-status-none.png"
+    elif led_color == 1:  # LED_GREEN
+        current_image_path = str(repo_root) + "/emulator/resources/fc-status-g.png"
+    elif led_color == 2:  # LED_RED
+        current_image_path = str(repo_root) + "/emulator/resources/fc-status-r.png"
+    elif led_color == 3:  # LED_BLUE
+        current_image_path = str(repo_root) + "/emulator/resources/fc-status-b.png"
+    elif led_color == 4:  # LED_CYAN
+        current_image_path = str(repo_root) + "/emulator/resources/fc-status-c.png"
+    elif led_color == 5:  # LED_PURPLE
+        current_image_path = str(repo_root) + "/emulator/resources/fc-status-p.png"
+    elif led_color == 6:  # LED_YELLOW
+        current_image_path = str(repo_root) + "/emulator/resources/fc-status-y.png"
+    elif led_color == 7:  # LED_WHITE
+        current_image_path = str(repo_root) + "/emulator/resources/fc-status-w.png"
     
     # Open, resize (optional), and convert the new image
     img = Image.open(current_image_path)
@@ -82,23 +81,22 @@ def pipe_handler():
             # print(in_str)
             
             if in_str.startswith('LED: '):
-                match in_str:
-                    case 'LED: OFF' | 'LED: RESET':
-                        latest_led_color = 0
-                    case 'LED: GREEN':
-                        latest_led_color = 1
-                    case 'LED: RED':
-                        latest_led_color = 2
-                    case 'LED: BLUE':
-                        latest_led_color = 3
-                    case 'LED: CYAN':
-                        latest_led_color = 4
-                    case 'LED: PURPLE':
-                        latest_led_color = 5
-                    case 'LED: YELLOW':
-                        latest_led_color = 6
-                    case 'LED: WHITE':
-                        latest_led_color = 7
+                if in_str == 'LED: OFF' or in_str == 'LED: RESET':
+                    latest_led_color = 0
+                elif in_str == 'LED: GREEN':
+                    latest_led_color = 1
+                elif in_str == 'LED: RED':
+                    latest_led_color = 2
+                elif in_str == 'LED: BLUE':
+                    latest_led_color = 3
+                elif in_str == 'LED: CYAN':
+                    latest_led_color = 4
+                elif in_str == 'LED: PURPLE':
+                    latest_led_color = 5
+                elif in_str == 'LED: YELLOW':
+                    latest_led_color = 6
+                elif in_str == 'LED: WHITE':
+                    latest_led_color = 7
             elif in_str.startswith('BUZZ: '):
                 latest_buzzer_time = int(in_str[6:])
         
