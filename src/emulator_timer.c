@@ -82,7 +82,7 @@ void HAL_Delay(uint32_t delay_time) {
     struct timespec req;
     req.tv_sec = delay_time / 1000; /* seconds */
     req.tv_nsec = (delay_time % 1000) * 1000000L; /* milliseconds to nanoseconds */
-    nanosleep(&req, NULL);
+    // nanosleep(&req, NULL);
 }
 
 HAL_StatusTypeDef HAL_TIM_PWM_Start

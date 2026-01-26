@@ -102,7 +102,7 @@ GPIO_PinState HAL_GPIO_ReadPin(const GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin) {
     if ( ( GPIOx == USB_DETECT_GPIO_PORT )
       && ( GPIO_Pin ==  USB_DETECT_PIN) )
         {
-        return ( serial_port <= 0 );
+        return ( serial_port > 0 );
         }
 
     return GPIO_PIN_RESET;

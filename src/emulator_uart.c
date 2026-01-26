@@ -194,6 +194,23 @@ if (fcntl(serial_port, F_GETFD) == -1) {
     return USB_FAIL;
 }
 
+/* Blocking read */
+struct timeval tv;
+tv.tv_sec  = 0;
+tv.tv_usec = 10000; // 10 ms
+
+fd_set rfds;
+FD_ZERO(&rfds);
+FD_SET(serial_port, &rfds);
+
+int ret = select(serial_port + 1, &rfds, NULL, NULL, &tv);
+if (ret < 0) {
+    perror("Serial: Select Failed");
+    return USB_FAIL;
+} else if (ret == 0) {
+    return USB_TIMEOUT;
+}
+
 memset( rx_data_ptr, 0, rx_data_size );
 int n = read( serial_port, rx_data_ptr, rx_data_size );
     
