@@ -129,6 +129,11 @@ emulator_start_timers();
 emulator_flash_init();
 
 /*------------------------------------------------------------------------------
+ Seed RNG for noise generator                                                 
+------------------------------------------------------------------------------*/
+srand(time(NULL));
+
+/*------------------------------------------------------------------------------
  Open socket for IPC                                                  
 ------------------------------------------------------------------------------*/
 guisock_open();
@@ -296,7 +301,7 @@ while (sock_listen)
             }
         }
     /* Do not busy wait. Delay to allow the buffer to refill. */
-    usleep(100000); /* 100000 microseconds -> 100 ms */
+    usleep(10000); /* 2000 microseconds -> 2 ms */
     }
 
     return 0;
