@@ -133,9 +133,8 @@ else
         fprintf( stderr, "    [DEBUG]: read_size == %ld.\n", read_size );
         exit(1);
         }
-
+    fclose(flash_fp);
     }
-fclose(flash_fp);
 
 } /* emulator_flash_init */
 
