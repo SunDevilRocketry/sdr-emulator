@@ -151,6 +151,7 @@ printf("    [DEBUG]: Attempting write.\n");
 /* Check invariants */
 if( address + size > FLASH_MAX_ADDR )
     {
+    printf("Flash Read: Address out of bounds %x\n", address + size);
     return FLASH_ADDR_OUT_OF_BOUNDS;
     }
 
