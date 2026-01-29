@@ -34,12 +34,11 @@
 
 #define FLASH_FILENAME "../../../../emulator/resources/emulator_flash.bin"
 #define FLASH_TMPFILENAME FLASH_FILENAME ".tmp"
-#define FLASH_SIZE FLASH_MAX_ADDR+1
 
 /*------------------------------------------------------------------------------
  Statics                                                         
 ------------------------------------------------------------------------------*/
-static uint8_t flash_memory[FLASH_SIZE];
+static uint8_t flash_memory[FLASH_MAX_ADDR + 1];
 
 static uint8_t last_flash_spi_opcode = 0x00;
 
