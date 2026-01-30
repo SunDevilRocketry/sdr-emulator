@@ -149,7 +149,7 @@ uint32_t emulator_flash_write
 printf("    [DEBUG]: Attempting write.\n");
 
 /* Check invariants */
-if( address + size > FLASH_MAX_ADDR )
+if( address + ( size - 1 ) > FLASH_MAX_ADDR )
     {
     printf("Flash Write: OOB write at %x with size %d\n", address, size);
     return FLASH_ADDR_OUT_OF_BOUNDS;
@@ -176,7 +176,7 @@ uint32_t emulator_flash_read
 printf("[FLASH DEBUG]: Read at %x with size %d\n", address, size);
 
 /* Check invariants */
-if( address + size > FLASH_MAX_ADDR )
+if( address + ( size - 1 ) > FLASH_MAX_ADDR )
     {
     printf("Flash Read: OOB read at %x with size %d\n", address, size);
     printf("Flash Read: Max addr would have been %x.\n", address + size);
