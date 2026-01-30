@@ -179,6 +179,7 @@ printf("[FLASH DEBUG]: Read at %x with size %d\n", address, size);
 if( address + size > FLASH_MAX_ADDR )
     {
     printf("Flash Read: OOB read at %x with size %d\n", address, size);
+    printf("Flash Read: Max addr would have been %x.\n", address + size);
     return FLASH_ADDR_OUT_OF_BOUNDS;
     }
 
