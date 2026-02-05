@@ -146,7 +146,7 @@ uint32_t emulator_flash_write
     uint16_t size
     )
 {
-printf("    [DEBUG]: Attempting write.\n");
+printf("[FLASH DEBUG]: Write at %x with size %d\n", address, size);
 
 /* Check invariants */
 if( address + ( size - 1 ) > FLASH_MAX_ADDR )
