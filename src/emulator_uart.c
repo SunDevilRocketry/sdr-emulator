@@ -95,7 +95,7 @@ bool emulator_prompt_and_open_serial_port
 {
 /* Prompt for serial port */
 char port_buf[12];
-printf("Serial Init: Please enter your serial port in the format /dev/ttyXX.\n\n");
+printf("Serial Init: Please enter your serial port in the format /dev/ttyXX or in the format COMX.\n\n");
 #if defined( _WIN32 ) || defined( __CYGWIN__ )
 printf("    Note for Windows users:\n");
 printf("    COM1 maps to /dev/ttyS0\n");
@@ -105,6 +105,18 @@ printf("    (etc)\n");
 #endif
 printf("Input: \n");
 scanf("%s", port_buf);
+
+char com_buf[4];
+int com_port_num;
+
+strncpy(com_buf, port_buf, 3);
+
+if(strcmp(com_buf, "COM") == 0){
+    sscanf(port_buf+3, "%d", &com_port_num);
+    com_port_num--;
+    snprintf(port_buf, 11, "/dev/ttyS%d", com_port_num);
+}
+
 serial_port = open(port_buf, O_RDWR | O_NOCTTY | O_NDELAY); // Open the port
 
 if (serial_port < 0) {
