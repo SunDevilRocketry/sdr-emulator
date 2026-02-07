@@ -104,7 +104,7 @@ printf("    ETS Temp: use /dev/ttyS0\n");
 printf("    (etc)\n");
 #endif
 printf("Input: \n");
-scanf("%s", port_buf);
+scanf_s("%s", port_buf, static_cast<unsigned>(_countof(port_buf)));
 
 char com_buf[4];
 int com_port_num;
