@@ -117,7 +117,7 @@ int com_port_num;
 
 strncpy(com_buf, port_buf, 3);
 
-if(strcmp(com_buf, "COM") == 0){
+if(strncmp(com_buf, "COM", 3) == 0){
     sscanf(port_buf+3, "%d", &com_port_num);
     com_port_num--;
     snprintf(port_buf, 12, "/dev/ttyS%d", com_port_num);
