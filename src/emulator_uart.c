@@ -104,7 +104,13 @@ printf("    ETS Temp: use /dev/ttyS0\n");
 printf("    (etc)\n");
 #endif
 printf("Input: \n");
-scanf_s("%s", port_buf, (unsigned)sizeof(port_buf));
+
+if(fgets(port_buf, sizeof(port_buf), stdin) == NULL){
+    perror("Serial Init: invalid port input\n");
+    return false;
+}
+
+port_buf[strcspn(port_buf, "\n")] = 0;
 
 char com_buf[4];
 int com_port_num;
@@ -114,7 +120,7 @@ strncpy(com_buf, port_buf, 3);
 if(strcmp(com_buf, "COM") == 0){
     sscanf(port_buf+3, "%d", &com_port_num);
     com_port_num--;
-    snprintf(port_buf, 11, "/dev/ttyS%d", com_port_num);
+    snprintf(port_buf, 12, "/dev/ttyS%d", com_port_num);
 }
 
 serial_port = open(port_buf, O_RDWR | O_NOCTTY | O_NDELAY); // Open the port
