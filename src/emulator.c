@@ -210,6 +210,10 @@ printf("Emulator Init: Starting firmware.\n");
 sleep(10);
 main_fut();
 
+/*------------------------------------------------------------------------------
+  Cleanup internal state of flash
+------------------------------------------------------------------------------*/
+emulator_flash_cleanup();
 } /* main */
 
 

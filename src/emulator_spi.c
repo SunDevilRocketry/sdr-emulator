@@ -26,6 +26,13 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
+
+/* CYGWIN stuff */
+#include <sys/fcntl.h>
+#include <sys/types.h>
+#include <sys/unistd.h>
+#include <sys/mman.h>
 
 #include "emulator.h"
 #include "stm32h7xx_hal.h"
@@ -35,10 +42,13 @@
 #define FLASH_FILENAME "../../../../emulator/resources/emulator_flash.bin"
 #define FLASH_TMPFILENAME FLASH_FILENAME ".tmp"
 
+/* Note that this is implicitly in bytes because flash_memory is a byte array*/
+#define FLASH_FILESIZE FLASH_MAX_ADDR + 1
+
 /*------------------------------------------------------------------------------
  Statics                                                         
 ------------------------------------------------------------------------------*/
-static uint8_t flash_memory[FLASH_MAX_ADDR + 1];
+static uint8_t *flash_memory;
 
 static uint8_t last_flash_spi_opcode = 0x00;
 
@@ -47,10 +57,6 @@ static uint8_t last_flash_spi_opcode = 0x00;
 ------------------------------------------------------------------------------*/
 static HAL_StatusTypeDef flash_spi_transmit(SPI_HandleTypeDef *hspi, const uint8_t *pData, uint16_t Size, uint32_t Timeout);
 static HAL_StatusTypeDef flash_spi_receive(SPI_HandleTypeDef *hspi, uint8_t *pData, uint16_t Size, uint32_t Timeout);
-static void atomic_flash_file_write
-    (
-    void
-    );
 static void flash_spi_delay
     (
     uint32_t num_bytes
@@ -95,48 +101,75 @@ void emulator_flash_init
     void
     )
 {
-/* Open or create flash file */
-static FILE* flash_fp = NULL;
-flash_fp = fopen( FLASH_FILENAME, "r+b");
-if ( flash_fp == NULL )
-    {
-    printf( "Emulator Init: Flash file does not exist. Creating new.\n" );
-    memset( flash_memory, 0xFF, sizeof( flash_memory ) );
-    atomic_flash_file_write();
-    }
-else
-    {
-    printf( "Emulator Init: Found existing flash file.\n" );
+/* Creates a new flash file. Overwrites if already exists (O_TRUNC) */
+/* Do note that the created file has full permissions */
+int flashFileFd = open(FLASH_FILENAME, O_CREAT | O_RDWR | O_TRUNC, S_IRWXO | S_IRWXG | S_IRWXU);
 
-    /* Invariant: Check size to ensure correct format. */
-    fseek(flash_fp, 0L, SEEK_END);
-    long size = ftell( flash_fp );
-    fseek(flash_fp, 0L, SEEK_SET);
-
-    if ( size != (FLASH_MAX_ADDR + 1) )
-        {
-        fprintf( stderr, "Emulator Init: Flash format appears incorrect. Please delete %s.\n", FLASH_FILENAME );
-        exit(1);
-        }
-    else
-        {
-        printf( "Emulator Init: Flash format appears correct. Reading contents.\n" );
-        }
-    size_t read_size = fread( flash_memory, sizeof( uint8_t ), sizeof( flash_memory ), flash_fp );
-    if ( read_size == sizeof( flash_memory ) )
-        {
-        printf( "Emulator Init: Flash memory loaded.\n" );
-        }
-    else
-        {
-        fprintf( stderr, "Emulator Init: An error occurred loading flash memory.\n" );
-        fprintf( stderr, "    [DEBUG]: read_size == %ld.\n", read_size );
-        exit(1);
-        }
-    fclose(flash_fp);
+if ( flashFileFd == -1 ) 
+    {
+    printf("Emulator Init: Flash file failed to open with errno %d", errno);
+    exit(1);
     }
+
+/* Write ones and make file size of flash. */
+/* Kind of an ugly method but I'm not sure if there's a way to set */
+/* files to a specific size. Shouldn't be too bad since this is on the stack */
+uint8_t tmpInitBytes[FLASH_FILESIZE]; 
+
+memset(tmpInitBytes, 0xFF, FLASH_FILESIZE);
+
+off_t fileSeekSize = lseek(flashFileFd, 0, SEEK_END);
+
+ssize_t writeFileSize  = -1;
+
+if ( fileSeekSize < FLASH_FILESIZE ) 
+    {
+    writeFileSize = write(flashFileFd, tmpInitBytes, FLASH_FILESIZE);
+    }
+else 
+    {
+    writeFileSize = FLASH_FILESIZE;
+    }
+
+if ( writeFileSize != FLASH_FILESIZE )
+    {
+    printf("Emulator Init: Failed to write to file with errno %d\n", errno);
+    exit(1);
+    }
+
+/* Reset file offset to zero */
+lseek(flashFileFd, 0, SEEK_SET);
+
+/* Note: consider looking into msync to control when file is updated */
+flash_memory = mmap(NULL, FLASH_FILESIZE, PROT_READ | PROT_WRITE, MAP_SHARED, flashFileFd, 0);
+
+if ( flash_memory == MAP_FAILED ) 
+    {
+    printf("Emulator Init: Flash file mmap failed with errno %d\n", errno);
+    exit(1);
+    }
+
+/* File can be closed without invalidating the mapping, per the man */
+int closeRet = close(flashFileFd);
+if ( closeRet == -1 ) 
+    {
+    printf("Emulator Init: Failed to close inital flash file with errno %d\n", errno);
+    exit(1);
+    }
+
+printf("Emulator Init: Successfully mapped %s to memory\n", FLASH_FILENAME);
 
 } /* emulator_flash_init */
+
+void emulator_flash_cleanup
+    (
+    void
+    )
+{
+
+munmap(flash_memory, FLASH_FILESIZE);
+
+} /* emulator_flash_cleanup */
 
 
 uint32_t emulator_flash_write
@@ -158,7 +191,6 @@ if( address + ( size - 1 ) > FLASH_MAX_ADDR )
 /* Proceed with write */
 /* Offset base buffer address by desired write address */
 memcpy( flash_memory + address, data, size );
-atomic_flash_file_write();
 // flash_spi_delay( size );
 
 return FLASH_OK;
@@ -199,8 +231,7 @@ uint32_t emulator_flash_erase
     )
 {
 printf("    [DEBUG]: Attempting erase.\n");
-memset( flash_memory, 255, sizeof( flash_memory ) );
-atomic_flash_file_write();
+memset( flash_memory, 255, FLASH_FILESIZE );
 
 return FLASH_OK;
 
@@ -248,7 +279,6 @@ if ( ( start_erase >= end_erase )
 
 /* POINTER ARITHMETIC; USE CAUTION */
 memset( flash_memory + start_erase, 255, true_size );
-atomic_flash_file_write();
 
 return FLASH_OK;
 
@@ -290,31 +320,6 @@ else
 
 return HAL_OK;
 }
-
-static void atomic_flash_file_write
-    (
-    void
-    )
-{
-printf("    [DEBUG]: Atomic Write\n");
-printf("    [DEBUG]: Checking Hang.\n");
-FILE* tmp_fp = fopen( FLASH_TMPFILENAME, "w+" );
-fwrite( flash_memory, sizeof( uint8_t ), sizeof( flash_memory ), tmp_fp );
-fclose( tmp_fp );
-if ( rename( FLASH_TMPFILENAME, FLASH_FILENAME ) == 0 )
-    {
-    printf("    [DEBUG]: Rename Success.\n");
-    return;
-    }
-else
-    {
-    /* WARNING: NOT ATOMIC, DATA LOSS POSSIBLE */
-    printf("    [DEBUG]: Non-atomic.\n");
-    remove( FLASH_FILENAME );
-    rename( FLASH_TMPFILENAME, FLASH_FILENAME );
-    }
-}
-
 
 static void flash_spi_delay
     (
