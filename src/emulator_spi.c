@@ -118,7 +118,6 @@ uint8_t tmpInitBytes[FLASH_FILESIZE];
 
 memset(tmpInitBytes, 0xFF, FLASH_FILESIZE);
 
-
 ssize_t writeFileSize = write(flashFileFd, tmpInitBytes, FLASH_FILESIZE);
 
 if ( writeFileSize != FLASH_FILESIZE )
@@ -126,9 +125,6 @@ if ( writeFileSize != FLASH_FILESIZE )
     printf("Emulator Init: Failed to write to file with errno %d\n", errno);
     exit(1);
     }
-
-/* Reset file offset to zero */
-lseek(flashFileFd, 0, SEEK_SET);
 
 /* Note: consider looking into msync() to control when file is updated */
 flash_memory = mmap(NULL, FLASH_FILESIZE, PROT_READ | PROT_WRITE, MAP_SHARED, flashFileFd, 0);
