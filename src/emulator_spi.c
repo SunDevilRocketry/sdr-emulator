@@ -43,7 +43,7 @@
 #define FLASH_TMPFILENAME FLASH_FILENAME ".tmp"
 
 /* Note that this is implicitly in bytes because flash_memory is a byte array */
-#define FLASH_FILESIZE FLASH_MAX_ADDR + 1
+#define FLASH_FILESIZE (FLASH_MAX_ADDR + 1)
 
 /*------------------------------------------------------------------------------
  Statics                                                         
