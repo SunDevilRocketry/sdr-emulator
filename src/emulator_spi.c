@@ -114,7 +114,7 @@ if ( flashFileFd == -1 )
 /* Resize the file to the proper size. */
 int resizeStatus = ftruncate(flashFileFd, FLASH_FILESIZE);
 
-if ( resizeStatus != 0)
+if ( resizeStatus == -1)
     {
     printf("Emulator Init: Failed to truncate flash file with errno %d\n", errno);
     exit(1);
