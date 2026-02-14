@@ -42,7 +42,7 @@
 #define FLASH_FILENAME "../../../../emulator/resources/emulator_flash.bin"
 #define FLASH_TMPFILENAME FLASH_FILENAME ".tmp"
 
-/* Note that this is implicitly in bytes because flash_memory is a byte array*/
+/* Note that this is implicitly in bytes because flash_memory is a byte array */
 #define FLASH_FILESIZE FLASH_MAX_ADDR + 1
 
 /*------------------------------------------------------------------------------
@@ -101,7 +101,7 @@ void emulator_flash_init
     void
     )
 {
-/* Creates a new flash file. Overwrites if already exists (O_TRUNC) */
+/* Creates a new flash file. Overwrites if already exists (See O_TRUNC) */
 /* Do note that the created file has full permissions */
 int flashFileFd = open(FLASH_FILENAME, O_CREAT | O_RDWR | O_TRUNC, S_IRWXO | S_IRWXG | S_IRWXU);
 
@@ -126,6 +126,7 @@ if ( writeFileSize != FLASH_FILESIZE )
     exit(1);
     }
 
+/* Maps the file to memory; when flash_memory is written the file changes simultaneously* */
 /* Note: consider looking into msync() to control when file is updated */
 flash_memory = mmap(NULL, FLASH_FILESIZE, PROT_READ | PROT_WRITE, MAP_SHARED, flashFileFd, 0);
 
@@ -135,8 +136,9 @@ if ( flash_memory == MAP_FAILED )
     exit(1);
     }
 
-/* File can be closed without invalidating the mapping, per the man */
+/* File descriptor can be closed without invalidating the mapping, per the man */
 int closeRet = close(flashFileFd);
+
 if ( closeRet == -1 ) 
     {
     printf("Emulator Init: Failed to close inital flash file with errno %d\n", errno);
