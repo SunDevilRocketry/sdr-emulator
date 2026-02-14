@@ -118,18 +118,8 @@ uint8_t tmpInitBytes[FLASH_FILESIZE];
 
 memset(tmpInitBytes, 0xFF, FLASH_FILESIZE);
 
-off_t fileSeekSize = lseek(flashFileFd, 0, SEEK_END);
 
-ssize_t writeFileSize  = -1;
-
-if ( fileSeekSize < FLASH_FILESIZE ) 
-    {
-    writeFileSize = write(flashFileFd, tmpInitBytes, FLASH_FILESIZE);
-    }
-else 
-    {
-    writeFileSize = FLASH_FILESIZE;
-    }
+ssize_t writeFileSize = write(flashFileFd, tmpInitBytes, FLASH_FILESIZE);
 
 if ( writeFileSize != FLASH_FILESIZE )
     {
@@ -140,7 +130,7 @@ if ( writeFileSize != FLASH_FILESIZE )
 /* Reset file offset to zero */
 lseek(flashFileFd, 0, SEEK_SET);
 
-/* Note: consider looking into msync to control when file is updated */
+/* Note: consider looking into msync() to control when file is updated */
 flash_memory = mmap(NULL, FLASH_FILESIZE, PROT_READ | PROT_WRITE, MAP_SHARED, flashFileFd, 0);
 
 if ( flash_memory == MAP_FAILED ) 
