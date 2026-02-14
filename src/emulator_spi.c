@@ -156,7 +156,8 @@ if( address + ( size - 1 ) > FLASH_MAX_ADDR )
     }
 
 /* Proceed with write */
-memcpy( flash_memory, data, size );
+/* Offset base buffer address by desired write address */
+memcpy( flash_memory + address, data, size );
 atomic_flash_file_write();
 // flash_spi_delay( size );
 
