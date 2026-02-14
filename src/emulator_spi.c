@@ -111,24 +111,21 @@ if ( flashFileFd == -1 )
     exit(1);
     }
 
-/* Write ones and make file size of flash. */
-/* Kind of an ugly method but I'm not sure if there's a way to set */
-/* files to a specific size. Shouldn't be too bad since this is on the stack */
-uint8_t tmpInitBytes[FLASH_FILESIZE]; 
+/* Resize the file to the proper size. */
+int resizeStatus = ftruncate(flashFileFd, FLASH_FILESIZE);
 
-memset(tmpInitBytes, 0xFF, FLASH_FILESIZE);
-
-ssize_t writeFileSize = write(flashFileFd, tmpInitBytes, FLASH_FILESIZE);
-
-if ( writeFileSize != FLASH_FILESIZE )
+if ( resizeStatus != 0)
     {
-    printf("Emulator Init: Failed to write to file with errno %d\n", errno);
+    printf("Emulator Init: Failed to truncate flash file with errno %d\n", errno);
     exit(1);
     }
 
 /* Maps the file to memory; when flash_memory is written the file changes simultaneously* */
 /* Note: consider looking into msync() to control when file is updated */
 flash_memory = mmap(NULL, FLASH_FILESIZE, PROT_READ | PROT_WRITE, MAP_SHARED, flashFileFd, 0);
+
+/* Initialze empty memory to 1s */
+memset(flash_memory, 0xFF, FLASH_FILESIZE);
 
 if ( flash_memory == MAP_FAILED ) 
     {
