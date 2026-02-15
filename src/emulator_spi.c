@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
-/* CYGWIN stuff */
+/* POSIX headers */
 #include <sys/fcntl.h>
 #include <sys/types.h>
 #include <sys/unistd.h>
@@ -105,8 +105,7 @@ void emulator_flash_init
 bool foundFlashFile = true;
 
 /* Attempts to open existing flash file. Does not create new one. */
-/* Do note that the created file has full permissions */
-int flashFileFd = open(FLASH_FILENAME, O_RDWR, S_IRWXO | S_IRWXG | S_IRWXU);
+int flashFileFd = open(FLASH_FILENAME, O_RDWR);
 
 /* If the first open fails, make sure it's for the expected reason: the file does not exist (code 2) */
 if (flashFileFd == -1 && errno == 2) 
@@ -114,6 +113,7 @@ if (flashFileFd == -1 && errno == 2)
     foundFlashFile = false;
 
     /* Create new flash file if not alreay present */
+    /* Do note that the created file has full permissions */
     flashFileFd = open(FLASH_FILENAME, O_CREAT | O_RDWR, S_IRWXO | S_IRWXG | S_IRWXU);
     printf("Emulator Init: Could not find %s, creating new\n", FLASH_FILENAME);
 }
@@ -175,6 +175,13 @@ uint32_t emulator_flash_write
 {
 printf("    [DEBUG]: Attempting write.\n");
 
+/* Make sure flash has been initialized */
+if ( flash_memory == NULL ) 
+    {
+    printf("Flash Write: Emulator flash is NULL\n");
+    return FLASH_INIT_FAIL;
+    }
+
 /* Check invariants */
 if( address + ( size - 1 ) > FLASH_MAX_ADDR )
     {
@@ -202,6 +209,13 @@ uint32_t emulator_flash_read
 // printf("    [DEBUG]: Attempting read.\n");
 printf("[FLASH DEBUG]: Read at %x with size %d\n", address, size);
 
+/* Make sure flash has been initialized */
+if ( flash_memory == NULL ) 
+    {
+    printf("Flash Read: Emulator flash is NULL\n");
+    return FLASH_INIT_FAIL;
+    }
+
 /* Check invariants */
 if( address + ( size - 1 ) > FLASH_MAX_ADDR )
     {
@@ -225,6 +239,14 @@ uint32_t emulator_flash_erase
     )
 {
 printf("    [DEBUG]: Attempting erase.\n");
+
+/* Make sure flash has been initialized */
+if ( flash_memory == NULL ) 
+    {
+    printf("Flash Erase: Emulator flash is NULL\n");
+    return FLASH_INIT_FAIL;
+    }
+
 memset( flash_memory, 255, FLASH_FILESIZE );
 
 return FLASH_OK;
@@ -239,6 +261,14 @@ uint32_t emulator_flash_block_erase
     )
 {
 printf("    [DEBUG]: Attempting block erase.\n");
+
+/* Make sure flash has been initialized */
+if ( flash_memory == NULL ) 
+    {
+    printf("Flash Block Erase: Emulator flash is NULL\n");
+    return FLASH_INIT_FAIL;
+    }
+
 /* Local Variables */
 uint32_t true_size = 0;
 uint32_t start_erase = 0;
