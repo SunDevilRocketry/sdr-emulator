@@ -185,6 +185,10 @@ printf("Emulator Init: Opening I2c interrupt listener.\n");
 pthread_t it_thread;
 pthread_create( &it_thread, NULL, emulator_i2c_it_listener, NULL );
 
+printf("Emulator Init: Opening GPS interrupt listener.\n");
+pthread_t gps_thread;
+pthread_create( &gps_thread, NULL, emulator_gps_it_listener, NULL );
+
 /*------------------------------------------------------------------------------
  Register Default Error Callback                                                   
 ------------------------------------------------------------------------------*/

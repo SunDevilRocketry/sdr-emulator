@@ -130,6 +130,11 @@ bool emulator_prompt_and_open_serial_port
     void
     );
 
+void* emulator_gps_it_listener
+    (
+    void* arg
+    );
+
 #ifdef __cplusplus
 }
 #endif

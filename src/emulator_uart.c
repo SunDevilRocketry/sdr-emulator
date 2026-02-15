@@ -33,17 +33,56 @@
 #include "stm32h7xx_hal.h"
 #include "sdr_pin_defines_A0002.h"
 #include "usb.h"
+#include "gps.h"
+#include "common.h"
 
 /* POSIX */
 #include <termios.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/types.h>
+#include <pthread.h>
+
+#define GPS_SIM_DELAY 200 /* 200 ms - approx 10 frames */
 
 /*------------------------------------------------------------------------------
  Globals                                                       
 ------------------------------------------------------------------------------*/
+extern volatile bool      irq_enabled;
+extern uint8_t            gps_mesg_byte;
+extern uint8_t            rx_buffer[GPSBUFSIZE];
+extern uint8_t            rx_index;
+extern GPS_DATA           gps_data;
+
 int serial_port = -1;
+volatile bool gps_data_it_flag = false;
+
+// static uint8_t* gps_data_ptr;
+// static uint16_t gps_data_size = 0;
+
+/* Shared synchronization objects */
+static pthread_mutex_t uart_it_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t  uart_it_cond  = PTHREAD_COND_INITIALIZER;
+
+/* GPS messages -- to be moved/modified */
+static const char* gps_msgs[] = 
+{
+"$GPRMC,134730.361,A,5540.3220,N,01231.2858,E,1.06,86.57,041112,,,A*55",
+"$GPGGA,134731.361,5540.3252,N,01231.2946,W,1,10,0.8,36.1,M,41.5,M,,0000*6C",
+"$GPRMC,134731.361,A,5540.3252,N,01231.2946,E,1.42,93.80,041112,,,A*51",
+"$GPVTG,93.80,T,,M,1.42,N,2.6,K,A*3C",
+"$GPGGA,134732.000,5540.3244,N,01231.2941,E,1,10,0.8,31.7,M,41.5,M,,0000*6A",
+"$GPRMC,134732.000,A,5540.3244,N,01231.2941,E,1.75,90.16,041112,,,A*5E",
+"$GPVTG,90.16,T,,M,1.75,N,3.2,K,A*31",
+"$GPGGA,134733.000,5540.3231,N,01231.2938,E,1,10,0.8,24.9,M,41.5,M,,0000*6D",
+"$GPRMC,134733.000,A,5540.3231,N,01231.2938,E,1.83,113.00,041112,,,A*67",
+"$GPGGA,134734.000,5540.3233,S,01231.2941,W,1,10,0.8,23.7,M,41.5,M,,0000*6F",
+"$GPRMC,134734.000,A,5540.3233,N,01231.2941,E,1.23,107.22,041112,,,A*63",
+"$GPGSA,A,3,03,22,06,19,11,14,32,01,28,18,,,1.8,0.8,1.6*3F",
+"$GPGLL,3953.88008971,N,10506.75318910,W,034138.00,A,D*7A",
+"$GPGLL,5109.0262317,N,11401.8407304,W,202725.00,A,D*79",
+"$GPGLL,,,,,,,"
+};
 
 /*------------------------------------------------------------------------------
  Static Prototypes                                                     
@@ -58,6 +97,11 @@ static void serial_write
     (
     const uint8_t* msg,
     size_t len
+    );
+
+static void gps_read_handler_IT
+    (
+    int message_num
     );
 
 /*------------------------------------------------------------------------------
@@ -81,6 +125,15 @@ HAL_StatusTypeDef HAL_UART_Receive(UART_HandleTypeDef *huart, uint8_t *pData, ui
 }
 
 HAL_StatusTypeDef HAL_UART_Receive_IT(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size) {
+    if ( huart == &(GPS_HUART) )
+        {
+        pthread_mutex_lock(&uart_it_mutex);
+        gps_data_it_flag = true;
+        // gps_data_ptr = pData;
+        // gps_data_size = Size;
+        pthread_cond_signal(&uart_it_cond);
+        pthread_mutex_unlock(&uart_it_mutex);
+        }
     return HAL_OK;
 }
 
@@ -242,3 +295,82 @@ int n = read( serial_port, rx_data_ptr, rx_data_size );
     }
 
 } /* serial_read */
+
+
+/*------------------------------------------------------------------------------
+ GPS                                                  
+------------------------------------------------------------------------------*/
+
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		emulator_gps_it_listener                                               *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Listen for and fulfill UART GPS IT I/O.                                *
+*                                                                              *
+*******************************************************************************/
+void* emulator_gps_it_listener
+    (
+    void* arg
+    )
+{
+bool recieve_gps = true;
+int gps_msg_idx = 0;
+while (recieve_gps) 
+    {
+    /* Wait until someone signals an IRQ */
+    pthread_mutex_lock(&uart_it_mutex);
+
+    /* Wait for work - handle spurious wakeups */
+    while (!gps_data_it_flag) {
+        pthread_cond_wait(&uart_it_cond, &uart_it_mutex);
+    }
+
+    pthread_mutex_unlock(&uart_it_mutex);
+
+    /* Simulate real-time 50 ms I/O delay */
+    struct timespec req;
+    req.tv_sec = 0; /* seconds */
+    req.tv_nsec = GPS_SIM_DELAY * 1000000L; /* milliseconds to nanoseconds */
+    nanosleep(&req, NULL);
+
+    pthread_mutex_lock(&uart_it_mutex); /* lock to safely access shared flags */
+    if (irq_enabled)
+        {
+        gps_data_it_flag = false;
+        }
+    pthread_mutex_unlock(&uart_it_mutex);
+
+    gps_read_handler_IT(gps_msg_idx);
+    gps_msg_idx++;
+    if (gps_msg_idx >= array_size( gps_msgs ) )
+        {
+        gps_msg_idx = 0;
+        }
+    }
+
+return 0;
+
+}
+
+static void gps_read_handler_IT( int message_num )
+{
+// memset( gps_data_ptr, 0, gps_data_size );
+if (message_num >= array_size( gps_msgs ) ) // freak out and explode
+    {
+    printf("[GPS DEBUG] Error: index out of range\n");
+    return;
+    }
+memcpy( rx_buffer, gps_msgs[message_num], strlen( gps_msgs[message_num] ) );
+printf("[GPS DEBUG] Msg: %s\n", gps_msgs[message_num]);
+
+/* Pasted in from UART4_IRQHandler */
+if(gps_mesg_validate((char*) rx_buffer))
+    GPS_parse(&gps_data, (char*) rx_buffer);
+rx_index = 0;
+memset(rx_buffer, 0, sizeof(rx_buffer));
+
+gps_receive_IT(&gps_mesg_byte, 1);
+
+}
