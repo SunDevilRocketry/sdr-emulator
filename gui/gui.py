@@ -6,6 +6,7 @@ import os
 import buzzer
 import platform
 import socket
+from sounddevice import PortAudioError
 
 # Global variables
 repo_root = None
@@ -111,6 +112,8 @@ def pipe_handler():
     except BlockingIOError:
         # No data available right now, that's fine
         pass
+    except PortAudioError:
+        print(f"{latest_buzzer_time / 1000}s buzzer skipped (no audio device found)")
     except Exception as e:
         print(f"Error in pipe_handler: {e}")
     
