@@ -108,7 +108,8 @@ bool foundFlashFile = true;
 /* Do note that the created file has full permissions */
 int flashFileFd = open(FLASH_FILENAME, O_RDWR, S_IRWXO | S_IRWXG | S_IRWXU);
 
-if (flashFileFd == -1) 
+/* If the first open fails, make sure it's for the expected reason: the file does not exist (code 2) */
+if (flashFileFd == -1 && errno == 2) 
 {
     foundFlashFile = false;
 
