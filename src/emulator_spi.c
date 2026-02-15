@@ -48,7 +48,7 @@
 /*------------------------------------------------------------------------------
  Statics                                                         
 ------------------------------------------------------------------------------*/
-static uint8_t *flash_memory;
+static uint8_t *flash_memory = NULL;
 
 static uint8_t last_flash_spi_opcode = 0x00;
 
@@ -101,9 +101,19 @@ void emulator_flash_init
     void
     )
 {
-/* Creates a new flash file. Overwrites if already exists (See O_TRUNC) */
+
+bool foundFlashFile = true;
+/* Attempts to open existing flash file. Does not create new one. */
 /* Do note that the created file has full permissions */
-int flashFileFd = open(FLASH_FILENAME, O_CREAT | O_RDWR | O_TRUNC, S_IRWXO | S_IRWXG | S_IRWXU);
+int flashFileFd = open(FLASH_FILENAME, O_RDWR, S_IRWXO | S_IRWXG | S_IRWXU);
+
+if (flashFileFd == -1) 
+{
+    foundFlashFile = false;
+    /* Create new flash file */
+    flashFileFd = open(FLASH_FILENAME, O_CREAT | O_RDWR, S_IRWXO | S_IRWXG | S_IRWXU);
+    printf("Emulator Init: Could not find %s, creating new\n", FLASH_FILENAME);
+}
 
 if ( flashFileFd == -1 ) 
     {
@@ -111,7 +121,10 @@ if ( flashFileFd == -1 )
     exit(1);
     }
 
+printf("Emulator Init: Successfully opened flash file");
+
 /* Resize the file to the proper size. */
+/* If the file is the correct format, does nothing. If too long/short, corrects it */
 int resizeStatus = ftruncate(flashFileFd, FLASH_FILESIZE);
 
 if ( resizeStatus == -1)
@@ -124,8 +137,12 @@ if ( resizeStatus == -1)
 /* Note: consider looking into msync() to control when file is updated */
 flash_memory = mmap(NULL, FLASH_FILESIZE, PROT_READ | PROT_WRITE, MAP_SHARED, flashFileFd, 0);
 
-/* Initialze empty memory to 1s */
-memset(flash_memory, 0xFF, FLASH_FILESIZE);
+if ( !foundFlashFile ) 
+    {
+    /* Initialze empty memory to 1s if new file created */
+    memset(flash_memory, 0xFF, FLASH_FILESIZE);
+    }
+
 
 if ( flash_memory == MAP_FAILED ) 
     {

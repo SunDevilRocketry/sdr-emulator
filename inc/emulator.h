@@ -99,11 +99,6 @@ void emulator_flash_init
     void
     );
 
-void emulator_flash_cleanup
-    (
-    void
-    );
-
 uint32_t emulator_flash_write
     (
     uint8_t* data,
