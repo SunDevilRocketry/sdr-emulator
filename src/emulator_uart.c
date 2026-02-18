@@ -348,13 +348,13 @@ return 0;
 static void gps_read_handler_IT( int message_num )
 {
 // memset( gps_data_ptr, 0, gps_data_size );
-if (message_num >= array_size( gps_msgs ) ) // freak out and explode
+if (message_num >= array_size( gps_msgs ) )
     {
     printf("[GPS DEBUG] Error: index out of range\n");
     return;
     }
 memcpy( rx_buffer, gps_msgs[message_num], strlen( gps_msgs[message_num] ) );
-printf("[GPS DEBUG] Msg: %s\n", gps_msgs[message_num]);
+// printf("[GPS DEBUG] Msg: %s\n", gps_msgs[message_num]);
 
 /* Pasted in from UART4_IRQHandler */
 if(gps_mesg_validate((char*) rx_buffer))
