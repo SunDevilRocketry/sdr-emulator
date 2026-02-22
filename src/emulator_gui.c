@@ -14,6 +14,27 @@ float vertices[] = {
     0, 0.5, 0,
 };
 
+static void error_callback
+    (
+     int error, 
+     const char* description
+     ) 
+{
+fprintf(stderr, "[GLFW ERROR]: %s\n", description);
+}
+
+static void framebuffer_size_callback 
+(
+GLFWwindow* window,
+int width,
+int height
+)
+{
+
+glViewport(0, 0, width, height);
+
+}
+
 void emulator_gui_main
     (
     void
@@ -24,6 +45,8 @@ void emulator_gui_main
         exit(1);
     }
 
+    glfwSetErrorCallback(error_callback);
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -33,6 +56,8 @@ void emulator_gui_main
         glfwTerminate();
         exit(1);
     }
+
+    glfwSetFramebufferSizeCallback(guiWindow, framebuffer_size_callback);
 
     glfwMakeContextCurrent(guiWindow);
 
