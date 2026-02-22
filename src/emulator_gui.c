@@ -3,9 +3,16 @@
 #include "glad/gl.h"
 #include "glfw3.h"
 #include "emulator.h"
+#include "shaders/readShader.h"
 #include <stdlib.h>
 #include <stdio.h>
 
+
+float vertices[] = {
+    -0.5, -0.5, 0,
+    0.5, -0.5, 0,
+    0, 0.5, 0,
+};
 
 void emulator_gui_main
     (
@@ -29,11 +36,73 @@ void emulator_gui_main
 
     glfwMakeContextCurrent(guiWindow);
 
+    /* Load OpenGL functions */
     gladLoadGL(glfwGetProcAddress);
+
+    GLuint VAO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+    GLuint VBO;
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    int success;
+    char infoLog[512];
+
+    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    const char* vertexShaderSource = readShaderSource("../../../../emulator/src/shaders/default.vert");
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glCompileShader(vertexShader);
+    free(vertexShaderSource);
+
+
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        fprintf(stderr, "vShader compilation failed:\n \t%s\n", infoLog);
+    }
+
+    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    const char* fragmentShaderSource = readShaderSource("../../../../emulator/src/shaders/default.frag");
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
+    free(fragmentShaderSource);
+
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        fprintf(stderr, "fShader compilation failed:\n \t%s\n", infoLog);
+    }
+
+    GLuint shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+    glUseProgram(shaderProgram);
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        fprintf(stderr, "Shader linkage failed:\n \t%s\n", infoLog);
+        exit(1);
+    }
 
     while (!glfwWindowShouldClose(guiWindow)) 
     {
         glClear(GL_COLOR_BUFFER_BIT);
+
+        glUseProgram(shaderProgram);
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
         glfwSwapBuffers(guiWindow);
         glfwPollEvents();
     }
@@ -41,6 +110,4 @@ void emulator_gui_main
 
     glfwDestroyWindow(guiWindow);
     glfwTerminate();
-
-
 }
