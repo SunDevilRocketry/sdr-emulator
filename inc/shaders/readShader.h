@@ -34,7 +34,7 @@ extern "C" {
 /*------------------------------------------------------------------------------
  Project Includes  
 ------------------------------------------------------------------------------*/
-
+#include "glad/gl.h"
 
 /*------------------------------------------------------------------------------
  Macros  
@@ -60,7 +60,22 @@ extern "C" {
  Function prototypes                                             
 ------------------------------------------------------------------------------*/
 
-const char* readShaderSource(const char* path);
+const char* readShaderSource
+    (
+    const char* path
+    );
+
+GLuint genShaderFromSource
+    (
+    const char* path,
+    GLenum shaderType
+    );
+
+GLuint genShaderProgramFromSources
+    (
+    const char* vertexShaderPath,
+    const char* fragmentShaderPath
+    );
 
 #ifdef __cplusplus
 }

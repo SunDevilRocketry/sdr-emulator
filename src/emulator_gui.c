@@ -27,7 +27,6 @@
 #include <stdio.h>
 
 /* necessary define for glad header-only mode */
-#define GLAD_GL_IMPLEMENTATION
 #include "glad/gl.h" // glad must go before glfw
 #include "glfw3.h"
 #include "emulator.h"
@@ -121,52 +120,12 @@ glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 glEnableVertexAttribArray(0);
 
-int success;
-char infoLog[512];
-
-GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-const char* vertexShaderSource = readShaderSource(MAKE_SHADER_PATH("default.vert"));
-glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-glCompileShader(vertexShader);
-free((void*)vertexShaderSource);
-
-
-glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-if (!success) 
-    {
-    glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-    fprintf(stderr, "vShader compilation failed:\n \t%s\n", infoLog);
-    }
-
-GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-const char* fragmentShaderSource = readShaderSource(MAKE_SHADER_PATH("default.frag"));
-glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-glCompileShader(fragmentShader);
-free((void*)fragmentShaderSource);
-
-glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-if (!success) 
-    {
-    glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-    fprintf(stderr, "fShader compilation failed:\n \t%s\n", infoLog);
-    }
-
-GLuint shaderProgram = glCreateProgram();
-glAttachShader(shaderProgram, vertexShader);
-glAttachShader(shaderProgram, fragmentShader);
-glLinkProgram(shaderProgram);
-glUseProgram(shaderProgram);
-
-glDeleteShader(vertexShader);
-glDeleteShader(fragmentShader);
-
-glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-if (!success) 
-    {
-    glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-    fprintf(stderr, "Shader linkage failed:\n \t%s\n", infoLog);
-    exit(1);
-    }
+GLuint shaderProgram = 
+    genShaderProgramFromSources
+        (
+        MAKE_SHADER_PATH("default.vert"),
+        MAKE_SHADER_PATH("default.frag")
+        );
 
 while (!glfwWindowShouldClose(guiWindow)) 
     {

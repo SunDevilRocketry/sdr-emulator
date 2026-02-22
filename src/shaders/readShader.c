@@ -88,3 +88,100 @@ return data;
 
 } /* readShaderSource */
 
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		genShaderFromSource                                                    *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Creates and returns an OpenGL shader object compiled from the passed   *
+*       file path and of the passed shader type.                               *
+*                                                                              *
+*******************************************************************************/
+GLuint genShaderFromSource
+    (
+    const char* path,
+    GLenum shaderType
+    )
+{
+int success;
+char infoLog[512];
+
+const char* shaderCode = readShaderSource(path);
+if (shaderCode == NULL) 
+    {
+    return 0;
+    }
+    
+    GLuint shaderID = glCreateShader(shaderType);
+    glShaderSource(shaderID, 1, &shaderCode, NULL); 
+    glCompileShader(shaderID);
+    free((void*)shaderCode);
+
+    glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success);
+    if (!success) 
+        {
+        glGetShaderInfoLog(shaderID, 512, NULL, infoLog);
+        fprintf(stderr, "Shader %s compilation failed:\n \t%s\n", path, infoLog);
+        }
+
+    return shaderID;
+} /* genShaderFromSource */
+
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		genShaderFromSource                                                    *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Creates and returns an OpenGL shader program with vertex and fragment  *
+*       stages corresponding to the passed shader paths                        *
+*                                                                              *
+*******************************************************************************/
+GLuint genShaderProgramFromSources
+    (
+    const char* vertexShaderPath,
+    const char* fragmentShaderPath
+    ) 
+{
+
+GLuint vShader = genShaderFromSource(vertexShaderPath, GL_VERTEX_SHADER);
+if (!vShader)
+    {
+    return 0;
+    }
+
+GLuint fShader = genShaderFromSource(fragmentShaderPath, GL_FRAGMENT_SHADER);
+if (!fShader) 
+    {
+    glDeleteShader(vShader);
+    return 0;
+    }
+
+GLuint program = glCreateProgram();
+if (!program) 
+    {
+    glDeleteShader(vShader);
+    glDeleteShader(fShader);
+    return 0;
+    }
+
+glAttachShader(program, vShader);
+glAttachShader(program, fShader);
+glLinkProgram(program);
+
+glDeleteShader(vShader);
+glDeleteShader(fShader);
+
+int success;
+glGetProgramiv(program, GL_LINK_STATUS, &success);
+if (!success) 
+    {
+    char infoLog[512];
+    glGetProgramInfoLog(program, 512, NULL, infoLog);
+    fprintf(stderr, "Shader linkage failed:\n \t%s\n", infoLog);
+    }
+
+return program;
+} /* genShaderProgramFromSources */
+
