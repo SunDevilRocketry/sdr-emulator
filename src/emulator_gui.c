@@ -33,6 +33,8 @@
 #include "emulator.h"
 #include "shaders/readShader.h"
 
+#define MAKE_SHADER_PATH(X) "../../../../emulator/src/shaders/"X
+
 /*------------------------------------------------------------------------------
  Constants                                                       
 ------------------------------------------------------------------------------*/
@@ -123,7 +125,7 @@ int success;
 char infoLog[512];
 
 GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-const char* vertexShaderSource = readShaderSource("../../../../emulator/src/shaders/default.vert");
+const char* vertexShaderSource = readShaderSource(MAKE_SHADER_PATH("default.vert"));
 glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
 glCompileShader(vertexShader);
 free((void*)vertexShaderSource);
@@ -137,7 +139,7 @@ if (!success)
     }
 
 GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-const char* fragmentShaderSource = readShaderSource("../../../../emulator/src/shaders/default.frag");
+const char* fragmentShaderSource = readShaderSource(MAKE_SHADER_PATH("default.frag"));
 glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
 glCompileShader(fragmentShader);
 free((void*)fragmentShaderSource);
@@ -166,9 +168,7 @@ if (!success)
     exit(1);
     }
 
-while (
-        !glfwWindowShouldClose(guiWindow)
-      ) 
+while (!glfwWindowShouldClose(guiWindow)) 
     {
     glClear(GL_COLOR_BUFFER_BIT);
 
