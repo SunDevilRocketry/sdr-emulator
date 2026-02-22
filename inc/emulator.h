@@ -99,6 +99,12 @@ void emulator_flash_init
     void
     );
 
+/* emulator_gui.c entry point */
+void emulator_gui_main
+    (
+    void
+    );
+
 uint32_t emulator_flash_write
     (
     uint8_t* data,

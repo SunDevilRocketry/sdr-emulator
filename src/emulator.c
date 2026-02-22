@@ -136,12 +136,15 @@ srand(time(NULL));
 /*------------------------------------------------------------------------------
  Open socket for IPC                                                  
 ------------------------------------------------------------------------------*/
+/*
 guisock_open();
 printf("Emulator Init: GUI socket opened successfully.\n");
+*/
 
 /*------------------------------------------------------------------------------
  Start GUI and wait                                                  
 ------------------------------------------------------------------------------*/
+/* GLFW is big & greedy, and many of its functions must be called on main thread */
 pid_t gui_pid;
 gui_pid = fork();
 
@@ -152,18 +155,18 @@ if ( gui_pid < 0 )
     } 
 else if ( gui_pid == 0 ) 
     {
-    execlp("python", "python", "../../../../emulator/gui/gui.py", (char *) NULL);
-    exit(0);
+    // Call glfw stuffies
+    emulator_gui_main();
     } 
 else {
     printf("Emulator Init: GUI Fork success. Waiting for the GUI to initialize before continuing.\n");
     sleep(4);
     printf("Emulator Init: Continuing with startup.\n");
     }
-
 /*------------------------------------------------------------------------------
  Attempt to open connection                                                  
 ------------------------------------------------------------------------------*/
+/*
 struct sockaddr_in client_address;
 socklen_t addrlen = sizeof(client_address);
 
