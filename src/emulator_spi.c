@@ -192,8 +192,6 @@ uint32_t emulator_flash_write
     uint16_t size
     )
 {
-printf("[FLASH DEBUG]: Write at %x with size %d\n", address, size);
-
 /* Make sure flash has been initialized */
 if ( flash_memory == NULL ) 
     {
@@ -234,8 +232,6 @@ uint32_t emulator_flash_read
     uint16_t size
     )
 {
-// printf("    [DEBUG]: Attempting read.\n");
-printf("[FLASH DEBUG]: Read at %x with size %d\n", address, size);
 
 /* Make sure flash has been initialized */
 if ( flash_memory == NULL ) 
@@ -254,7 +250,6 @@ if( address + ( size - 1 ) > FLASH_MAX_ADDR )
 
 /* Proceed with read */
 memcpy( data, &(flash_memory[address]), size );
-// flash_spi_delay( size ); ETS TEMP: This is slowing us pretty bad.
 
 return FLASH_OK;
 
@@ -275,8 +270,6 @@ uint32_t emulator_flash_erase
     void
     )
 {
-printf("    [DEBUG]: Attempting erase.\n");
-
 /* Make sure flash has been initialized */
 if ( flash_memory == NULL ) 
     {
@@ -306,8 +299,6 @@ uint32_t emulator_flash_block_erase
 	uint32_t        size             /* Size of block           */
     )
 {
-printf("    [DEBUG]: Attempting block erase.\n");
-
 /* Make sure flash has been initialized */
 if ( flash_memory == NULL ) 
     {
@@ -338,7 +329,6 @@ switch( size )
 
 start_erase = flash_block_num * true_size;
 end_erase = ( ( flash_block_num + 1 ) * true_size) - 1;
-printf( "    [DEBUG]: Block Erase -- Start erase at %X, end erase at %X.\n", start_erase, end_erase );
 
 /* Check Invariants */
 if ( ( start_erase >= end_erase )

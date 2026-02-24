@@ -153,7 +153,6 @@ printf("Serial Init: Please enter your serial port in the format /dev/ttyXX or i
 printf("    Note for Windows users:\n");
 printf("    COM1 maps to /dev/ttyS0\n");
 printf("    COM2 maps to /dev/ttyS1\n");
-printf("    ETS Temp: use /dev/ttyS0\n");
 printf("    (etc)\n");
 #endif
 printf("Input: \n");
@@ -390,7 +389,6 @@ if (message_num >= array_size( gps_msgs ) )
     return;
     }
 memcpy( rx_buffer, gps_msgs[message_num], strlen( gps_msgs[message_num] ) );
-// printf("[GPS DEBUG] Msg: %s\n", gps_msgs[message_num]);
 
 /* Pasted in from UART4_IRQHandler */
 if(gps_mesg_validate((char*) rx_buffer))
