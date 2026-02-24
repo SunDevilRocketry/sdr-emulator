@@ -132,6 +132,15 @@ HAL_StatusTypeDef HAL_UART_Receive_IT(UART_HandleTypeDef *huart, uint8_t *pData,
  Procedures                                                     
 ------------------------------------------------------------------------------*/
 
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		emulator_prompt_and_open_serial_port                                   *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Set up the serial connection to SDEC.                                  *
+*                                                                              *
+*******************************************************************************/
 bool emulator_prompt_and_open_serial_port
     (
     void
@@ -224,9 +233,18 @@ else {
 
 return true;
 
-}
+} /* emulator_prompt_and_open_serial_port */
 
 
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		serial_write                                                           *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Write to the virtual serial port.                                      *
+*                                                                              *
+*******************************************************************************/
 static void serial_write
     (
     const uint8_t* msg,
@@ -243,6 +261,15 @@ write( serial_port, msg, len );
 } /* serial_write */
 
 
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		serial_read                                                            *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Read from the virtual serial port.                                     *
+*                                                                              *
+*******************************************************************************/
 static USB_STATUS serial_read
     (
     void*    rx_data_ptr , /* Buffer to export data to        */
@@ -287,10 +314,6 @@ int n = read( serial_port, rx_data_ptr, rx_data_size );
 
 } /* serial_read */
 
-
-/*------------------------------------------------------------------------------
- GPS                                                  
-------------------------------------------------------------------------------*/
 
 /*******************************************************************************
 *                                                                              *
@@ -343,9 +366,22 @@ while (recieve_gps)
 
 return 0;
 
-}
+} /* emulator_gps_it_listener */
 
-static void gps_read_handler_IT( int message_num )
+
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		gps_read_handler_IT                                                    *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Interrupt the main thread with a new GPS message.                      *
+*                                                                              *
+*******************************************************************************/
+static void gps_read_handler_IT
+    (
+    int message_num
+    )
 {
 // memset( gps_data_ptr, 0, gps_data_size );
 if (message_num >= array_size( gps_msgs ) )
@@ -364,4 +400,4 @@ memset(rx_buffer, 0, sizeof(rx_buffer));
 
 gps_receive_IT(&gps_mesg_byte, 1);
 
-}
+} /* gps_read_handler_IT */

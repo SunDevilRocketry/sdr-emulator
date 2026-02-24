@@ -214,76 +214,126 @@ while ( listening )
     return 0;
 }
 
-/* Blocking helpers -- used for init */
 
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		baro_read_handler                                                      *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Handle blocking I2C reg reads for the barometer.                       *
+*                                                                              *
+*******************************************************************************/
 static HAL_StatusTypeDef baro_read_handler(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, uint16_t MemAddress,
                                     uint16_t MemAddSize, uint8_t *pData, uint16_t Size, uint32_t Timeout)
 {
-    /* imperfect approximation, but delay a bit like the real FC */
-    HAL_Delay( (uint8_t)(0.4 * Size) );
+/* imperfect approximation, but delay a bit like the real FC */
+HAL_Delay( (uint8_t)(0.4 * Size) );
 
-    if( MemAddress == BARO_REG_CHIP_ID )
-        {
-        *pData = BMP390_DEVICE_ID;
-        return HAL_OK;
-        }
-    if( MemAddress == BARO_REG_ERR_REG )
-        {
-        *pData = 0x00; /* Clear the error register */
-        return HAL_OK;
-        }
-    
+if( MemAddress == BARO_REG_CHIP_ID )
+    {
+    *pData = BMP390_DEVICE_ID;
     return HAL_OK;
-}
+    }
+if( MemAddress == BARO_REG_ERR_REG )
+    {
+    *pData = 0x00; /* Clear the error register */
+    return HAL_OK;
+    }
 
+return HAL_OK;
+
+} /* baro_read_handler */
+
+
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		imu_read_handler                                                       *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Handle blocking I2C reg reads for the IMU.                             *
+*                                                                              *
+*******************************************************************************/
 static HAL_StatusTypeDef imu_read_handler(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, uint16_t MemAddress,
                                     uint16_t MemAddSize, uint8_t *pData, uint16_t Size, uint32_t Timeout)
 {
-    /* imperfect approximation, but delay a bit like the real FC */
-    HAL_Delay( (uint8_t)(0.4 * Size) );
+/* imperfect approximation, but delay a bit like the real FC */
+HAL_Delay( (uint8_t)(0.4 * Size) );
 
-    if( MemAddress == IMU_REG_CHIP_ID )
-        {
-        *pData = IMU_ID;
-        return HAL_OK;
-        }
-    if( MemAddress == IMU_REG_INTERNAL_STATUS )
-        {
-        *pData = 0x01; /* First bit needs to be set */
-        return HAL_OK;
-        }
-    
+if( MemAddress == IMU_REG_CHIP_ID )
+    {
+    *pData = IMU_ID;
     return HAL_OK;
-}
+    }
+if( MemAddress == IMU_REG_INTERNAL_STATUS )
+    {
+    *pData = 0x01; /* First bit needs to be set */
+    return HAL_OK;
+    }
+
+return HAL_OK;
+
+} /* imu_read_handler */
 
 
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		mag_read_handler                                                       *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Handle blocking I2C reg reads for the magnetometer.                    *
+*                                                                              *
+*******************************************************************************/
 static HAL_StatusTypeDef mag_read_handler(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, uint16_t MemAddress,
                                     uint16_t MemAddSize, uint8_t *pData, uint16_t Size, uint32_t Timeout)
 {
-    /* imperfect approximation, but delay a bit like the real FC */
-    HAL_Delay( (uint8_t)(0.4 * Size) );
+/* imperfect approximation, but delay a bit like the real FC */
+HAL_Delay( (uint8_t)(0.4 * Size) );
 
-    if( MemAddress == MAG_REG_CHIP_ID )
-        {
-        *pData = MAG_ID;
-        return HAL_OK;
-        }
-    if( MemAddress == IMU_REG_INTERNAL_STATUS )
-        {
-        *pData = 0x01; /* First bit needs to be set */
-        return HAL_OK;
-        }
-    
+if( MemAddress == MAG_REG_CHIP_ID )
+    {
+    *pData = MAG_ID;
     return HAL_OK;
-}
+    }
+if( MemAddress == IMU_REG_INTERNAL_STATUS )
+    {
+    *pData = 0x01; /* First bit needs to be set */
+    return HAL_OK;
+    }
 
-/* Interrupt helpers -- used for data retrieval */
+return HAL_OK;
+
+} /* mag_read_handler */
+
+
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		baro_read_handler_IT                                                   *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Handle interrupt-based I2C reg reads for the barometer.                *
+*                                                                              *
+*******************************************************************************/
 static void baro_read_handler_IT()
 {
 memset(baro_data_ptr, 0, baro_data_size);
 baro_IT_handler();
-}
 
+} /* baro_read_handler_IT */
+
+
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		imu_read_handler_IT                                                    *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Handle interrupt-based I2C reg reads for the IMU.                      *
+*                                                                              *
+*******************************************************************************/
 static void imu_read_handler_IT()
 {
 memset(imu_data_ptr, 0, imu_data_size);
@@ -304,14 +354,36 @@ memcpy( imu_data_ptr + 10, &gyroZ, 2 );
 
 /* Call interrupt handler */
 imu_it_handler(); 
-}
 
+} /* imu_read_handler_IT */
+
+
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		mag_read_handler_IT                                                    *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Handle interrupt-based I2C reg reads for the magnetometer.             *
+*                                                                              *
+*******************************************************************************/
 static void mag_read_handler_IT()
 {
 memset(mag_data_ptr, 0, mag_data_size);
 imu_it_handler();
-}
 
+} /* mag_read_handler_IT */
+
+
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		sensor_add_random_noise                                                *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Adds linear noise around the given value.                              *
+*                                                                              *
+*******************************************************************************/
 static float sensor_add_random_noise(float readout_in, float noise_max)
 {
 float random = rand() / (float)RAND_MAX; /* 0 - 1 */
@@ -323,37 +395,59 @@ if ( sign )
 
 return readout_in + (random * noise_max);
 
-}
+} /* sensor_add_random_noise */
 
+
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		sensor_acc_inv                                                         *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Convert a float value to the IMU accel reg format.                     *
+*                                                                              *
+*******************************************************************************/
 static uint16_t sensor_acc_inv(float accel)
 {
 uint8_t g_setting = 16;
 float g = 9.8f;
 float accel_step = 2 * g_setting * g / 65535.0f;
 
-// Convert back to signed raw value
+/* Convert back to signed raw value */
 int32_t raw = (int32_t)(accel / accel_step);
 
-// Clamp to int16 range (safety)
+/* Clamp to int16 range (safety) */
 if (raw > 32767) raw = 32767;
 if (raw < -32768) raw = -32768;
 
-// Return as uint16 two’s complement
+/* Return as uint16 two’s complement */
 return (uint16_t)((int16_t)raw);
-}
 
+} /* sensor_acc_inv */
+
+
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		sensor_gyro_inv                                                        *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Convert a float value to the IMU gyro reg format.                      *
+*                                                                              *
+*******************************************************************************/
 static uint16_t sensor_gyro_inv(float dps)
 {
 float gyro_setting = 2000.0f;
 float gyro_sens = 65535.0f / (2 * gyro_setting);
 
-// Convert back to signed raw
+/* Convert back to signed raw */
 int32_t raw = (int32_t)(dps * gyro_sens);
 
-// Clamp to int16 range
+/* Clamp to int16 range */
 if (raw > 32767) raw = 32767;
 if (raw < -32768) raw = -32768;
 
-// Return two’s complement
+/* Return two’s complement */
 return (uint16_t)((int16_t)raw);
-}
+
+} /* sensor_gyro_inv */
