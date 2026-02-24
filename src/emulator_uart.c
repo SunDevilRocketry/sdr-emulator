@@ -172,7 +172,14 @@ strncpy(com_buf, port_buf, 3);
 if(strncmp(com_buf, "COM", 3) == 0){
     sscanf(port_buf+3, "%d", &com_port_num);
     com_port_num--;
-    snprintf(port_buf, 12, "/dev/ttyS%d", com_port_num);
+    uint8_t last_two_digits = com_port_num % 100; /* least significant two digits */
+
+    /* we know this is safe, but we need to ignore the warning */
+    // ETS: THIS IS GROSS. Do not do this.
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wformat-truncation"
+    snprintf(port_buf, 12, "/dev/ttyS%02u", last_two_digits);
+    #pragma GCC diagnostic pop
 }
 
 serial_port = open(port_buf, O_RDWR | O_NOCTTY | O_NDELAY); // Open the port
