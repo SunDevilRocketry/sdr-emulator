@@ -41,7 +41,6 @@
 #include <stddef.h>
 
 #include "emulator.h"
-#include "stm32h755xx.h"
 
 #include <stddef.h>
 #include <pthread.h>
@@ -50,29 +49,16 @@
  Constants                                                       
 ------------------------------------------------------------------------------*/
 const char DEVICE_ID[] = "SW_EMULATOR";
-#define GUI_SOCK_PORT 5100
 
 /*------------------------------------------------------------------------------
  Globals                                                       
 ------------------------------------------------------------------------------*/
-int gui_sock_fd;
-int gui_connection_fd;
 
 extern volatile bool ignite_flag;
-volatile bool irq_enabled = true;
 
 /*------------------------------------------------------------------------------
  Static Prototypes                                                       
 ------------------------------------------------------------------------------*/
-static void guisock_open
-    (
-    void
-    );
-
-static void* sock_listener
-    (
-    void* arg
-    );
 
 /*------------------------------------------------------------------------------
  HAL interfaces                                                       
@@ -96,9 +82,6 @@ uint32_t HAL_GetUIDw2(void) {
     return buf;
 }
 
-/* checked by emulator_uart and emulator_i2c before mocking ISRs */
-void HAL_NVIC_DisableIRQ(IRQn_Type IRQn) {irq_enabled = false;}
-void HAL_NVIC_EnableIRQ(IRQn_Type IRQn) {irq_enabled = true;}
 
 /*------------------------------------------------------------------------------
  Procedures                                                     
@@ -163,26 +146,6 @@ else {
     sleep(4);
     printf("Emulator Init: Continuing with startup.\n");
     }
-/*------------------------------------------------------------------------------
- Attempt to open connection                                                  
-------------------------------------------------------------------------------*/
-/*
-struct sockaddr_in client_address;
-socklen_t addrlen = sizeof(client_address);
-
-while ( (gui_connection_fd = accept(gui_sock_fd, (struct sockaddr *)&client_address, &addrlen) ) < 0) 
-    {
-    printf("Emulator Init: Socket accept failed.\n");
-    printf("Emulator Init: Retrying...\n");
-    sleep(1);
-    } 
-printf("Emulator Init: Socket connected to GUI client.\n");
-printf("    [DEBUG] IP: %s\n", inet_ntoa(client_address.sin_addr));
-printf("    [DEBUG] Port: %d\n", ntohs(client_address.sin_port));
-
-printf("Emulator Init: Opening socket listener.\n");
-pthread_t socket_thread;
-pthread_create( &socket_thread, NULL, sock_listener, NULL );
 
 printf("Emulator Init: Opening I2c interrupt listener.\n");
 pthread_t it_thread;
@@ -216,117 +179,3 @@ main_fut();
 } /* main */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		guisock_open                                                           *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Start the GUI socket.                                                  *
-*                                                                              *
-*******************************************************************************/
-static void guisock_open
-    (
-    void
-    )
-{
-
-struct sockaddr_in sock_addr; 
-
-if ( ( gui_sock_fd = socket( AF_INET, SOCK_STREAM, 0 ) ) < 0 ) 
-    {
-    perror("Emulator Init: Error while creating the socket\n");
-    exit(1);
-    }
-
-memset( &sock_addr, 0, sizeof(sock_addr) ); 
-
-sock_addr.sin_family = AF_INET;
-
-sock_addr.sin_port = htons( GUI_SOCK_PORT );
-
-sock_addr.sin_addr.s_addr = htonl( INADDR_ANY ); /* allow the emulator to accept a connection on any interface */
-
-if ( bind( gui_sock_fd, (struct sockaddr *) &sock_addr, sizeof( sock_addr ) ) < 0 ) 
-    {
-    perror("Emulator Init: Error in binding GUI socket.\n");
-    exit(1);
-    } 
-
-if (listen(gui_sock_fd, 1) < 0) {
-    perror("Emulator Init: Socket listen failed.\n");
-    exit(1);
-}
-printf("Emulator Init: Socket is now listening on port %d.\n", GUI_SOCK_PORT);
-
-} /* guisock_open */
-
-
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		sock_listener                                                          *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Listen on the socket for events.                                       *
-*                                                                              *
-*******************************************************************************/
-static void* sock_listener
-    (
-    void* arg
-    )
-{
-bool sock_listen = true;
-char buf[256];
-
-printf("Emulator Init: Socket listener running.\n");
-
-while (sock_listen)
-    {
-    /* Read up to 256 bytes from the socket at a time */
-    int bytes_read = 0;
-    bytes_read = read( gui_connection_fd, buf, sizeof( buf ) );
-
-    /* If there's content in the socket, tokenize it based on newlines*/
-    if ( bytes_read > 0 )
-        {
-        char* token = strtok(buf, "\n");
-
-        while ( token != NULL )
-            {
-            /* Handle each command here */
-            if ( !strncmp( token, "ignite", 6 ) )
-                {
-                ignite_flag = true;
-                }
-
-            token = strtok( NULL, "\n" );
-            }
-        }
-    /* Do not busy wait. Delay to allow the buffer to refill. */
-    usleep(10000); /* 2000 microseconds -> 2 ms */
-    }
-
-    return 0;
-
-} /* sock_listener */
-
-
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		guisock_put                                                            *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Write some string to the GUI socket.                                   *
-*                                                                              *
-*******************************************************************************/
-void guisock_put
-    (
-    const char* message,
-    size_t size
-    )
-{
-write( gui_connection_fd, message, size );
-
-} /* guisock_put */

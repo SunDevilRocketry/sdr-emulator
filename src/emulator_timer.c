@@ -103,7 +103,6 @@ void emulator_buzzer_beep_request(uint32_t duration)
 {
     char buf[13];
     snprintf( buf, 13, "BUZZ: %05d\n", duration);
-    guisock_put( buf, 12 );
     HAL_Delay(duration);
 }
 

@@ -66,13 +66,6 @@ extern "C" {
 /* firmware entry point */
 int main_fut(void);
 
-/* emulator.h */
-void guisock_put
-    (
-    const char* message,
-    size_t size
-    );
-
 /* emulator_timer.c */
 void emulator_start_timers
     (
