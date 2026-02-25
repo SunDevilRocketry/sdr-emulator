@@ -35,6 +35,7 @@
 #include <sys/mman.h>
 
 #include "emulator.h"
+#include "main.h"
 #include "stm32h7xx_hal.h"
 #include "flash.h"
 #include "sdr_pin_defines_A0002.h"
