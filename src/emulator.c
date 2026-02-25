@@ -57,9 +57,10 @@ const char DEVICE_ID[] = "SW_EMULATOR";
 extern volatile bool ignite_flag;
 
 /*------------------------------------------------------------------------------
- Static Prototypes                                                       
+ Static Variables
 ------------------------------------------------------------------------------*/
-
+static pthread_t firmwareThread;
+static pthread_t it_thread;
 /*------------------------------------------------------------------------------
  HAL interfaces                                                       
 ------------------------------------------------------------------------------*/
@@ -116,39 +117,15 @@ emulator_flash_init();
 ------------------------------------------------------------------------------*/
 srand(time(NULL));
 
-/*------------------------------------------------------------------------------
- Open socket for IPC                                                  
-------------------------------------------------------------------------------*/
-/*
-guisock_open();
-printf("Emulator Init: GUI socket opened successfully.\n");
-*/
 
-/*------------------------------------------------------------------------------
- Start GUI and wait                                                  
-------------------------------------------------------------------------------*/
-/* GLFW is big & greedy, and many of its functions must be called on main thread */
-pid_t gui_pid;
-gui_pid = fork();
+// Make the main thread handle the gui and use a pthread for the emulator
+// This lets me use shared memory to communicate
+// emulator_exit function that will ensure teardown before exiting program
+// Kill all pthreads when gui closes
+// Sigint handler to kill thread from console
 
-if ( gui_pid < 0 ) 
-    {
-    fprintf(stderr, "Emulator Init: GUI Fork failed!\n");
-    return 1;
-    } 
-else if ( gui_pid == 0 ) 
-    {
-    // Call glfw stuffies
-    emulator_gui_main();
-    } 
-else {
-    printf("Emulator Init: GUI Fork success. Waiting for the GUI to initialize before continuing.\n");
-    sleep(4);
-    printf("Emulator Init: Continuing with startup.\n");
-    }
 
 printf("Emulator Init: Opening I2c interrupt listener.\n");
-pthread_t it_thread;
 pthread_create( &it_thread, NULL, emulator_i2c_it_listener, NULL );
 
 /*------------------------------------------------------------------------------
@@ -167,15 +144,43 @@ if ( emulator_prompt_and_open_serial_port() )
 else
     {
     printf("Emulator Init: Serial connection failed. Continuing without.\n");
+    
     }
+/*------------------------------------------------------------------------------
+ Initialize GUI
+------------------------------------------------------------------------------*/
+
+emulator_gui_init();
 
 /*------------------------------------------------------------------------------
  Once setup is complete, run the firmware                                                    
 ------------------------------------------------------------------------------*/
 printf("Emulator Init: Starting firmware.\n");
-sleep(10);
-main_fut();
+//sleep(10);
+
+// Ugly cast to correct function type (might be the worst cast I've ever seen)
+pthread_create( &firmwareThread, NULL, (void*(*)(void*))main_fut, NULL );
+
+/*------------------------------------------------------------------------------
+ Run and block until GUI termination
+------------------------------------------------------------------------------*/
+emulator_gui_main();
+
+emulator_exit(EXIT_SUCCESS);
+//main_fut();
 
 } /* main */
+
+void emulator_exit
+    (
+    int exitCode
+    )
+{
+emulator_gui_teardown();
+
+/* Should force kill all pthreads */
+exit(exitCode);
+
+}
 
 

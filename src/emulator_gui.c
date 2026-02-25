@@ -47,6 +47,12 @@ const float vertices[] = {
 ------------------------------------------------------------------------------*/
 
 /*------------------------------------------------------------------------------
+ Static Variables
+------------------------------------------------------------------------------*/
+
+GLFWwindow* guiWindow = NULL;
+
+/*------------------------------------------------------------------------------
  Static Prototypes                                                       
 ------------------------------------------------------------------------------*/
 static void error_callback
@@ -66,19 +72,10 @@ static void framebuffer_size_callback
  Procedures                                                     
 ------------------------------------------------------------------------------*/
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		emulator_gui_main                                                      *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Emulator GUI entry point.                                              *
-*                                                                              *
-*******************************************************************************/
-void emulator_gui_main
+void emulator_gui_init
     (
     void
-    ) 
+    )
 {
 if (!glfwInit()) {
     fprintf(stderr, "[GUI]: GLFW Initialization failed");
@@ -90,7 +87,7 @@ glfwSetErrorCallback(error_callback);
 glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-GLFWwindow* guiWindow = glfwCreateWindow(640, 480, "SDR HW Emulator", NULL, NULL);
+guiWindow = glfwCreateWindow(640, 480, "SDR HW Emulator", NULL, NULL);
 
 if (!guiWindow) 
     {
@@ -108,6 +105,34 @@ glfwMakeContextCurrent(guiWindow);
 /* Load OpenGL functions */
 gladLoadGL(glfwGetProcAddress);
 
+/* Init vertex objects */
+}
+
+void emulator_gui_teardown
+    (
+    void
+    )
+{
+glfwDestroyWindow(guiWindow);
+glfwTerminate();
+
+}
+
+
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		emulator_gui_main                                                      *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Emulator GUI entry point.                                              *
+*                                                                              *
+*******************************************************************************/
+void emulator_gui_main
+    (
+    void
+    ) 
+{
 GLuint VAO;
 glGenVertexArrays(1, &VAO);
 glBindVertexArray(VAO);
@@ -139,9 +164,6 @@ while (!glfwWindowShouldClose(guiWindow))
     glfwPollEvents();
     }
 
-
-glfwDestroyWindow(guiWindow);
-glfwTerminate();
 } /* emulator_gui_main */
 
 /*******************************************************************************
