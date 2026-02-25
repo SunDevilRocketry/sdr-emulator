@@ -88,6 +88,7 @@ glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 guiWindow = glfwCreateWindow(640, 480, "SDR HW Emulator", NULL, NULL);
+glfwHideWindow(guiWindow);
 
 if (!guiWindow) 
     {
@@ -151,6 +152,9 @@ GLuint shaderProgram =
         MAKE_SHADER_PATH("default.vert"),
         MAKE_SHADER_PATH("default.frag")
         );
+glfwShowWindow(guiWindow);
+glfwRequestWindowAttention(guiWindow);
+glfwFocusWindow(guiWindow);
 
 while (!glfwWindowShouldClose(guiWindow)) 
     {

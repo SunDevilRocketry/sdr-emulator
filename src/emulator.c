@@ -38,6 +38,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <signal.h>
+#include <getopt.h>
 
 #include <stddef.h>
 
@@ -59,6 +60,7 @@ const char DEVICE_ID[] = "SW_EMULATOR";
 
 extern volatile bool ignite_flag;
 volatile bool irq_enabled = true;
+volatile bool gui_enable = true;
 
 /*------------------------------------------------------------------------------
  Static Variables
@@ -75,6 +77,74 @@ void sigintHandler
     )
 {
     emulator_exit(0);
+}
+
+static void printArgsHelp
+    (
+    void
+    ) 
+{
+
+printf("Usage: build/appa [OPTION]\n");
+printf("Runs the flight computer emulator\n\n\n");
+printf("\t-h, --help              Displays this screen and exits\n");
+printf("\t--no-gui                Runs the emulator without the GUI (CLI only)\n");
+
+}
+
+static void parseArgs
+    (
+    int argc, 
+    char* const argv[]
+    )
+{
+
+while (1) 
+{
+    int c;
+    int option_index = 0;
+    static struct option long_options[] = 
+    {
+        { "no-gui", no_argument, NULL, 0 }, /* Disables GUI */
+        { "help", no_argument, NULL, 0}, /* help me */
+        { "verbose", no_argument, NULL, 0}, /* For misc info like emulator initialized X system */
+        { "debug", no_argument, NULL, 0} /* For prints such as address writing */
+
+    };
+
+    c = getopt_long(argc, argv, "-:h", long_options, &option_index);
+    if (c == -1)
+        {
+        break;
+        }
+
+    switch (c)
+        {
+        case 0:
+            if ( option_index == 0 )
+                {
+                gui_enable = false;
+                }
+            else if ( option_index == 1 )
+                {
+                printArgsHelp();
+                exit(0);
+                }
+            break;
+
+        case 'h':
+            printArgsHelp();
+            exit(0);
+            break;
+
+        case '?':
+            printf("Unknown argument -%c\n", optopt);
+            printArgsHelp();
+            exit(0);
+            break;
+        }
+}
+
 }
 /*------------------------------------------------------------------------------
  HAL interfaces                                                       
@@ -117,9 +187,13 @@ void HAL_NVIC_EnableIRQ(IRQn_Type IRQn) {irq_enabled = true;}
 *******************************************************************************/
 int main
     (
-    void
+    int argc,
+    char* const argv[]
     )
 {
+// --no-gui command line argument
+
+parseArgs(argc, argv);
 /*------------------------------------------------------------------------------
  Connect sigint handler
 ------------------------------------------------------------------------------*/
@@ -139,14 +213,6 @@ emulator_flash_init();
  Seed RNG for noise generator                                                 
 ------------------------------------------------------------------------------*/
 srand(time(NULL));
-
-
-// [X] Make the main thread handle the gui and use a pthread for the emulator
-// This lets me use shared memory to communicate
-// [X] emulator_exit function that will ensure teardown before exiting program
-// [X] Kill all pthreads when gui closes
-// [X] Sigint handler to kill thread from console
-
 
 printf("Emulator Init: Opening I2c interrupt listener.\n");
 pthread_create( &it_thread, NULL, emulator_i2c_it_listener, NULL );
@@ -173,7 +239,9 @@ else
  Initialize GUI
 ------------------------------------------------------------------------------*/
 
-emulator_gui_init();
+if ( gui_enable ) 
+{
+    emulator_gui_init();
 
 /*------------------------------------------------------------------------------
  Once setup is complete, run the firmware                                                    
@@ -182,12 +250,17 @@ printf("Emulator Init: Starting firmware.\n");
 //sleep(10);
 
 // Ugly cast to correct function type (might be the worst cast I've ever seen)
+// Shouldn't happen in normal execution, but if main_fut returns, likely UB
 pthread_create( &firmwareThread, NULL, (void*(*)(void*))main_fut, NULL );
 
 /*------------------------------------------------------------------------------
  Run and block until GUI termination
 ------------------------------------------------------------------------------*/
-emulator_gui_main();
+}
+else 
+{
+main_fut();
+}
 
 emulator_exit(EXIT_SUCCESS);
 } /* main */
@@ -199,7 +272,10 @@ void emulator_exit
 {
 
 printf("Emulator terminating with exit code %d", exitCode);
-emulator_gui_teardown();
+if ( gui_enable ) 
+{
+    emulator_gui_teardown();
+}
 
 /* Should force kill all pthreads */
 exit(exitCode);
