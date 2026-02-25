@@ -37,6 +37,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <time.h>
+#include <signal.h>
 
 #include <stddef.h>
 
@@ -61,6 +62,16 @@ extern volatile bool ignite_flag;
 ------------------------------------------------------------------------------*/
 static pthread_t firmwareThread;
 static pthread_t it_thread;
+/*------------------------------------------------------------------------------
+ Static Functions
+------------------------------------------------------------------------------*/
+void sigintHandler
+    (
+    int dummy
+    )
+{
+    emulator_exit(0);
+}
 /*------------------------------------------------------------------------------
  HAL interfaces                                                       
 ------------------------------------------------------------------------------*/
@@ -103,6 +114,11 @@ int main
     )
 {
 /*------------------------------------------------------------------------------
+ Connect sigint handler
+------------------------------------------------------------------------------*/
+signal(SIGINT, sigintHandler);
+
+/*------------------------------------------------------------------------------
  Start software timers                                                    
 ------------------------------------------------------------------------------*/
 emulator_start_timers();
@@ -118,11 +134,11 @@ emulator_flash_init();
 srand(time(NULL));
 
 
-// Make the main thread handle the gui and use a pthread for the emulator
+// [X] Make the main thread handle the gui and use a pthread for the emulator
 // This lets me use shared memory to communicate
-// emulator_exit function that will ensure teardown before exiting program
-// Kill all pthreads when gui closes
-// Sigint handler to kill thread from console
+// [X] emulator_exit function that will ensure teardown before exiting program
+// [X] Kill all pthreads when gui closes
+// [X] Sigint handler to kill thread from console
 
 
 printf("Emulator Init: Opening I2c interrupt listener.\n");
@@ -167,8 +183,6 @@ pthread_create( &firmwareThread, NULL, (void*(*)(void*))main_fut, NULL );
 emulator_gui_main();
 
 emulator_exit(EXIT_SUCCESS);
-//main_fut();
-
 } /* main */
 
 void emulator_exit
@@ -176,6 +190,8 @@ void emulator_exit
     int exitCode
     )
 {
+
+printf("Emulator terminating with exit code %d", exitCode);
 emulator_gui_teardown();
 
 /* Should force kill all pthreads */
