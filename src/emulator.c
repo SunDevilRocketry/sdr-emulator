@@ -241,7 +241,8 @@ else
 
 if ( gui_enable ) 
 {
-    emulator_gui_init();
+
+emulator_gui_init();
 
 /*------------------------------------------------------------------------------
  Once setup is complete, run the firmware                                                    
@@ -256,6 +257,7 @@ pthread_create( &firmwareThread, NULL, (void*(*)(void*))main_fut, NULL );
 /*------------------------------------------------------------------------------
  Run and block until GUI termination
 ------------------------------------------------------------------------------*/
+emulator_gui_main();
 }
 else 
 {
