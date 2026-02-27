@@ -110,8 +110,9 @@ gladLoadGL(glfwGetProcAddress);
 
 /* Load obj */
 struct fileVertexData objData = loadVertexDataFromOBJ(MAKE_RESOURCES_PATH("FC_REV2.obj"));
-for (size_t i = 0; i < objData.vertexCount; i+=3) {
-    printf("VERTEX: %.2f, %.2f, %.2f\n", objData.vertices[i], objData.vertices[i+1], objData.vertices[i+2]);
+sleep(1);
+for (size_t i = 0; i < objData.vFloatCount; i+=3) {
+    printf("VERTEX: %.2f, %.2f, %.2f\n", objData.vertexData[i], objData.vertexData[i+1], objData.vertexData[i+2]);
 }
 
 }

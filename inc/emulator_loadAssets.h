@@ -3,9 +3,8 @@
 #include <stddef.h>
 
 struct fileVertexData {
-    size_t  vertexCount;
-    size_t vertexCapacity;
-    float* vertices;
+    size_t vFloatCount;
+    float* vertexData;
 };
 
 struct fileVertexData loadVertexDataFromOBJ(const char* filepath);

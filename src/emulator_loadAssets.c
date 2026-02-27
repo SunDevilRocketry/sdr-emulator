@@ -15,7 +15,8 @@ struct fileVertexData loadVertexDataFromOBJ
 
 struct fileVertexData vData = 
     {
-        .vertices = NULL
+        .vFloatCount = 0,
+        .vertexData = NULL
     };
 
 FILE *srcFile = NULL;
@@ -45,11 +46,11 @@ if ( srcFile == NULL )
 // 10 is probably enough
 char elementSpecifier[10];
 
-size_t vertexCount = 0;
-size_t vertexCapacity = 50;
+size_t vFloatCount= 0;
+size_t vFloatCapacity = 100;
 
-// Init size to 50
-vData.vertices = malloc(sizeof(float) * vertexCapacity);
+// Init size to initial capacity
+vData.vertexData = malloc(sizeof(float) * vFloatCapacity);
 
 
 while ( fscanf(srcFile, "%s", elementSpecifier) != EOF ) 
@@ -62,19 +63,19 @@ while ( fscanf(srcFile, "%s", elementSpecifier) != EOF )
             float vertices[3];
             fscanf(srcFile, "%f %f %f", &vertices[0], &vertices[1], &vertices[2]);
   //              printf("VERTEX COORDINATES: %.2f, %.2f, %.2f\n", vertices[0], vertices[1], vertices[2]);
-            if ( vertexCount + 3 < vertexCapacity ) 
+            if ( vFloatCount + 3 < vFloatCapacity ) 
                 {
   //              printf("Copying to vertex array\n");
-                memcpy(vData.vertices + vertexCount, vertices, sizeof(float) * 3);
-                vertexCount += 3;
+                memcpy(vData.vertexData + vFloatCount, vertices, sizeof(float) * 3);
+                vFloatCount += 3;
                 }
             else
                 {
-                vertexCapacity *= 1.5;
-                vData.vertices = realloc(vData.vertices, sizeof(float) * vertexCapacity);
-                printf("Expanding vertex array to %lu and copying\n", vertexCapacity);
-                memcpy(vData.vertices + vertexCount, vertices, sizeof(float) * 3);
-                vertexCount += 3;
+                vFloatCapacity *= 2;
+                vData.vertexData = realloc(vData.vertexData, sizeof(float) * vFloatCapacity);
+                printf("Expanding vertex array to %lu and copying\n", vFloatCapacity);
+                memcpy(vData.vertexData + vFloatCount, vertices, sizeof(float) * 3);
+                vFloatCount += 3;
                 }
             }
 
@@ -82,8 +83,11 @@ while ( fscanf(srcFile, "%s", elementSpecifier) != EOF )
 
 fclose(srcFile);
 
-vData.vertexCount = vertexCount;
-vData.vertexCapacity = vertexCapacity;
+// Trim buffer to free excess space
+printf("Trimming vertex data buffer to %ld floats (%ld bytes)\n", vFloatCount, sizeof(float) * vFloatCount);
+vData.vertexData = realloc(vData.vertexData, sizeof(float) * vFloatCount);
+
+vData.vFloatCount = vFloatCount;
 
 printf("thingo");
 return vData;
