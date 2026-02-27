@@ -132,6 +132,3 @@ libglad: $(GLAD_OBJS)
 	@mkdir -p $(GLAD_LIBDIR)
 	ar rcs -o $(GLAD_LIBDIR)/$@.a $^
 	@echo "====== glad Compilation Complete ======"
-
-#application: libglfw
-#	gcc -o $(BUILDDIR)/glfwTest.exe main.c -L$(LIBDIR) -l:libglfw.a -lgdi32
