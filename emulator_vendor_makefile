@@ -1,4 +1,4 @@
-CC=GCC
+#CC=cc
 BUILDDIR=./build
 EMUDIR=../../../../emulator
 
