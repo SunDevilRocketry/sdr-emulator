@@ -258,6 +258,7 @@ pthread_create( &firmwareThread, NULL, (void*(*)(void*))main_fut, NULL );
  Run and block until GUI termination
 ------------------------------------------------------------------------------*/
 emulator_gui_main();
+
 }
 else 
 {

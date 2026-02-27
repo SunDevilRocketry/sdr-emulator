@@ -31,8 +31,10 @@
 #include "glfw3.h"
 #include "emulator.h"
 #include "shaders/readShader.h"
+#include "emulator_loadAssets.h"
 
 #define MAKE_SHADER_PATH(X) "../../../../emulator/src/shaders/"X
+#define MAKE_RESOURCES_PATH(X) "../../../../emulator/resources/"X
 
 /*------------------------------------------------------------------------------
  Constants                                                       
@@ -106,7 +108,12 @@ glfwMakeContextCurrent(guiWindow);
 /* Load OpenGL functions */
 gladLoadGL(glfwGetProcAddress);
 
-/* Init vertex objects */
+/* Load obj */
+struct fileVertexData objData = loadVertexDataFromOBJ(MAKE_RESOURCES_PATH("FC_REV2.obj"));
+for (size_t i = 0; i < objData.vertexCount; i+=3) {
+    printf("VERTEX: %.2f, %.2f, %.2f\n", objData.vertices[i], objData.vertices[i+1], objData.vertices[i+2]);
+}
+
 }
 
 void emulator_gui_teardown
@@ -134,6 +141,7 @@ void emulator_gui_main
     void
     ) 
 {
+
 GLuint VAO;
 glGenVertexArrays(1, &VAO);
 glBindVertexArray(VAO);
