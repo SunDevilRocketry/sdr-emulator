@@ -14,4 +14,4 @@ As this project is still in its early stages, automated test support has not yet
 Below are the hashes of the most recent recorded tests on different toolchains/architectures.
 
 - Eli's Laptop (Win 11, 4-core AMD64) - e4552f6c656f5e4a2b195dff5530959055d6a153 ("Checkpoint: I2C IT") - 1/26/26
-- Eli's PC (Linux (Arch), 10-core AMD64) - 9e42849ec05efefb5d74ae0af6668ef437e98769 ("Fix a fclose call that was analogous to a double free.") - 1/26/26
+- Eli's PC (Linux (Arch btw), 10-core AMD64) - 9e42849ec05efefb5d74ae0af6668ef437e98769 ("Fix a fclose call that was analogous to a double free.") - 1/26/26
