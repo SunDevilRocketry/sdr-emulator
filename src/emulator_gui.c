@@ -110,8 +110,7 @@ glfwMakeContextCurrent(guiWindow);
 gladLoadGL(glfwGetProcAddress);
 
 /* Load obj */
-objData = loadVertexDataFromOBJ(MAKE_RESOURCES_PATH("FC_REV2.obj"));
-sleep(1);
+objData = loadVertexDataFromOBJ(MAKE_RESOURCES_PATH("teapot.obj"));
 /*
 for (size_t i = 0; i < objData.vFloatCount; i+=3) {
     printf("VERTEX: %.2f, %.2f, %.2f\n", objData.vertexData[i], objData.vertexData[i+1], objData.vertexData[i+2]);
@@ -157,6 +156,13 @@ glBindBuffer(GL_ARRAY_BUFFER, VBO);
 glBufferData(GL_ARRAY_BUFFER, sizeof(float) * objData.vFloatCount, objData.vertexData, GL_STATIC_DRAW);
 free(objData.vertexData); // temp
 
+GLuint EBO;
+glGenBuffers(1, &EBO);
+glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * objData.iCount, objData.faceIndexData, GL_STATIC_DRAW);
+glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+free(objData.faceIndexData);
+
 glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 glEnableVertexAttribArray(0);
 
@@ -166,16 +172,18 @@ GLuint shaderProgram =
         MAKE_SHADER_PATH("default.vert"),
         MAKE_SHADER_PATH("default.frag")
         );
+
 glfwShowWindow(guiWindow);
 glfwRequestWindowAttention(guiWindow);
 glfwFocusWindow(guiWindow);
 
-mat4 model = mat4Translation(0, 0, -1);
-vec3 camPos = vec3New(0, 0, 0);
-vec3 camTarget = vec3New(0, 0, -1);
+mat4 model = mat4Translation(0, 0, -5);
+vec3 camPos = vec3New(-3, 5, 5);
+vec3 camTarget = vec3New(0, 0, 0);
 vec3 camUp = vec3New(0, 1, 0);
 mat4 view = mat4LookAt(camPos, camTarget, camUp);
 mat4 proj = mat4Proj(1.57, 16.0/9.0, .01, 100);
+
 int modelUniformLocation = glGetUniformLocation(shaderProgram, "model");
 int viewUniformLocation = glGetUniformLocation(shaderProgram, "view");
 int projUniformLocation = glGetUniformLocation(shaderProgram, "proj");
@@ -192,7 +200,8 @@ while (!glfwWindowShouldClose(guiWindow))
     glUniformMatrix4fv(modelUniformLocation, 1, GL_FALSE, model.data);
     glUniformMatrix4fv(viewUniformLocation, 1, GL_FALSE, view.data);
     glUniformMatrix4fv(projUniformLocation, 1, GL_FALSE, proj.data);
-    glDrawArrays(GL_TRIANGLES, 0, objData.vFloatCount);
+    //glDrawArrays(GL_TRIANGLES, 0, objData.vFloatCount);
+    glDrawElements(GL_TRIANGLES, objData.iCount, GL_UNSIGNED_INT, 0);
 
     glfwSwapBuffers(guiWindow);
     glfwPollEvents();
