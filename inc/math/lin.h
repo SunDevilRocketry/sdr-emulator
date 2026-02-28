@@ -49,7 +49,13 @@ mat4 mat4Identity();
 mat4 mat4Mult(const mat4 a, const mat4 b);
 mat4 mat4Translation(float x, float y, float z);
 mat4 mat4LookAt(vec3 position, vec3 target, vec3 up);
-mat4 mat4Proj(float x, float y, float z);
+mat4 mat4Proj
+    (
+    float fov,
+    float aspect,
+    float near,
+    float far
+    );
 
 // IDK if ortho is needed
 mat4 mat4Ortho(float x, float y, float z);

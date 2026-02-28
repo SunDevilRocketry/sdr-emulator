@@ -153,6 +153,7 @@ glBindVertexArray(VAO);
 GLuint VBO;
 glGenBuffers(1, &VBO);
 glBindBuffer(GL_ARRAY_BUFFER, VBO);
+//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 glBufferData(GL_ARRAY_BUFFER, sizeof(float) * objData.vFloatCount, objData.vertexData, GL_STATIC_DRAW);
 free(objData.vertexData); // temp
 
@@ -169,29 +170,28 @@ glfwShowWindow(guiWindow);
 glfwRequestWindowAttention(guiWindow);
 glfwFocusWindow(guiWindow);
 
-/*
-vec3 vec = vec3New(1, 0, 0);
-vec3 vec2 = vec3New(0, 1, 0);
+mat4 model = mat4Translation(0, 0, -1);
+vec3 camPos = vec3New(0, 0, 0);
+vec3 camTarget = vec3New(0, 0, -1);
+vec3 camUp = vec3New(0, 1, 0);
+mat4 view = mat4LookAt(camPos, camTarget, camUp);
+mat4 proj = mat4Proj(1.57, 16.0/9.0, .01, 100);
+int modelUniformLocation = glGetUniformLocation(shaderProgram, "model");
+int viewUniformLocation = glGetUniformLocation(shaderProgram, "view");
+int projUniformLocation = glGetUniformLocation(shaderProgram, "proj");
 
-vec3 magvec = vec3New(53245, 646, 35930);
+mat4_debugprint(proj);
 
-vec3 cross = vec3Cross(&vec, &vec2);
-
-float mag = vec3Magnitude(&magvec);
-vec3 norm = vec3Normalize(&magvec);
-*/
-vec3 pos = vec3New(0, 0, 0);
-vec3 targ = vec3New(0, 0, 10);
-vec3 up = vec3New(0, 1, 0);
-mat4 test = mat4LookAt(pos, targ, up);
-mat4_debugprint(test);
-
+printf("[GUI STARTUP SUCCESSFUL]: Rise and shine\n");
 while (!glfwWindowShouldClose(guiWindow)) 
     {
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(shaderProgram);
     glBindVertexArray(VAO);
+    glUniformMatrix4fv(modelUniformLocation, 1, GL_FALSE, model.data);
+    glUniformMatrix4fv(viewUniformLocation, 1, GL_FALSE, view.data);
+    glUniformMatrix4fv(projUniformLocation, 1, GL_FALSE, proj.data);
     glDrawArrays(GL_TRIANGLES, 0, objData.vFloatCount);
 
     glfwSwapBuffers(guiWindow);

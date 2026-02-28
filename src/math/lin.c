@@ -1,5 +1,6 @@
 #include "math/lin.h"
 #include <math.h>
+#include <stdint.h>
 #include <stdio.h>
 
 vec3 vec3New
@@ -153,7 +154,36 @@ lookAt.data[14] = -position.members.z;
 return lookAt;
 }
 
-mat4 mat4Proj(float x, float y, float z);
+mat4 mat4Proj
+    (
+    float fov,
+    float aspect,
+    float near,
+    float far
+    ) 
+{
+
+// Goal: We want to define a global coordinate space that our camera can 'look' into and render a result to the screen.
+// Problem 1: OpenGL Only renders vertices that are within the NDC range ([-1, 1] for x and y), so most of our global world would not be visible.
+// Problem 2: We want things to look realistic. Vertices that are further away should be smaller.
+
+/* Solution: Interpret the visible world as a frustrum. Project all vertices in the frustrum onto the near plane. This allows all resulting coordinate to be normalized to [-1, 1] and takes care of making further vertices smaller via perspective divide.*/
+
+
+float xMult = 1/(aspect*tan(fov/2.0));
+float yMult = 1/tan(fov/2.0);
+float zMult = -((far + near)/(far - near));
+
+mat4 proj = {};
+proj.data[0] = xMult;
+proj.data[5] = yMult;
+proj.data[10] = zMult;
+proj.data[11] = -1;
+// Dont really understand the z component modifications. Its some kind of non-linear mapping
+proj.data[14] = -(2*far*near)/(far-near);
+
+return proj;
+}
 
 // IDK if ortho is needed
 mat4 mat4Ortho(float x, float y, float z);
