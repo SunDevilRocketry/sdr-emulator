@@ -43,15 +43,19 @@ if ( srcFile == NULL )
 
 #endif
 
-// 10 is probably enough
+// 10 is probably enough, they typically are only 2 chars at max
 char elementSpecifier[10];
 
 size_t vFloatCount= 0;
 size_t vFloatCapacity = 100;
 
+size_t iCount = 0;
+size_t iCapacity = 100;
+
+
 // Init size to initial capacity
 vData.vertexData = malloc(sizeof(float) * vFloatCapacity);
-
+vData.faceIndexData = malloc(sizeof(float) * iCapacity);
 
 while ( fscanf(srcFile, "%s", elementSpecifier) != EOF ) 
     {
@@ -78,6 +82,68 @@ while ( fscanf(srcFile, "%s", elementSpecifier) != EOF )
                 vFloatCount += 3;
                 }
             }
+        else if ( strcmp(elementSpecifier, "f") == 0 )
+            {
+            // This indicates a face index specifier for EBO    
+            // There can be any amount of vertices for each face
+            // There are also negative indices but im ignoring those because i dont wanna deal with them rn
+            // 1 Figure out how many chars until newline
+            // 2 Scanf until I pass that char limit
+            // 3 undo last scanf and break loop
+            
+            // Since this file is open in binary mode, arithmetic with ftell return value is well defined
+
+            long int initialPos = ftell(srcFile);
+            // Skips everything up to the newline
+            fscanf(srcFile, "%*[^\n]");
+            long int finalPos = ftell(srcFile);
+
+            long int dataLength = finalPos - initialPos;
+            //printf("%ld chars to read\n", dataLength);
+
+            long int charsRead = 0;
+
+            fseek(srcFile, initialPos, SEEK_SET);
+            while (charsRead < dataLength) {
+                int dummy1;
+                int dummy2;
+                int vIndex;
+
+                long int beforeScanPos = ftell(srcFile);
+                fscanf(srcFile, "%d/%d/%d", &vIndex, &dummy1, &dummy2);
+                long int currentPos = ftell(srcFile);
+                charsRead = currentPos - initialPos;
+                if (charsRead < dataLength) 
+                {
+                    // Insert into array
+                    //printf("vIndex: %d\n", vIndex);
+                    if (iCount + 1 < iCapacity) 
+                    {
+                    vIndex--;
+                    memcpy(vData.faceIndexData + iCount, &vIndex, sizeof(int));
+                    iCount++;
+                    }
+                    else
+                    {
+                    iCapacity *= 2;
+                    printf("Resizing face index data to %ld (%ld bytes)\n", iCapacity, sizeof(int) * iCapacity);
+                    vData.faceIndexData = realloc(vData.faceIndexData, sizeof(int) * iCapacity);
+
+                    vIndex--;
+                    memcpy(vData.faceIndexData + iCount, &vIndex, sizeof(int));
+                    iCount++;
+                    }
+                }
+                else 
+                {
+                    //printf("TOO FAR!\n");
+                    fseek(srcFile, beforeScanPos, SEEK_SET);
+                    break;
+                }
+                //printf("Total chars read: %ld\n", charsRead);
+            }
+
+            }
 
     }
 
@@ -87,7 +153,11 @@ fclose(srcFile);
 printf("Trimming vertex data buffer to %ld floats (%ld bytes)\n", vFloatCount, sizeof(float) * vFloatCount);
 vData.vertexData = realloc(vData.vertexData, sizeof(float) * vFloatCount);
 
+printf("Trimming index data buffer to %ld floats (%ld bytes)\n", iCount, sizeof(float) * iCount);
+vData.vertexData = realloc(vData.vertexData, sizeof(int) * iCount);
+
 vData.vFloatCount = vFloatCount;
+vData.iCount = iCount;
 
 printf("thingo");
 return vData;

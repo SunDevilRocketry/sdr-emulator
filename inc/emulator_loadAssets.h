@@ -4,7 +4,10 @@
 
 struct fileVertexData {
     size_t vFloatCount;
-    float* vertexData;
+    float *vertexData;
+
+    size_t iCount;
+    unsigned int *faceIndexData;
 };
 
 struct fileVertexData loadVertexDataFromOBJ(const char* filepath);
