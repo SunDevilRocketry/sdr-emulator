@@ -32,6 +32,7 @@
 #include "emulator.h"
 #include "shaders/readShader.h"
 #include "emulator_loadAssets.h"
+#include "math/lin.h"
 
 #define MAKE_SHADER_PATH(X) "../../../../emulator/src/shaders/"X
 #define MAKE_RESOURCES_PATH(X) "../../../../emulator/resources/"X
@@ -73,7 +74,7 @@ static void framebuffer_size_callback
 /*------------------------------------------------------------------------------
  Procedures                                                     
 ------------------------------------------------------------------------------*/
-
+static struct fileVertexData objData;
 void emulator_gui_init
     (
     void
@@ -109,12 +110,13 @@ glfwMakeContextCurrent(guiWindow);
 gladLoadGL(glfwGetProcAddress);
 
 /* Load obj */
-struct fileVertexData objData = loadVertexDataFromOBJ(MAKE_RESOURCES_PATH("FC_REV2.obj"));
+objData = loadVertexDataFromOBJ(MAKE_RESOURCES_PATH("FC_REV2.obj"));
 sleep(1);
+/*
 for (size_t i = 0; i < objData.vFloatCount; i+=3) {
     printf("VERTEX: %.2f, %.2f, %.2f\n", objData.vertexData[i], objData.vertexData[i+1], objData.vertexData[i+2]);
 }
-
+*/
 }
 
 void emulator_gui_teardown
@@ -122,6 +124,7 @@ void emulator_gui_teardown
     void
     )
 {
+    
 glfwDestroyWindow(guiWindow);
 glfwTerminate();
 
@@ -150,7 +153,8 @@ glBindVertexArray(VAO);
 GLuint VBO;
 glGenBuffers(1, &VBO);
 glBindBuffer(GL_ARRAY_BUFFER, VBO);
-glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+glBufferData(GL_ARRAY_BUFFER, sizeof(float) * objData.vFloatCount, objData.vertexData, GL_STATIC_DRAW);
+free(objData.vertexData); // temp
 
 glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 glEnableVertexAttribArray(0);
@@ -165,13 +169,30 @@ glfwShowWindow(guiWindow);
 glfwRequestWindowAttention(guiWindow);
 glfwFocusWindow(guiWindow);
 
+/*
+vec3 vec = vec3New(1, 0, 0);
+vec3 vec2 = vec3New(0, 1, 0);
+
+vec3 magvec = vec3New(53245, 646, 35930);
+
+vec3 cross = vec3Cross(&vec, &vec2);
+
+float mag = vec3Magnitude(&magvec);
+vec3 norm = vec3Normalize(&magvec);
+*/
+vec3 pos = vec3New(0, 0, 0);
+vec3 targ = vec3New(0, 0, 10);
+vec3 up = vec3New(0, 1, 0);
+mat4 test = mat4LookAt(pos, targ, up);
+mat4_debugprint(test);
+
 while (!glfwWindowShouldClose(guiWindow)) 
     {
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(shaderProgram);
     glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawArrays(GL_TRIANGLES, 0, objData.vFloatCount);
 
     glfwSwapBuffers(guiWindow);
     glfwPollEvents();
