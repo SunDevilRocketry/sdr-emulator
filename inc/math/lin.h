@@ -44,10 +44,14 @@ vec3 vec3Cross(const vec3 a, const vec3 b);
 float vec3Magnitude(const vec3 vec);
 vec3 vec3Normalize(const vec3 vec);
 vec3 vec3Sub(const vec3 a, const vec3 b);
+vec3 vec3MultScalar(const vec3 a, float scalar);
 
 mat4 mat4Identity();
 mat4 mat4Mult(const mat4 a, const mat4 b);
+mat4 mat4MultScalar(const mat4 a, float scalar);
+mat4 mat4Add(const mat4 a, const mat4 b);
 mat4 mat4RotY(float angle);
+mat4 mat4AxisAngle(vec3 axis, float angle);
 mat4 mat4Translation(float x, float y, float z);
 mat4 mat4LookAt(vec3 position, vec3 target, vec3 up);
 mat4 mat4Proj

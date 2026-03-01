@@ -181,26 +181,27 @@ glfwShowWindow(guiWindow);
 glfwRequestWindowAttention(guiWindow);
 glfwFocusWindow(guiWindow);
 
-mat4 model = mat4RotY(0);
-vec3 camPos = vec3New(0, 20, 100); 
-vec3 camTarget = vec3New(0, -40, 0);
+vec3 axis = vec3Normalize(vec3New(1, 0, 1));
+mat4 model = mat4AxisAngle(axis, 1.57);
+mat4_debugprint(model);
+vec3 camPos = vec3New(0, 0, 100); 
+vec3 camTarget = vec3New(0, 0, 0);
 vec3 camUp = vec3New(0, 1, 0);
 mat4 view = mat4LookAt(camPos, camTarget, camUp);
 mat4 proj = mat4Proj(1.57, 16.0/9.0, 1, 500);
-mat4_debugprint(view);
 
 int modelUniformLocation = glGetUniformLocation(shaderProgram, "model");
 int viewUniformLocation = glGetUniformLocation(shaderProgram, "view");
 int projUniformLocation = glGetUniformLocation(shaderProgram, "proj");
 
-mat4_debugprint(proj);
+//mat4_debugprint(proj);
 
 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 printf("[GUI STARTUP SUCCESSFUL]: Rise and shine\n");
 while (!glfwWindowShouldClose(guiWindow)) 
     {
-    model = mat4RotY(glfwGetTime());
+    model = mat4AxisAngle(axis, glfwGetTime());
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(shaderProgram);

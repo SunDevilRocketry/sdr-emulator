@@ -2,6 +2,7 @@
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 vec3 vec3New
     (
@@ -87,6 +88,15 @@ difference.data[2] = a.members.z - b.members.z;
 return difference;
 }
 
+vec3 vec3MultScalar(const vec3 a, float scalar) 
+{
+vec3 retVec;
+retVec.data[0] = a.data[0] * scalar;
+retVec.data[1] = a.data[1] * scalar;
+retVec.data[2] = a.data[2] * scalar;
+return retVec;
+}
+
 mat4 mat4Identity()
 {
 
@@ -101,7 +111,48 @@ return retMat4;
 
 }
 
-mat4 mat4Mult(const mat4 a, const mat4 b);
+mat4 mat4Mult(const mat4 a, const mat4 b)
+{
+mat4 retMat = {};
+
+for (size_t row = 0; row < 4; row++)
+{
+    for (size_t col = 0; col < 4; col++)
+    {
+    *(retMat.data + col * 4 + row) =
+        *(a.data + 0 * 4 + row) * *(b.data + col * 4 + 0) +
+        *(a.data + 1 * 4 + row) * *(b.data + col * 4 + 1) +
+        *(a.data + 2 * 4 + row) * *(b.data + col * 4 + 2) +
+        *(a.data + 3 * 4 + row) * *(b.data + col * 4 + 3);
+    }
+}
+return retMat;
+}
+
+mat4 mat4MultScalar(const mat4 a, float scalar)
+{
+mat4 retMat = a;
+
+for (size_t col = 0; col < 4; col++)
+{
+for (size_t row = 0; row < 4; row++)
+    {
+        *(retMat.data + col * 4 + row) *= scalar;
+    }
+}
+return retMat;
+}
+
+mat4 mat4Add(const mat4 a, const mat4 b)
+{
+mat4 retMat = {};
+for (size_t col = 0; col < 4; col++) {
+    for (size_t row = 0; row < 4; row++) {
+       *(retMat.data + col * 4 + row) = *(a.data + col * 4 + row) + *(b.data + col * 4 + row);
+    }
+}
+return retMat;
+}
 
 mat4 mat4RotY(float angle)
 {
@@ -112,6 +163,26 @@ rotMat.data[8] = sin(angle);
 rotMat.data[10] = cos(angle);
 return rotMat;
 
+}
+
+mat4 mat4AxisAngle(vec3 axis, float angle)
+{
+mat4 I = mat4Identity();
+mat4 A;
+memset(A.data, 0, sizeof(float) * 16);
+A.data[1] = axis.members.z;
+A.data[2] = -axis.members.y;
+
+A.data[4] = -axis.members.z;
+A.data[6] = axis.members.x;
+
+A.data[8] = axis.members.y;
+A.data[9] = -axis.members.x;
+
+mat4 A2 = mat4MultScalar(mat4Mult(A, A), 1 - cos(angle));
+A = mat4MultScalar(A, sin(angle));
+
+return mat4Add(I, mat4Add(A2, A));
 }
 
 mat4 mat4Translation
