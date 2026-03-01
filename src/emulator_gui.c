@@ -110,10 +110,13 @@ glfwMakeContextCurrent(guiWindow);
 gladLoadGL(glfwGetProcAddress);
 
 /* Load obj */
-objData = loadVertexDataFromOBJ(MAKE_RESOURCES_PATH("teapot.obj"));
+objData = loadVertexDataFromOBJ(MAKE_RESOURCES_PATH("FC_REV2.obj"));
 /*
-for (size_t i = 0; i < objData.vFloatCount; i+=3) {
+for (size_t i = 0; i < objData.vertexDataCount; i+=3) {
     printf("VERTEX: %.2f, %.2f, %.2f\n", objData.vertexData[i], objData.vertexData[i+1], objData.vertexData[i+2]);
+}
+for (size_t i = 0; i < objData.faceIndexDataCount; i++) {
+    printf("FACE INDEX: %u\n", objData.faceIndexData[i]);
 }
 */
 }
@@ -153,13 +156,13 @@ GLuint VBO;
 glGenBuffers(1, &VBO);
 glBindBuffer(GL_ARRAY_BUFFER, VBO);
 //glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-glBufferData(GL_ARRAY_BUFFER, sizeof(float) * objData.vFloatCount, objData.vertexData, GL_STATIC_DRAW);
+glBufferData(GL_ARRAY_BUFFER, sizeof(float) * objData.vertexDataCount, objData.vertexData, GL_STATIC_DRAW);
 free(objData.vertexData); // temp
 
 GLuint EBO;
 glGenBuffers(1, &EBO);
 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * objData.iCount, objData.faceIndexData, GL_STATIC_DRAW);
+glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * objData.faceIndexDataCount, objData.faceIndexData, GL_STATIC_DRAW);
 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 free(objData.faceIndexData);
 
@@ -177,18 +180,21 @@ glfwShowWindow(guiWindow);
 glfwRequestWindowAttention(guiWindow);
 glfwFocusWindow(guiWindow);
 
-mat4 model = mat4Translation(0, 0, -5);
-vec3 camPos = vec3New(-3, 5, 5);
+mat4 model = mat4Translation(0, 0, 0);
+vec3 camPos = vec3New(0, 20, 60);
 vec3 camTarget = vec3New(0, 0, 0);
 vec3 camUp = vec3New(0, 1, 0);
 mat4 view = mat4LookAt(camPos, camTarget, camUp);
 mat4 proj = mat4Proj(1.57, 16.0/9.0, .01, 100);
+mat4_debugprint(view);
 
 int modelUniformLocation = glGetUniformLocation(shaderProgram, "model");
 int viewUniformLocation = glGetUniformLocation(shaderProgram, "view");
 int projUniformLocation = glGetUniformLocation(shaderProgram, "proj");
 
 mat4_debugprint(proj);
+
+glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 printf("[GUI STARTUP SUCCESSFUL]: Rise and shine\n");
 while (!glfwWindowShouldClose(guiWindow)) 
@@ -200,8 +206,8 @@ while (!glfwWindowShouldClose(guiWindow))
     glUniformMatrix4fv(modelUniformLocation, 1, GL_FALSE, model.data);
     glUniformMatrix4fv(viewUniformLocation, 1, GL_FALSE, view.data);
     glUniformMatrix4fv(projUniformLocation, 1, GL_FALSE, proj.data);
-    //glDrawArrays(GL_TRIANGLES, 0, objData.vFloatCount);
-    glDrawElements(GL_TRIANGLES, objData.iCount, GL_UNSIGNED_INT, 0);
+    //glDrawArrays(GL_TRIANGLES, 0, objData.vertexDataCount);
+    glDrawElements(GL_TRIANGLES, objData.faceIndexDataCount* 6, GL_UNSIGNED_INT, 0);
 
     glfwSwapBuffers(guiWindow);
     glfwPollEvents();

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "emulator_loadAssets.h"
+// TODO: The renderer still does not draw the test geometry correctly. I have no idea why, but it draws the REV2 just fine. ugh. fix later
 
 static void skipToNextLine(FILE* file) 
 {
@@ -20,7 +21,7 @@ if ( fileVertexData->vertexDataCount + 1 > fileVertexData->vertexDataSize )
     fileVertexData->vertexData = realloc(fileVertexData->vertexData, sizeof(float) * fileVertexData->vertexDataSize);
     }
 
-printf("Updated vertex data\n");
+//printf("Updated vertex data\n");
 *(fileVertexData->vertexData + fileVertexData->vertexDataCount) = val;
 fileVertexData->vertexDataCount++;
 
@@ -33,11 +34,12 @@ val--;
 if ( fileVertexData->faceIndexDataCount + 1 > fileVertexData->faceIndexDataSize) 
     {
     printf("Reized face vertex index data\n");
+    printf("oldSize: %d, newSize: %d\n", fileVertexData->faceIndexDataSize, fileVertexData->faceIndexDataSize*2);
     fileVertexData->faceIndexDataSize *= 2;
-    fileVertexData->faceIndexData = realloc(fileVertexData->faceIndexData, sizeof(int) * fileVertexData->vertexDataSize);
+    fileVertexData->faceIndexData = realloc(fileVertexData->faceIndexData, sizeof(int) * fileVertexData->faceIndexDataSize);
     }
 
-printf("Updated face vertex index data\n");
+//printf("Updated face vertex index data\n");
 *(fileVertexData->faceIndexData + fileVertexData->faceIndexDataCount) = val;
 fileVertexData->faceIndexDataCount++;
 
@@ -50,7 +52,7 @@ int c;
 // Hopefully this covers all platforms? although I think I'm the odd one since windows lol
 while ((c = fgetc(file)) != '\n' && c != '\r') 
     {
-        printf("PARSE VERTEX C: %c\n", c);
+        //printf("PARSE VERTEX C: %c\n", c);
         switch (c) 
         {
             case ' ':
@@ -63,7 +65,7 @@ while ((c = fgetc(file)) != '\n' && c != '\r')
                 float readFloat;
                 fscanf(file, "%f", &readFloat);
                 addVertexToFileStructArray(fileVertexData, readFloat);
-                printf("VDATA: %f\n", readFloat);
+                //printf("VDATA: %f\n", readFloat);
                 break;
         }
     }
@@ -75,7 +77,7 @@ static void parseFaceNormalIndex(FILE* file, struct fileVertexData* fileVertexDa
     // theres gonna be a float here, just read it bro
     float readFloat;
     fscanf(file, "%f", &readFloat);
-    printf("Read face normal index %f\n", readFloat);
+    //printf("Read face normal index %f\n", readFloat);
 
 }
 
@@ -87,7 +89,7 @@ int c = fgetc(file);
 switch (c) 
     {
         case '/':
-            printf("Texture index skipped\n");
+            //printf("Texture index skipped\n");
             parseFaceNormalIndex(file, fileVertexData);
             break;
         default:
@@ -95,7 +97,7 @@ switch (c)
             // read the float (does nothing rn)
             int readInt;
             fscanf(file, "%d", &readInt);
-            printf("Reads texture index: %d\n", readInt);
+            //printf("Reads texture index: %d\n", readInt);
             break;
     }
 
@@ -116,7 +118,7 @@ static void parseFaceVertexIndex(FILE* file, struct fileVertexData* fileVertexDa
 ungetc(lastChar, file);
 int readInt;
 fscanf(file, "%d", &readInt);
-printf("FACE VINDEX: %d\n", readInt);
+//printf("FACE VINDEX: %d\n", readInt);
 // add to array here
 addFaceVertexIndexToFileStructArray(fileVertexData, readInt);
 // Continue to next state if a / is found
@@ -137,7 +139,7 @@ static void parseFace(FILE* file, struct fileVertexData* fileVertexData)
 int c;
 while ((c = fgetc(file)) != '\n' && c != '\r') 
     {
-        printf("PARSE FACE C: %c\n", c);
+        //printf("PARSE FACE C: %c\n", c);
         switch (c) 
         {
             case ' ':
@@ -146,6 +148,7 @@ while ((c = fgetc(file)) != '\n' && c != '\r')
             case '/':
                 // found the 
                 break;
+                
             default:
                 // Anything else implies a float next, go back 1 char and read
                 parseFaceVertexIndex(file, fileVertexData, c);
@@ -211,7 +214,10 @@ while ((c = fgetc(srcFile)) != EOF)
                 skipToNextLine(srcFile);
                 break;
             case 'v':
+                if ((c = fgetc(srcFile)) == ' ')
+                {
                 parseVertex(srcFile, &vData);
+                }
                 break; 
             case 'f':
                 parseFace(srcFile, &vData);
