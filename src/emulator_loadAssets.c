@@ -5,6 +5,155 @@
 #include <stdio.h>
 #include "emulator_loadAssets.h"
 
+static void skipToNextLine(FILE* file) 
+{
+fscanf(file, "%*[^\n]");
+}
+
+static void addVertexToFileStructArray(struct fileVertexData* fileVertexData, float val) 
+{
+
+if ( fileVertexData->vertexDataCount + 1 > fileVertexData->vertexDataSize ) 
+    {
+    printf("Reized vertex data\n");
+    fileVertexData->vertexDataSize *= 2;
+    fileVertexData->vertexData = realloc(fileVertexData->vertexData, sizeof(float) * fileVertexData->vertexDataSize);
+    }
+
+printf("Updated vertex data\n");
+*(fileVertexData->vertexData + fileVertexData->vertexDataCount) = val;
+fileVertexData->vertexDataCount++;
+
+}
+
+static void addFaceVertexIndexToFileStructArray(struct fileVertexData* fileVertexData, int val)
+{
+    // These indices are 1-based, so offset by one
+val--;
+if ( fileVertexData->faceIndexDataCount + 1 > fileVertexData->faceIndexDataSize) 
+    {
+    printf("Reized face vertex index data\n");
+    fileVertexData->faceIndexDataSize *= 2;
+    fileVertexData->faceIndexData = realloc(fileVertexData->faceIndexData, sizeof(int) * fileVertexData->vertexDataSize);
+    }
+
+printf("Updated face vertex index data\n");
+*(fileVertexData->faceIndexData + fileVertexData->faceIndexDataCount) = val;
+fileVertexData->faceIndexDataCount++;
+
+}
+
+static void parseVertex(FILE* file, struct fileVertexData* fileVertexData)
+{
+
+int c;
+// Hopefully this covers all platforms? although I think I'm the odd one since windows lol
+while ((c = fgetc(file)) != '\n' && c != '\r') 
+    {
+        printf("PARSE VERTEX C: %c\n", c);
+        switch (c) 
+        {
+            case ' ':
+            case '\t':
+                // ignore
+                break;
+            default:
+                // Anything else implies there is going to be a float next, go back 1 char and read the float
+                ungetc(c, file);
+                float readFloat;
+                fscanf(file, "%f", &readFloat);
+                addVertexToFileStructArray(fileVertexData, readFloat);
+                printf("VDATA: %f\n", readFloat);
+                break;
+        }
+    }
+
+}
+
+static void parseFaceNormalIndex(FILE* file, struct fileVertexData* fileVertexData)
+{
+    // theres gonna be a float here, just read it bro
+    float readFloat;
+    fscanf(file, "%f", &readFloat);
+    printf("Read face normal index %f\n", readFloat);
+
+}
+
+static void parseFaceTextureIndex(FILE* file, struct fileVertexData* fileVertexData) 
+{
+
+// check to make sure this field is not empty
+int c = fgetc(file);
+switch (c) 
+    {
+        case '/':
+            printf("Texture index skipped\n");
+            parseFaceNormalIndex(file, fileVertexData);
+            break;
+        default:
+            ungetc(c, file);
+            // read the float (does nothing rn)
+            int readInt;
+            fscanf(file, "%d", &readInt);
+            printf("Reads texture index: %d\n", readInt);
+            break;
+    }
+
+c = fgetc(file);
+if ( c == '/' )
+    {
+    parseFaceNormalIndex(file, fileVertexData);
+    }
+else
+    {
+    ungetc(c, file);
+    }
+}
+
+static void parseFaceVertexIndex(FILE* file, struct fileVertexData* fileVertexData, int lastChar) 
+{
+
+ungetc(lastChar, file);
+int readInt;
+fscanf(file, "%d", &readInt);
+printf("FACE VINDEX: %d\n", readInt);
+// add to array here
+addFaceVertexIndexToFileStructArray(fileVertexData, readInt);
+// Continue to next state if a / is found
+int c = fgetc(file);
+if (c == '/') 
+    {
+    parseFaceTextureIndex(file, fileVertexData);
+    }
+else
+    {
+    ungetc(c, file);
+    }
+}
+
+
+static void parseFace(FILE* file, struct fileVertexData* fileVertexData) 
+{
+int c;
+while ((c = fgetc(file)) != '\n' && c != '\r') 
+    {
+        printf("PARSE FACE C: %c\n", c);
+        switch (c) 
+        {
+            case ' ':
+            case '\t':
+                break;
+            case '/':
+                // found the 
+                break;
+            default:
+                // Anything else implies a float next, go back 1 char and read
+                parseFaceVertexIndex(file, fileVertexData, c);
+                break;
+        }
+    }
+}
+
 
 struct fileVertexData loadVertexDataFromOBJ
     (
@@ -15,8 +164,13 @@ struct fileVertexData loadVertexDataFromOBJ
 
 struct fileVertexData vData = 
     {
-        .vFloatCount = 0,
-        .vertexData = NULL
+        .vertexDataSize = 100,
+        .vertexDataCount= 0,
+        .vertexData = malloc(sizeof(float) * vData.vertexDataSize),
+
+        .faceIndexDataSize = 100,
+        .faceIndexDataCount = 0,
+        .faceIndexData = malloc(sizeof(int) * vData.faceIndexDataSize)
     };
 
 FILE *srcFile = NULL;
@@ -43,122 +197,40 @@ if ( srcFile == NULL )
 
 #endif
 
-// 10 is probably enough, they typically are only 2 chars at max
-char elementSpecifier[10];
-
-size_t vFloatCount= 0;
-size_t vFloatCapacity = 100;
-
-size_t iCount = 0;
-size_t iCapacity = 100;
-
-
-// Init size to initial capacity
-vData.vertexData = malloc(sizeof(float) * vFloatCapacity);
-vData.faceIndexData = malloc(sizeof(float) * iCapacity);
-
-while ( fscanf(srcFile, "%s", elementSpecifier) != EOF ) 
+int c;
+while ((c = fgetc(srcFile)) != EOF)
     {
+    switch (c) 
+        {
+            case ' ':
+            case '\t':
+            case '\n':
+                break;
+            case '#':
+                printf("Skipping Comment\n");
+                skipToNextLine(srcFile);
+                break;
+            case 'v':
+                parseVertex(srcFile, &vData);
+                break; 
+            case 'f':
+                parseFace(srcFile, &vData);
+                break;
+            default:
+                break;
 
-        if ( strcmp(elementSpecifier, "v" ) == 0 )
-            {
-//            printf("Element specifier: %s\n", elementSpecifier);
- //           printf("VERTEX DETECTED\n");
-            float vertices[3];
-            fscanf(srcFile, "%f %f %f", &vertices[0], &vertices[1], &vertices[2]);
-  //              printf("VERTEX COORDINATES: %.2f, %.2f, %.2f\n", vertices[0], vertices[1], vertices[2]);
-            if ( vFloatCount + 3 < vFloatCapacity ) 
-                {
-  //              printf("Copying to vertex array\n");
-                memcpy(vData.vertexData + vFloatCount, vertices, sizeof(float) * 3);
-                vFloatCount += 3;
-                }
-            else
-                {
-                vFloatCapacity *= 2;
-                vData.vertexData = realloc(vData.vertexData, sizeof(float) * vFloatCapacity);
-                printf("Expanding vertex array to %lu and copying\n", vFloatCapacity);
-                memcpy(vData.vertexData + vFloatCount, vertices, sizeof(float) * 3);
-                vFloatCount += 3;
-                }
-            }
-        else if ( strcmp(elementSpecifier, "f") == 0 )
-            {
-            // This indicates a face index specifier for EBO    
-            // There can be any amount of vertices for each face
-            // There are also negative indices but im ignoring those because i dont wanna deal with them rn
-            // 1 Figure out how many chars until newline
-            // 2 Scanf until I pass that char limit
-            // 3 undo last scanf and break loop
-            
-            // Since this file is open in binary mode, arithmetic with ftell return value is well defined
-
-            long int initialPos = ftell(srcFile);
-            // Skips everything up to the newline
-            fscanf(srcFile, "%*[^\n]");
-            long int finalPos = ftell(srcFile);
-
-            long int dataLength = finalPos - initialPos;
-            //printf("%ld chars to read\n", dataLength);
-
-            long int charsRead = 0;
-
-            fseek(srcFile, initialPos, SEEK_SET);
-            while (charsRead < dataLength) {
-                int dummy1;
-                int dummy2;
-                int vIndex;
-
-                long int beforeScanPos = ftell(srcFile);
-                fscanf(srcFile, "%d/%d/%d", &vIndex, &dummy1, &dummy2);
-                long int currentPos = ftell(srcFile);
-                charsRead = currentPos - initialPos;
-                if (charsRead < dataLength) 
-                {
-                    // Insert into array
-                    //printf("vIndex: %d\n", vIndex);
-                    if (iCount + 1 < iCapacity) 
-                    {
-                    vIndex--;
-                    memcpy(vData.faceIndexData + iCount, &vIndex, sizeof(int));
-                    iCount++;
-                    }
-                    else
-                    {
-                    iCapacity *= 2;
-                    printf("Resizing face index data to %ld (%ld bytes)\n", iCapacity, sizeof(int) * iCapacity);
-                    vData.faceIndexData = realloc(vData.faceIndexData, sizeof(int) * iCapacity);
-
-                    vIndex--;
-                    memcpy(vData.faceIndexData + iCount, &vIndex, sizeof(int));
-                    iCount++;
-                    }
-                }
-                else 
-                {
-                    //printf("TOO FAR!\n");
-                    fseek(srcFile, beforeScanPos, SEEK_SET);
-                    break;
-                }
-                //printf("Total chars read: %ld\n", charsRead);
-            }
-
-            }
-
+        }
     }
 
+printf("\n");
 fclose(srcFile);
 
-// Trim buffer to free excess space
-printf("Trimming vertex data buffer to %ld floats (%ld bytes)\n", vFloatCount, sizeof(float) * vFloatCount);
-vData.vertexData = realloc(vData.vertexData, sizeof(float) * vFloatCount);
-
-printf("Trimming index data buffer to %ld floats (%ld bytes)\n", iCount, sizeof(float) * iCount);
-vData.vertexData = realloc(vData.vertexData, sizeof(int) * iCount);
-
-vData.vFloatCount = vFloatCount;
-vData.iCount = iCount;
-
-printf("thingo");
+// trim
+printf("Trimmed vertex data to size %lu floats (%lu bytes)\n", vData.vertexDataCount, sizeof(float) * vData.vertexDataCount);
+vData.vertexData = realloc(vData.vertexData, sizeof(float) * vData.vertexDataCount);
+vData.vertexDataSize = vData.vertexDataCount;
+printf("Trimmed face vertex index data to size %lu ints (%lu bytes)\n", vData.faceIndexDataCount, sizeof(int) * vData.faceIndexDataCount);
+vData.faceIndexData = realloc(vData.faceIndexData, sizeof(int) * vData.faceIndexDataCount);
+vData.faceIndexDataSize = vData.faceIndexDataCount;
 return vData;
 }
