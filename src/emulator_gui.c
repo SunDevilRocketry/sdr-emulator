@@ -72,6 +72,44 @@ static void framebuffer_size_callback
     int height
     );
 
+static double lastMouseX = 0;
+static double lastMouseY = 0;
+static void evaluateCursorDiff()
+{
+glfwGetCursorPos(guiWindow, &lastMouseX, &lastMouseY);
+}
+
+static const double sensitivity = 0.04;
+static mat4 getUserRotation()
+{
+    const double epsilon = 0.001;
+
+    const double lmx = lastMouseX;
+    const double lmy = lastMouseY;
+
+    evaluateCursorDiff();
+
+    if ( fabs(lastMouseX - lmx) < epsilon && fabs(lastMouseY - lmy) < epsilon)
+    {
+        return mat4Identity();
+    }
+
+    int state = glfwGetMouseButton(guiWindow, GLFW_MOUSE_BUTTON_LEFT);
+    if (state != GLFW_PRESS)
+    {
+        return mat4Identity();
+    }
+
+    vec3 dir = vec3Normalize(vec3New(lastMouseX-lmx, -lastMouseY+lmy, 0));
+    vec3 rotAxis = vec3Cross(vec3New(0, 0, 1), dir);
+    return mat4AxisAngle
+            (rotAxis, 
+             sensitivity
+            );
+}
+
+
+
 /*------------------------------------------------------------------------------
  Procedures                                                     
 ------------------------------------------------------------------------------*/
@@ -182,14 +220,14 @@ glfwShowWindow(guiWindow);
 glfwRequestWindowAttention(guiWindow);
 glfwFocusWindow(guiWindow);
 
-vec3 axis = vec3Normalize(vec3New(1, 0, 1));
-mat4 model = mat4AxisAngle(axis, 1.57);
+vec3 axis = vec3Normalize(vec3New(1, 1, 1));
+mat4 model = mat4Identity();
 mat4_debugprint(model);
 vec3 camPos = vec3New(0, 0, 100); 
 vec3 camTarget = vec3New(0, 0, 0);
 vec3 camUp = vec3New(0, 1, 0);
 mat4 view = mat4LookAt(camPos, camTarget, camUp);
-mat4 proj = mat4Proj(1.57, 16.0/9.0, 1, 500);
+mat4 proj = mat4Proj(1.57, 16.0/9.0, 1, 300);
 
 int modelUniformLocation = glGetUniformLocation(shaderProgram, "model");
 int viewUniformLocation = glGetUniformLocation(shaderProgram, "view");
@@ -202,7 +240,7 @@ glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 printf("[GUI STARTUP SUCCESSFUL]: Rise and shine\n");
 while (!glfwWindowShouldClose(guiWindow)) 
     {
-    model = mat4AxisAngle(axis, glfwGetTime());
+    model = mat4Mult(getUserRotation(), model);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(shaderProgram);
