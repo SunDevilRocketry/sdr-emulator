@@ -47,6 +47,7 @@ vec3 vec3Sub(const vec3 a, const vec3 b);
 
 mat4 mat4Identity();
 mat4 mat4Mult(const mat4 a, const mat4 b);
+mat4 mat4RotY(float angle);
 mat4 mat4Translation(float x, float y, float z);
 mat4 mat4LookAt(vec3 position, vec3 target, vec3 up);
 mat4 mat4Proj

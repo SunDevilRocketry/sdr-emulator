@@ -23,6 +23,7 @@
 /*------------------------------------------------------------------------------
  Includes                                                         
 ------------------------------------------------------------------------------*/
+#include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -180,12 +181,12 @@ glfwShowWindow(guiWindow);
 glfwRequestWindowAttention(guiWindow);
 glfwFocusWindow(guiWindow);
 
-mat4 model = mat4Translation(0, 0, 0);
-vec3 camPos = vec3New(0, 20, 60);
-vec3 camTarget = vec3New(0, 0, 0);
+mat4 model = mat4RotY(0);
+vec3 camPos = vec3New(0, 20, 100); 
+vec3 camTarget = vec3New(0, -40, 0);
 vec3 camUp = vec3New(0, 1, 0);
 mat4 view = mat4LookAt(camPos, camTarget, camUp);
-mat4 proj = mat4Proj(1.57, 16.0/9.0, .01, 100);
+mat4 proj = mat4Proj(1.57, 16.0/9.0, 1, 500);
 mat4_debugprint(view);
 
 int modelUniformLocation = glGetUniformLocation(shaderProgram, "model");
@@ -199,6 +200,7 @@ glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 printf("[GUI STARTUP SUCCESSFUL]: Rise and shine\n");
 while (!glfwWindowShouldClose(guiWindow)) 
     {
+    model = mat4RotY(glfwGetTime());
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(shaderProgram);

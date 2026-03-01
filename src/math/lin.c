@@ -103,6 +103,17 @@ return retMat4;
 
 mat4 mat4Mult(const mat4 a, const mat4 b);
 
+mat4 mat4RotY(float angle)
+{
+mat4 rotMat = mat4Identity();
+rotMat.data[0] = cos(angle);
+rotMat.data[2] = -sin(angle);
+rotMat.data[8] = sin(angle);
+rotMat.data[10] = cos(angle);
+return rotMat;
+
+}
+
 mat4 mat4Translation
     (
     float x, 
