@@ -31,7 +31,7 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include "shaders/readShader.h"
+#include "shaders/shaders.h"
 
 /*------------------------------------------------------------------------------
  Procedures                                                     

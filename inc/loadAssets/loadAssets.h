@@ -1,11 +1,12 @@
 /*******************************************************************************
 *
 * FILE: 
-* 		readShader.h
+* 		loadAssets.h
 *
 * DESCRIPTION: 
-* 		Header containing prototypes for shader processing functions
-*                                                                              
+*       Provides standard structure for handling vertex data after parsing from file.
+*       Provides function prototypes for parsing vertex data from file.
+*
 * COPYRIGHT:                                                                   
 *       Copyright (c) 2026 Sun Devil Rocketry.                                 
 *       All rights reserved.                                                   
@@ -19,70 +20,50 @@
 *
 *******************************************************************************/
 
-#ifndef READ_SHADER_H_
-#define READ_SHADER_H_
+#ifndef LOAD_ASSETS_H_
+#define LOAD_ASSETS_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+
 /*------------------------------------------------------------------------------
  Standard Includes                                                                    
 ------------------------------------------------------------------------------*/
 
+#include <stddef.h>
 
 /*------------------------------------------------------------------------------
- Project Includes  
-------------------------------------------------------------------------------*/
-#include "glad/gl.h"
-
-/*------------------------------------------------------------------------------
- Macros  
+ Structs
 ------------------------------------------------------------------------------*/
 
 
-/*------------------------------------------------------------------------------
- Typedefs
-------------------------------------------------------------------------------*/
+struct fileVertexData {
+    /* TODO: Take *DataSize out of this struct */
+    size_t vertexDataSize; /* Used in parsing to contain full size of array; same as data count otherwise */
+    size_t vertexDataCount;
+    float *vertexData;
 
-
-/*------------------------------------------------------------------------------
- Global Variables                                             
-------------------------------------------------------------------------------*/
-
-
-/*------------------------------------------------------------------------------
- Exported function prototypes                                             
-------------------------------------------------------------------------------*/
-
+    size_t faceIndexDataSize; /* Used in parsing to contain full size of array; same as data count otherwise */
+    size_t faceIndexDataCount;
+    unsigned int *faceIndexData;
+};
 
 /*------------------------------------------------------------------------------
  Function prototypes                                             
 ------------------------------------------------------------------------------*/
 
-const char* readShaderSource
+struct fileVertexData loadVertexDataFromOBJ
     (
-    const char* path
-    );
-
-GLuint genShaderFromSource
-    (
-    const char* path,
-    GLenum shaderType
-    );
-
-GLuint genShaderProgramFromSources
-    (
-    const char* vertexShaderPath,
-    const char* fragmentShaderPath
+    const char* filepath
     );
 
 #ifdef __cplusplus
 }
 #endif
 
-
-#endif /* READ_SHADER_H_ */
+#endif /* LOAD_ASSETS_H_ */
 
 /*******************************************************************************
 * END OF FILE                                                                  *

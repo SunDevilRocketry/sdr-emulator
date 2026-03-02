@@ -1,11 +1,38 @@
-#ifndef MAT4_H_
-#define MAT4_H_
+/*******************************************************************************
+*
+* FILE: 
+* 		lin.h
+*
+* DESCRIPTION: 
+*       Provides types for passing coordinate/transform data to shaders.
+*       Provides function prototypes for manipulating coordinates and transforms.
+*
+* COPYRIGHT:                                                                   
+*       Copyright (c) 2026 Sun Devil Rocketry.                                 
+*       All rights reserved.                                                   
+*                                                                              
+*       This software is licensed under terms that can be found in the LICENSE 
+*       file in the root directory of this software component.                 
+*       If no LICENSE file comes with this software, it is covered under the   
+*       BSD-3-Clause.                                                          
+*                                                                              
+*       https://opensource.org/license/bsd-3-clause                            
+*
+*******************************************************************************/
 
-// Column major
+#ifndef LIN_H_ 
+#define LIN_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*------------------------------------------------------------------------------
+ Typedefs
+------------------------------------------------------------------------------*/
 
 typedef union vec3 {
     float data[3];
-    // Anonymous structs are a microsoft extension :(
     struct _vec3_members {
         float x;
         float y;
@@ -13,12 +40,14 @@ typedef union vec3 {
     } members;
 } vec3;
 
-// typedef?
+_Static_assert( sizeof(vec3) == 12, "vec3s should only contain 3 floats" );
+
+/* Matrices are stored in column major order per the GLSL specification. */
+/* This has no effect on their operations or use */
 typedef union mat4 {
     float data[16];
-    // Anonymous structs are a microsoft extension :(
     struct _mat4_members {
-        // a[row][col]
+        /* a[row][col] */
         float a00;
         float a01;
         float a02;
@@ -38,22 +67,109 @@ typedef union mat4 {
     } members;
 } mat4;
 
-vec3 vec3New(const float x, const float y, const float z);
-float vec3Dot(const vec3 a, const vec3 b);
-vec3 vec3Cross(const vec3 a, const vec3 b);
-float vec3Magnitude(const vec3 vec);
-vec3 vec3Normalize(const vec3 vec);
-vec3 vec3Sub(const vec3 a, const vec3 b);
-vec3 vec3MultScalar(const vec3 a, float scalar);
+_Static_assert( sizeof(mat4) == 64, "mat4s should only contain 3 floats" );
 
-mat4 mat4Identity();
-mat4 mat4Mult(const mat4 a, const mat4 b);
-mat4 mat4MultScalar(const mat4 a, float scalar);
-mat4 mat4Add(const mat4 a, const mat4 b);
-mat4 mat4RotY(float angle);
-mat4 mat4AxisAngle(vec3 axis, float angle);
-mat4 mat4Translation(float x, float y, float z);
-mat4 mat4LookAt(vec3 position, vec3 target, vec3 up);
+/*------------------------------------------------------------------------------
+ Function prototypes                                             
+------------------------------------------------------------------------------*/
+
+/* VEC3 FUNCTIONS */
+/* vec3.c */
+
+vec3 vec3New
+    (
+    float x, 
+    float y, 
+    float z
+    );
+
+
+vec3 vec3Cross
+    (
+    vec3 a, 
+    vec3 b
+    );
+
+
+vec3 vec3Normalize
+    (
+    vec3 vec
+    );
+
+vec3 vec3Sub
+    (
+    vec3 a, 
+    vec3 b
+    );
+
+vec3 vec3MultScalar
+    (
+    vec3 a, 
+    float scalar
+    );
+
+float vec3Magnitude
+    (
+    const vec3 vec
+    );
+
+float vec3Dot
+    (
+    vec3 a, 
+    vec3 b
+    );
+
+/* MAT4 FUNCTIONS */
+/* mat4.c */
+
+mat4 mat4Identity
+    (
+    void
+    );
+
+mat4 mat4Mult
+    (
+    mat4 a, 
+    mat4 b
+    );
+
+mat4 mat4MultScalar
+    (
+    mat4 a, 
+    float scalar
+    );
+    
+mat4 mat4Add
+    (
+    mat4 a, 
+    mat4 b
+    );
+
+mat4 mat4RotY
+    (
+    float angle
+    );
+
+mat4 mat4AxisAngle
+    (
+    vec3 axis, 
+    float angle
+    );
+
+mat4 mat4Translation
+    (
+    float x, 
+    float y, 
+    float z
+    );
+
+mat4 mat4LookAt
+    (
+    vec3 position, 
+    vec3 target, 
+    vec3 up
+    );
+
 mat4 mat4Proj
     (
     float fov,
@@ -62,10 +178,25 @@ mat4 mat4Proj
     float far
     );
 
-// IDK if ortho is needed
-mat4 mat4Ortho(float x, float y, float z);
+/* TODO: Remove or implement this function */
+mat4 mat4Ortho
+    (
+    float x, 
+    float y, 
+    float z
+    );
 
+/* TODO: Remove these or convert to macro */
 void mat4_debugprint(mat4 mat);
 void vec3_debugprint(vec3 vec);
 
-#endif // MAT4_H_
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* LIN_H_ */
+
+/*******************************************************************************
+* END OF FILE                                                                  *
+*******************************************************************************/
+

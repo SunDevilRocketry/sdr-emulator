@@ -3,7 +3,7 @@
 #define __STDC_WANT_LIB_EXT1__ 1
 #include <stdlib.h>
 #include <stdio.h>
-#include "emulator_loadAssets.h"
+#include "loadAssets/loadAssets.h"
 // TODO: The renderer still does not draw the test geometry correctly. I have no idea why, but it draws the REV2 just fine. ugh. fix later
 
 static void skipToNextLine(FILE* file) 

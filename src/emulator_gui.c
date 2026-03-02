@@ -31,8 +31,9 @@
 #include "glad/gl.h" // glad must go before glfw
 #include "glfw3.h"
 #include "emulator.h"
-#include "shaders/readShader.h"
-#include "emulator_loadAssets.h"
+#include "shaders/shaders.h"
+#include "loadAssets/loadAssets.h"
+#include "loadAssets/loadAssets.h"
 #include "math/lin.h"
 
 #define MAKE_SHADER_PATH(X) "../../../../emulator/src/shaders/"X
@@ -79,7 +80,7 @@ static void evaluateCursorDiff()
 glfwGetCursorPos(guiWindow, &lastMouseX, &lastMouseY);
 }
 
-static const double sensitivity = 0.04;
+static const double sensitivity = 0.02;
 static mat4 getUserRotation()
 {
     const double epsilon = 0.001;
