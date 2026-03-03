@@ -67,7 +67,7 @@ typedef union mat4 {
     } members;
 } mat4;
 
-_Static_assert( sizeof(mat4) == 64, "mat4s should only contain 3 floats" );
+_Static_assert( sizeof(mat4) == 64, "mat4s should only contain 16 floats" );
 
 /*------------------------------------------------------------------------------
  Function prototypes                                             

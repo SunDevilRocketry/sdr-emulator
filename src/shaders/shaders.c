@@ -34,7 +34,7 @@
 #include "shaders/shaders.h"
 
 /*------------------------------------------------------------------------------
- Procedures                                                     
+ Functions
 ------------------------------------------------------------------------------*/
 
 /*******************************************************************************
@@ -48,7 +48,7 @@
 *       responsible for freeing the returned string.                           *
 *                                                                              *
 *******************************************************************************/
-const char* readShaderSource
+char* readShaderSource
     (
     const char* path
     ) 
@@ -107,25 +107,25 @@ GLuint genShaderFromSource
 int success;
 char infoLog[512];
 
-const char* shaderCode = readShaderSource(path);
+char* shaderCode = readShaderSource(path);
 if (shaderCode == NULL) 
     {
     return 0;
     }
     
-    GLuint shaderID = glCreateShader(shaderType);
-    glShaderSource(shaderID, 1, &shaderCode, NULL); 
-    glCompileShader(shaderID);
-    free((void*)shaderCode);
+GLuint shaderID = glCreateShader(shaderType);
+glShaderSource(shaderID, 1, &shaderCode, NULL); 
+glCompileShader(shaderID);
+free(shaderCode);
 
-    glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success);
-    if (!success) 
-        {
-        glGetShaderInfoLog(shaderID, 512, NULL, infoLog);
-        fprintf(stderr, "Shader %s compilation failed:\n \t%s\n", path, infoLog);
-        }
+glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success);
+if (!success) 
+    {
+    glGetShaderInfoLog(shaderID, 512, NULL, infoLog);
+    fprintf(stderr, "Shader %s compilation failed:\n \t%s\n", path, infoLog);
+    }
 
-    return shaderID;
+return shaderID;
 } /* genShaderFromSource */
 
 /*******************************************************************************
@@ -135,7 +135,8 @@ if (shaderCode == NULL)
 *                                                                              *
 * DESCRIPTION:                                                                 * 
 *       Creates and returns an OpenGL shader program with vertex and fragment  *
-*       stages corresponding to the passed shader paths                        *
+*       stages corresponding to the passed shader paths. Return value of       *
+*       zero indicates error as per the OpenGL specification                   *
 *                                                                              *
 *******************************************************************************/
 GLuint genShaderProgramFromSources
@@ -185,3 +186,6 @@ if (!success)
 return program;
 } /* genShaderProgramFromSources */
 
+/*******************************************************************************
+* END OF FILE                                                                  *
+*******************************************************************************/

@@ -35,7 +35,7 @@ extern "C" {
  Function prototypes                                             
 ------------------------------------------------------------------------------*/
 
-const char* readShaderSource
+char* readShaderSource
     (
     const char* path
     );

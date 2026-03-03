@@ -54,6 +54,7 @@ struct fileVertexData {
  Function prototypes                                             
 ------------------------------------------------------------------------------*/
 
+/* loadOBJ.c */
 struct fileVertexData loadVertexDataFromOBJ
     (
     const char* filepath
