@@ -10,7 +10,7 @@ void main() {
 
     vec3 norm = normalize(normal);
 
-    vec3 lightDir = normalize(vec3(0, 0, 5) - fragPos);
+    vec3 lightDir = normalize(vec3(0, 0, 35) - fragPos);
 
     float diff = max(dot(norm, lightDir), 0);
 

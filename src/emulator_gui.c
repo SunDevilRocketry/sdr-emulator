@@ -177,6 +177,14 @@ printf("VERTEX NORMAL INDEX: %d; CORRESPONDING NORMAL: (%f, %f, %f)\n",
                 *(objData.vertexNormalsData + objData.vertexNormalsIndices[i]*3+2));
 }
 */
+int runningtotal = 0;
+for (size_t i = 0; i < DARRAY_SIZE(objData.fileMaterialsData); i++)
+{
+    struct fileMaterials mat = objData.fileMaterialsData[i];
+    printf("VERTS: %d, COLOR: (%f, %f, %f)\n", mat.numIndiciesUsingMat, mat.r, mat.g, mat.b);
+    runningtotal += mat.numIndiciesUsingMat;
+}
+printf("TOTAL INDICES USING MATS: %d\n", runningtotal);
 }
 
 void emulator_gui_teardown
@@ -210,6 +218,9 @@ GLuint VAO;
 glGenVertexArrays(1, &VAO);
 glBindVertexArray(VAO);
 
+//TODO: THE METHOD FOR LOADING VERTICES:
+// The load obj function will populate a new array of type struct (containing material names and no. of indices defined with that material)
+// We can then load from that and interleave the data here
 float *realVBOData= DARRAY_NEW(float, 100);
 printf("FACE INDEX SIZE: %d\n", DARRAY_SIZE(objData.faceIndexData));
 printf("FACE NORMALS INDEX SIZE: %d\n", DARRAY_SIZE(objData.vertexNormalsIndices));

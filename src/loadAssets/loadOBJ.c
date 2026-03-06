@@ -24,10 +24,10 @@
  Standard Includes                                                                    
 ------------------------------------------------------------------------------*/
 #define __STDC_WANT_LIB_EXT1__ 1
+#include <stdio.h>
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 /*------------------------------------------------------------------------------
  Project Includes
@@ -50,6 +50,95 @@ static void skipToNextLine
 static void skipToNextLine(FILE* file) 
 {
 fscanf(file, "%*[^\n]");
+}
+
+static void getMtlDiffuse(FILE* mtlFile, struct fileMaterials* material)
+{
+// im gna do it the dumb way </3
+
+int c;
+while ((c = fgetc(mtlFile)) != EOF)
+{
+switch (c) 
+    {
+    case ' ':
+    case '\t':
+    case '\n':
+        break;
+    case 'K':
+        if (fgetc(mtlFile) == 'd')
+        {
+        fscanf(mtlFile, " %f %f %f", &material->r, &material->g, &material->b);
+        return;
+        }
+        break;
+    default:
+        break;
+    }
+}
+}
+
+
+static struct fileMaterials getMaterialFromMtl(const char* mtlFileName, const char* mtlName) 
+{
+struct fileMaterials material = {};
+
+char actualFileName[1024] = "../../../../emulator/resources/";
+
+strcat(actualFileName, mtlFileName);
+
+// TODO: strcat tjhis
+FILE* mtlFile = fopen(actualFileName, "rb");
+
+if ( mtlFile == NULL )
+{
+    printf("NOOOO!\n");
+    exit(1);
+}
+
+char readMtlName[512];
+
+int c;
+while ((c = fgetc(mtlFile)) != EOF)
+{
+switch (c) 
+    {
+    case ' ':
+    case '\t':
+    case '\n':
+        break;
+    case '#':
+        printf("Skipping Comment\n");
+        skipToNextLine(mtlFile);
+        break;
+    case 'n':
+        ungetc(c, mtlFile);
+        fscanf(mtlFile, "%s", readMtlName);
+
+        if ( strcmp(readMtlName, "newmtl") != 0 )
+        {
+        break;
+        }
+        fscanf(mtlFile, "%s", readMtlName);
+        printf("READ NAME : %s", readMtlName);
+        if ( strcmp(readMtlName, mtlName) != 0 )
+        {
+        printf("STRCMP FAIL: %s != %s\n", mtlName, readMtlName);
+        break;
+        }
+        getMtlDiffuse(mtlFile, &material);
+        printf("%f %f %f\n", material.r, material.g, material.b);
+        fclose(mtlFile);
+        return material;
+    break;
+    default:
+        break;
+    }
+
+}
+
+fclose(mtlFile);
+return material;
 }
 
 static void addVertexToFileStructArray(struct fileVertexData* fileVertexData, float val) 
@@ -171,8 +260,9 @@ else
 }
 
 
-static void parseFace(FILE* file, struct fileVertexData* fileVertexData) 
+static int parseFace(FILE* file, struct fileVertexData* fileVertexData) 
 {
+int numIndicesParsed = 0;
 int c;
 while ((c = fgetc(file)) != '\n' && c != '\r') 
     {
@@ -189,9 +279,11 @@ while ((c = fgetc(file)) != '\n' && c != '\r')
             default:
                 // Anything else implies a float next, go back 1 char and read
                 parseFaceVertexIndex(file, fileVertexData, c);
+                numIndicesParsed++;
                 break;
         }
     }
+return numIndicesParsed;
 }
 
 static void parseVertexNormal(FILE* file, struct fileVertexData* fileVertexData)
@@ -228,6 +320,7 @@ struct fileVertexData loadVertexDataFromOBJ
 
 struct fileVertexData vData = 
     {
+        .fileMaterialsData = DARRAY_NEW(struct fileMaterials, 10),
         .vertexData = DARRAY_NEW(float, 100),
         .vertexNormalsData = DARRAY_NEW(float, 100),
         .faceIndexData = DARRAY_NEW(unsigned int, 100),
@@ -258,6 +351,10 @@ if ( srcFile == NULL )
 
 #endif
 
+char mtlFileName[512];
+char currMtlName[512];
+ssize_t numIndicesWithCurrMtl = -1;
+
 int c;
 while ((c = fgetc(srcFile)) != EOF)
     {
@@ -281,8 +378,41 @@ while ((c = fgetc(srcFile)) != EOF)
                 }
                 break; 
             case 'f':
-                parseFace(srcFile, &vData);
+                numIndicesWithCurrMtl += parseFace(srcFile, &vData);
                 break;
+            case 'm':
+                ungetc(c, srcFile);
+                fscanf(srcFile, "%s", mtlFileName);
+                if ( strcmp("mtllib", mtlFileName) == 0 )
+                {
+                fscanf(srcFile, "%s", mtlFileName);
+                printf("%s\n", mtlFileName);
+                }
+                break;
+            case 'u':
+                ungetc(c, srcFile);
+
+                fscanf(srcFile, "%s", currMtlName);
+
+                if (strcmp("usemtl", currMtlName) != 0) 
+                {
+                break;
+                }
+
+                fscanf(srcFile, "%s", currMtlName);
+
+                if (numIndicesWithCurrMtl != -1) 
+                {
+                // put in mat data arr
+                struct fileMaterials mat = getMaterialFromMtl(mtlFileName, currMtlName);
+                mat.numIndiciesUsingMat = numIndicesWithCurrMtl;
+                DARRAY_PUSH(vData.fileMaterialsData, mat);
+                }
+
+                fscanf(srcFile, "%s", currMtlName);
+                numIndicesWithCurrMtl = 0;
+                printf("Using material %s\n", currMtlName);
+                break; 
             default:
                 break;
 
@@ -291,6 +421,10 @@ while ((c = fgetc(srcFile)) != EOF)
 
 printf("\n");
 fclose(srcFile);
+
+struct fileMaterials mat = getMaterialFromMtl(mtlFileName, currMtlName);
+mat.numIndiciesUsingMat = numIndicesWithCurrMtl;
+DARRAY_PUSH(vData.fileMaterialsData, mat);
 
 return vData;
 }

@@ -38,8 +38,15 @@ extern "C" {
  Structs
 ------------------------------------------------------------------------------*/
 
+struct fileMaterials {
+    unsigned int numIndiciesUsingMat;
+    float r;
+    float g;
+    float b;
+};
 
 struct fileVertexData {
+    struct fileMaterials* fileMaterialsData;
     float *vertexData;
     float *vertexNormalsData;
     unsigned int *faceIndexData;
