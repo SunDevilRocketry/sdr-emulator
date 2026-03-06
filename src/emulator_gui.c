@@ -170,7 +170,11 @@ printf("VERTEX NORMAL: %f\n", DARRAY_GET(objData.vertexNormalsData, i));
 /*
 for (size_t i = 0; i < DARRAY_SIZE(objData.vertexNormalsIndices); i++)
 {
-printf("VERTEX NORMAL INDEX: %d\n", DARRAY_GET(objData.vertexNormalsIndices, i));
+printf("VERTEX NORMAL INDEX: %d; CORRESPONDING NORMAL: (%f, %f, %f)\n", 
+                DARRAY_GET(objData.vertexNormalsIndices, i), 
+                *(objData.vertexNormalsData + objData.vertexNormalsIndices[i]*3),
+                *(objData.vertexNormalsData + objData.vertexNormalsIndices[i]*3+1),
+                *(objData.vertexNormalsData + objData.vertexNormalsIndices[i]*3+2));
 }
 */
 }
@@ -206,24 +210,40 @@ GLuint VAO;
 glGenVertexArrays(1, &VAO);
 glBindVertexArray(VAO);
 
+float *realVBOData= DARRAY_NEW(float, 100);
+printf("FACE INDEX SIZE: %d\n", DARRAY_SIZE(objData.faceIndexData));
+printf("FACE NORMALS INDEX SIZE: %d\n", DARRAY_SIZE(objData.vertexNormalsIndices));
+for (size_t i = 0; i < DARRAY_SIZE(objData.faceIndexData); i++)
+{
+DARRAY_PUSH(realVBOData, *(objData.vertexData + objData.faceIndexData[i]*3));
+DARRAY_PUSH(realVBOData, *(objData.vertexData + objData.faceIndexData[i]*3+1));
+DARRAY_PUSH(realVBOData, *(objData.vertexData + objData.faceIndexData[i]*3+2));
+
+DARRAY_PUSH(realVBOData, *(objData.vertexNormalsData + objData.vertexNormalsIndices[i]*3));
+DARRAY_PUSH(realVBOData, *(objData.vertexNormalsData + objData.vertexNormalsIndices[i]*3+1));
+DARRAY_PUSH(realVBOData, *(objData.vertexNormalsData + objData.vertexNormalsIndices[i]*3+2));
+}
+
 GLuint VBO;
 glGenBuffers(1, &VBO);
 glBindBuffer(GL_ARRAY_BUFFER, VBO);
 //glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-glBufferData(GL_ARRAY_BUFFER, sizeof(float) * DARRAY_SIZE(objData.vertexData), objData.vertexData, GL_STATIC_DRAW);
-DARRAY_FREE(objData.vertexData);
-
-GLuint EBO;
-glGenBuffers(1, &EBO);
-glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * DARRAY_SIZE(objData.faceIndexData), objData.faceIndexData, GL_STATIC_DRAW);
-glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-int numIndices = DARRAY_SIZE(objData.faceIndexData);
-DARRAY_FREE(objData.faceIndexData);
-
-
-glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+glBufferData(GL_ARRAY_BUFFER, sizeof(float) * DARRAY_SIZE(realVBOData), realVBOData, GL_STATIC_DRAW);
+//DARRAY_FREE(objData.vertexData);
+glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 glEnableVertexAttribArray(0);
+glEnableVertexAttribArray(1);
+
+// TODO: I'm gonna need to write something to reorder my normals so they arent borked
+/*
+for (size_t i = 0; i < DARRAY_SIZE(realVBOData); i+=6)
+{
+printf("VERTEX COORDS: (%f, %f, %f), VERTEX NORMALS (%f, %f, %f)\n", realVBOData[i], realVBOData[i+1], realVBOData[i+2], realVBOData[i+3], realVBOData[i+4], realVBOData[i+5]);
+}
+*/
+//TODO: I think im gna have to give up on using EBO for now and just convert indices to raw vertices so I can use normals more easily.
+// It seems you can only have one VBO per VAO, so I will just interleave normal and vert data
 
 GLuint shaderProgram = 
     genShaderProgramFromSources
@@ -239,7 +259,7 @@ glfwFocusWindow(guiWindow);
 vec3 axis = vec3Normalize(vec3New(1, 1, 1));
 mat4 model = mat4Identity();
 mat4_debugprint(model);
-vec3 camPos = vec3New(0, 0, 100); 
+vec3 camPos = vec3New(0, 0, 85); 
 vec3 camTarget = vec3New(0, 0, 0);
 vec3 camUp = vec3New(0, 1, 0);
 mat4 view = mat4LookAt(camPos, camTarget, camUp);
@@ -251,21 +271,21 @@ int projUniformLocation = glGetUniformLocation(shaderProgram, "proj");
 
 //mat4_debugprint(proj);
 
-glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+glEnable(GL_DEPTH_TEST);
 
 printf("[GUI STARTUP SUCCESSFUL]: Rise and shine\n");
 while (!glfwWindowShouldClose(guiWindow)) 
     {
     model = mat4Mult(getUserRotation(), model);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(shaderProgram);
-    glBindVertexArray(VAO);
     glUniformMatrix4fv(modelUniformLocation, 1, GL_FALSE, model.data);
     glUniformMatrix4fv(viewUniformLocation, 1, GL_FALSE, view.data);
     glUniformMatrix4fv(projUniformLocation, 1, GL_FALSE, proj.data);
-    //glDrawArrays(GL_TRIANGLES, 0, objData.vertexDataCount);
-    glDrawElements(GL_TRIANGLES, numIndices , GL_UNSIGNED_INT, 0);
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLES, 0, DARRAY_SIZE(realVBOData));
 
     glfwSwapBuffers(guiWindow);
     glfwPollEvents();
