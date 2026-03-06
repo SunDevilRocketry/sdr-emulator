@@ -161,6 +161,18 @@ for (size_t i = 0; i < objData.faceIndexDataCount; i++) {
     printf("FACE INDEX: %u\n", objData.faceIndexData[i]);
 }
 */
+/*
+for (size_t i = 0; i < DARRAY_SIZE(objData.vertexNormalsData); i++)
+{
+printf("VERTEX NORMAL: %f\n", DARRAY_GET(objData.vertexNormalsData, i));
+}
+*/
+/*
+for (size_t i = 0; i < DARRAY_SIZE(objData.vertexNormalsIndices); i++)
+{
+printf("VERTEX NORMAL INDEX: %d\n", DARRAY_GET(objData.vertexNormalsIndices, i));
+}
+*/
 }
 
 void emulator_gui_teardown

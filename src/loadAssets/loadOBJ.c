@@ -59,12 +59,25 @@ static void addVertexToFileStructArray(struct fileVertexData* fileVertexData, fl
 
 }
 
-static void addFaceVertexIndexToFileStructArray(struct fileVertexData* fileVertexData, int val)
+static void addFaceVertexIndexToFileStructArray(struct fileVertexData* fileVertexData, unsigned int val)
 {
     // These indices are 1-based, so offset by one
 val--;
 (void)DARRAY_PUSH(fileVertexData->faceIndexData, val);
 
+}
+
+static void addVertexNormalToFileStructArray(struct fileVertexData* fileVertexData, float val)
+{
+
+(void)DARRAY_PUSH(fileVertexData->vertexNormalsData, val);
+
+}
+
+static void addFaceNormalIndexToFilestructArray(struct fileVertexData* fileVertexData, unsigned int val)
+{
+val--;
+(void)DARRAY_PUSH(fileVertexData->vertexNormalsIndices, val);
 }
 
 static void parseVertex(FILE* file, struct fileVertexData* fileVertexData)
@@ -97,8 +110,10 @@ while ((c = fgetc(file)) != '\n' && c != '\r')
 static void parseFaceNormalIndex(FILE* file, struct fileVertexData* fileVertexData)
 {
     // theres gonna be a float here, just read it bro
-    float readFloat;
-    fscanf(file, "%f", &readFloat);
+    unsigned int readIndex;
+    fscanf(file, "%d", &readIndex);
+    addFaceNormalIndexToFilestructArray(fileVertexData, readIndex);
+
     //printf("Read face normal index %f\n", readFloat);
 
 }
@@ -179,6 +194,30 @@ while ((c = fgetc(file)) != '\n' && c != '\r')
     }
 }
 
+static void parseVertexNormal(FILE* file, struct fileVertexData* fileVertexData)
+{
+int c;
+while ((c = fgetc(file)) != '\n' && c != '\r') 
+    {
+        switch (c) 
+        {
+            case ' ':
+            case '\t':
+                // ignore
+                break;
+            default:
+                // Anything else implies there is going to be a float next, go back 1 char and read the float
+                ungetc(c, file);
+                float readFloat;
+                fscanf(file, "%f", &readFloat);
+                addVertexNormalToFileStructArray(fileVertexData, readFloat);
+                //printf("VDATA: %f\n", readFloat);
+                break;
+        }
+    }
+
+}
+
 
 struct fileVertexData loadVertexDataFromOBJ
     (
@@ -190,8 +229,9 @@ struct fileVertexData loadVertexDataFromOBJ
 struct fileVertexData vData = 
     {
         .vertexData = DARRAY_NEW(float, 100),
-
-        .faceIndexData = DARRAY_NEW(unsigned int, 100)
+        .vertexNormalsData = DARRAY_NEW(float, 100),
+        .faceIndexData = DARRAY_NEW(unsigned int, 100),
+        .vertexNormalsIndices = DARRAY_NEW(unsigned int, 100)
     };
 
 FILE *srcFile = NULL;
@@ -235,6 +275,9 @@ while ((c = fgetc(srcFile)) != EOF)
                 if ((c = fgetc(srcFile)) == ' ')
                 {
                 parseVertex(srcFile, &vData);
+                } else if (c == 'n')
+                {
+                parseVertexNormal(srcFile, &vData);
                 }
                 break; 
             case 'f':

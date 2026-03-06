@@ -41,7 +41,9 @@ extern "C" {
 
 struct fileVertexData {
     float *vertexData;
+    float *vertexNormalsData;
     unsigned int *faceIndexData;
+    unsigned int *vertexNormalsIndices;
 };
 
 /*------------------------------------------------------------------------------
