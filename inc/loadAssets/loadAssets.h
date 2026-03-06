@@ -40,13 +40,7 @@ extern "C" {
 
 
 struct fileVertexData {
-    /* TODO: Take *DataSize out of this struct */
-    size_t vertexDataSize; /* Used in parsing to contain full size of array; same as data count otherwise */
-    size_t vertexDataCount;
     float *vertexData;
-
-    size_t faceIndexDataSize; /* Used in parsing to contain full size of array; same as data count otherwise */
-    size_t faceIndexDataCount;
     unsigned int *faceIndexData;
 };
 

@@ -1,11 +1,52 @@
+/*******************************************************************************
+*
+* FILE: 
+* 		loadOBJ.c
+*
+* DESCRIPTION: 
+* 		''''State machine'''' implementation that parses OBJ files and returns
+* 		a fileVertexData struct describing the OBJ data.
+*                                                                             
+* COPYRIGHT:                                                                  
+*       Copyright (c) 2026 Sun Devil Rocketry.                                
+*       All rights reserved.                                                  
+*                                                                             
+*       This software is licensed under terms that can be found in the LICENSE
+*       file in the root directory of this software component.                 
+*       If no LICENSE file comes with this software, it is covered under the   
+*       BSD-3-Clause.                                                          
+*                                                                              
+*       https://opensource.org/license/bsd-3-clause                            
+*
+*******************************************************************************/
+
+/*------------------------------------------------------------------------------
+ Standard Includes                                                                    
+------------------------------------------------------------------------------*/
+#define __STDC_WANT_LIB_EXT1__ 1
 #include <stddef.h>
 #include <string.h>
-#define __STDC_WANT_LIB_EXT1__ 1
 #include <stdlib.h>
 #include <stdio.h>
-#include "loadAssets/loadAssets.h"
-// TODO: The renderer still does not draw the test geometry correctly. I have no idea why, but it draws the REV2 just fine. ugh. fix later
 
+/*------------------------------------------------------------------------------
+ Project Includes
+------------------------------------------------------------------------------*/
+#include "containers/darr.h"
+#include "loadAssets/loadAssets.h"
+/* TODO: The renderer still does not draw the test geometry correctly. I have no idea why, but it draws the REV2 just fine. ugh. fix later */
+
+/*------------------------------------------------------------------------------
+ Static Function Prototypes
+------------------------------------------------------------------------------*/
+static void skipToNextLine
+    (
+    FILE* file
+    );
+
+/*------------------------------------------------------------------------------
+ Functions 
+------------------------------------------------------------------------------*/
 static void skipToNextLine(FILE* file) 
 {
 fscanf(file, "%*[^\n]");
@@ -13,17 +54,8 @@ fscanf(file, "%*[^\n]");
 
 static void addVertexToFileStructArray(struct fileVertexData* fileVertexData, float val) 
 {
-
-if ( fileVertexData->vertexDataCount + 1 > fileVertexData->vertexDataSize ) 
-    {
-    printf("Reized vertex data\n");
-    fileVertexData->vertexDataSize *= 2;
-    fileVertexData->vertexData = realloc(fileVertexData->vertexData, sizeof(float) * fileVertexData->vertexDataSize);
-    }
-
-//printf("Updated vertex data\n");
-*(fileVertexData->vertexData + fileVertexData->vertexDataCount) = val;
-fileVertexData->vertexDataCount++;
+       
+(void)DARRAY_PUSH(fileVertexData->vertexData, val);
 
 }
 
@@ -31,17 +63,7 @@ static void addFaceVertexIndexToFileStructArray(struct fileVertexData* fileVerte
 {
     // These indices are 1-based, so offset by one
 val--;
-if ( fileVertexData->faceIndexDataCount + 1 > fileVertexData->faceIndexDataSize) 
-    {
-    printf("Reized face vertex index data\n");
-    printf("oldSize: %d, newSize: %d\n", fileVertexData->faceIndexDataSize, fileVertexData->faceIndexDataSize*2);
-    fileVertexData->faceIndexDataSize *= 2;
-    fileVertexData->faceIndexData = realloc(fileVertexData->faceIndexData, sizeof(int) * fileVertexData->faceIndexDataSize);
-    }
-
-//printf("Updated face vertex index data\n");
-*(fileVertexData->faceIndexData + fileVertexData->faceIndexDataCount) = val;
-fileVertexData->faceIndexDataCount++;
+(void)DARRAY_PUSH(fileVertexData->faceIndexData, val);
 
 }
 
@@ -167,13 +189,9 @@ struct fileVertexData loadVertexDataFromOBJ
 
 struct fileVertexData vData = 
     {
-        .vertexDataSize = 100,
-        .vertexDataCount= 0,
-        .vertexData = malloc(sizeof(float) * vData.vertexDataSize),
+        .vertexData = DARRAY_NEW(float, 100),
 
-        .faceIndexDataSize = 100,
-        .faceIndexDataCount = 0,
-        .faceIndexData = malloc(sizeof(int) * vData.faceIndexDataSize)
+        .faceIndexData = DARRAY_NEW(unsigned int, 100)
     };
 
 FILE *srcFile = NULL;
@@ -231,12 +249,9 @@ while ((c = fgetc(srcFile)) != EOF)
 printf("\n");
 fclose(srcFile);
 
-// trim
-printf("Trimmed vertex data to size %lu floats (%lu bytes)\n", vData.vertexDataCount, sizeof(float) * vData.vertexDataCount);
-vData.vertexData = realloc(vData.vertexData, sizeof(float) * vData.vertexDataCount);
-vData.vertexDataSize = vData.vertexDataCount;
-printf("Trimmed face vertex index data to size %lu ints (%lu bytes)\n", vData.faceIndexDataCount, sizeof(int) * vData.faceIndexDataCount);
-vData.faceIndexData = realloc(vData.faceIndexData, sizeof(int) * vData.faceIndexDataCount);
-vData.faceIndexDataSize = vData.faceIndexDataCount;
 return vData;
 }
+
+/*******************************************************************************
+* END OF FILE                                                                  *
+*******************************************************************************/

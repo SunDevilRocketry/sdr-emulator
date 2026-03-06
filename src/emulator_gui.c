@@ -35,6 +35,7 @@
 #include "loadAssets/loadAssets.h"
 #include "loadAssets/loadAssets.h"
 #include "math/lin.h"
+#include "containers/darr.h"
 
 #define MAKE_SHADER_PATH(X) "../../../../emulator/src/shaders/"X
 #define MAKE_RESOURCES_PATH(X) "../../../../emulator/resources/"X
@@ -197,15 +198,17 @@ GLuint VBO;
 glGenBuffers(1, &VBO);
 glBindBuffer(GL_ARRAY_BUFFER, VBO);
 //glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-glBufferData(GL_ARRAY_BUFFER, sizeof(float) * objData.vertexDataCount, objData.vertexData, GL_STATIC_DRAW);
-free(objData.vertexData); // temp
+glBufferData(GL_ARRAY_BUFFER, sizeof(float) * DARRAY_SIZE(objData.vertexData), objData.vertexData, GL_STATIC_DRAW);
+DARRAY_FREE(objData.vertexData);
 
 GLuint EBO;
 glGenBuffers(1, &EBO);
 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * objData.faceIndexDataCount, objData.faceIndexData, GL_STATIC_DRAW);
+glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * DARRAY_SIZE(objData.faceIndexData), objData.faceIndexData, GL_STATIC_DRAW);
 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-free(objData.faceIndexData);
+int numIndices = DARRAY_SIZE(objData.faceIndexData);
+DARRAY_FREE(objData.faceIndexData);
+
 
 glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 glEnableVertexAttribArray(0);
@@ -250,7 +253,7 @@ while (!glfwWindowShouldClose(guiWindow))
     glUniformMatrix4fv(viewUniformLocation, 1, GL_FALSE, view.data);
     glUniformMatrix4fv(projUniformLocation, 1, GL_FALSE, proj.data);
     //glDrawArrays(GL_TRIANGLES, 0, objData.vertexDataCount);
-    glDrawElements(GL_TRIANGLES, objData.faceIndexDataCount* 6, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, numIndices , GL_UNSIGNED_INT, 0);
 
     glfwSwapBuffers(guiWindow);
     glfwPollEvents();
