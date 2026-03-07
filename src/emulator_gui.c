@@ -154,7 +154,6 @@ gladLoadGL(glfwGetProcAddress);
 /* Load obj */
 objData = loadVertexDataFromOBJ(MAKE_RESOURCES_PATH("FC_REV2.obj"));
 printf("READ COMPLETE\n");
-sleep(4);
 }
 
 void emulator_gui_teardown
@@ -184,37 +183,68 @@ void emulator_gui_main
     ) 
 {
 
-GLuint VAO;
-glGenVertexArrays(1, &VAO);
-glBindVertexArray(VAO);
+GLuint defaultVAO;
+glGenVertexArrays(1, &defaultVAO);
+glBindVertexArray(defaultVAO);
 
-//TODO: The method to make the lights:
-// Log the names of the different objects parsed
-// collect light vertices separate from all the rest
-// use separate vao
-// profit
-
-//TODO: THE METHOD FOR LOADING VERTICES:
-// The load obj function will populate a new array of type struct (containing material names and no. of indices defined with that material)
-// We can then load from that and interleave the data here
-//
-
-float* realVBOData = DARRAY_NEW(float, 100);
+float* defaultVBOData = DARRAY_NEW(float, 100);
 for (size_t i = 0; i < DARRAY_SIZE(objData); i++)
 {
     printf ("OBJCET NAME: %s\n", objData[i].objName);
+    if ( strcmp("Power_Light", objData[i].objName) == 0 || strcmp("Status_Light", objData[i].objName) == 0) 
+    {
+        continue;
+    }
     for(size_t vs = 0; vs < DARRAY_SIZE(objData[i].vertexData); vs++)
     {
-        DARRAY_PUSH(realVBOData, objData[i].vertexData[vs]);
+
+        DARRAY_PUSH(defaultVBOData, objData[i].vertexData[vs]);
     }
 }
 
-GLuint VBO;
-glGenBuffers(1, &VBO);
-glBindBuffer(GL_ARRAY_BUFFER, VBO);
+GLuint defaultVBO;
+glGenBuffers(1, &defaultVBO);
+glBindBuffer(GL_ARRAY_BUFFER, defaultVBO);
 //glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-glBufferData(GL_ARRAY_BUFFER, sizeof(float) * DARRAY_SIZE(realVBOData), realVBOData, GL_STATIC_DRAW);
+glBufferData(GL_ARRAY_BUFFER, sizeof(float) * DARRAY_SIZE(defaultVBOData), defaultVBOData, GL_STATIC_DRAW);
+glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
+glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
+glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(6 * sizeof(float)));
+glEnableVertexAttribArray(0);
+glEnableVertexAttribArray(1);
+glEnableVertexAttribArray(2);
 //DARRAY_FREE(objData.vertexData);
+
+GLuint defaultShaderProgram = 
+    genShaderProgramFromSources
+        (
+        MAKE_SHADER_PATH("default.vert"),
+        MAKE_SHADER_PATH("default.frag")
+        );
+
+
+float* powerLightVBOData = DARRAY_NEW(float, 100);
+for (size_t i = 0; i < DARRAY_SIZE(objData); i++)
+{
+    printf ("OBJCET NAME: %s\n", objData[i].objName);
+    if ( strcmp("Power_Light", objData[i].objName) != 0 ) 
+    {
+        continue;
+    }
+    for(size_t vs = 0; vs < DARRAY_SIZE(objData[i].vertexData); vs++)
+    {
+
+        DARRAY_PUSH(powerLightVBOData, objData[i].vertexData[vs]);
+    }
+}
+GLuint powerLightVAO;
+glGenVertexArrays(1, &powerLightVAO);
+glBindVertexArray(powerLightVAO);
+
+GLuint powerLightVBO;
+glGenBuffers(1, &powerLightVBO);
+glBindBuffer(GL_ARRAY_BUFFER, powerLightVBO);
+glBufferData(GL_ARRAY_BUFFER, sizeof(float) * DARRAY_SIZE(powerLightVBOData), powerLightVBOData, GL_STATIC_DRAW);
 glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
 glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
 glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(6 * sizeof(float)));
@@ -222,29 +252,58 @@ glEnableVertexAttribArray(0);
 glEnableVertexAttribArray(1);
 glEnableVertexAttribArray(2);
 
-GLuint shaderProgram = 
+float* statusLightVBOData = DARRAY_NEW(float, 100);
+for (size_t i = 0; i < DARRAY_SIZE(objData); i++)
+{
+    printf ("OBJCET NAME: %s\n", objData[i].objName);
+    if ( strcmp("Status_Light", objData[i].objName) != 0 ) 
+    {
+        continue;
+    }
+    for(size_t vs = 0; vs < DARRAY_SIZE(objData[i].vertexData); vs++)
+    {
+        DARRAY_PUSH(statusLightVBOData, objData[i].vertexData[vs]);
+    }
+}
+
+GLuint statusLightVAO;
+glGenVertexArrays(1, &statusLightVAO);
+glBindVertexArray(statusLightVAO);
+
+GLuint statusLightVBO;
+glGenBuffers(1, &statusLightVBO);
+glBindBuffer(GL_ARRAY_BUFFER, statusLightVBO);
+glBufferData(GL_ARRAY_BUFFER, sizeof(float) * DARRAY_SIZE(statusLightVBOData), statusLightVBOData, GL_STATIC_DRAW);
+glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
+glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
+glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(6 * sizeof(float)));
+glEnableVertexAttribArray(0);
+glEnableVertexAttribArray(1);
+glEnableVertexAttribArray(2);
+
+GLuint LEDShaderProgram = 
     genShaderProgramFromSources
         (
-        MAKE_SHADER_PATH("default.vert"),
-        MAKE_SHADER_PATH("default.frag")
+        MAKE_SHADER_PATH("LED.vert"),
+        MAKE_SHADER_PATH("LED.frag")
         );
 
-glfwShowWindow(guiWindow);
-glfwRequestWindowAttention(guiWindow);
-glfwFocusWindow(guiWindow);
 
-vec3 axis = vec3Normalize(vec3New(1, 1, 1));
 mat4 model = mat4Identity();
-mat4_debugprint(model);
 vec3 camPos = vec3New(0, 0, 85); 
 vec3 camTarget = vec3New(0, 0, 0);
 vec3 camUp = vec3New(0, 1, 0);
 mat4 view = mat4LookAt(camPos, camTarget, camUp);
 mat4 proj = mat4Proj(1.57, 16.0/9.0, 1, 300);
 
-int modelUniformLocation = glGetUniformLocation(shaderProgram, "model");
-int viewUniformLocation = glGetUniformLocation(shaderProgram, "view");
-int projUniformLocation = glGetUniformLocation(shaderProgram, "proj");
+int modelUniformLocation = glGetUniformLocation(defaultShaderProgram, "model");
+int viewUniformLocation = glGetUniformLocation(defaultShaderProgram, "view");
+int projUniformLocation = glGetUniformLocation(defaultShaderProgram, "proj");
+
+int LEDModelUniformLocation = glGetUniformLocation(LEDShaderProgram, "model");
+int LEDViewlUniformLocation = glGetUniformLocation(LEDShaderProgram, "view");
+int LEDProjUniformLocation = glGetUniformLocation(LEDShaderProgram, "proj");
+int LEDEmissionColorUniformLocation = glGetUniformLocation(LEDShaderProgram, "emissionColor");
 
 
 //mat4_debugprint(proj);
@@ -252,18 +311,35 @@ int projUniformLocation = glGetUniformLocation(shaderProgram, "proj");
 //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 glEnable(GL_DEPTH_TEST);
 
+glfwShowWindow(guiWindow);
+glfwRequestWindowAttention(guiWindow);
+glfwFocusWindow(guiWindow);
+
 printf("[GUI STARTUP SUCCESSFUL]: Rise and shine\n");
 while (!glfwWindowShouldClose(guiWindow)) 
     {
     model = mat4Mult(getUserRotation(), model);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glUseProgram(shaderProgram);
+    glBindVertexArray(defaultVAO);
+    glUseProgram(defaultShaderProgram);
     glUniformMatrix4fv(modelUniformLocation, 1, GL_FALSE, model.data);
     glUniformMatrix4fv(viewUniformLocation, 1, GL_FALSE, view.data);
     glUniformMatrix4fv(projUniformLocation, 1, GL_FALSE, proj.data);
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, DARRAY_SIZE(realVBOData)/9);
+    glDrawArrays(GL_TRIANGLES, 0, DARRAY_SIZE(defaultVBOData)/9);
+
+    float col[3] = {0, 0 ,1};
+    glUseProgram(LEDShaderProgram);
+    glUniformMatrix4fv(LEDModelUniformLocation, 1, GL_FALSE, model.data);
+    glUniformMatrix4fv(LEDViewlUniformLocation, 1, GL_FALSE, view.data);
+    glUniformMatrix4fv(LEDProjUniformLocation, 1, GL_FALSE, proj.data);
+    glUniform3fv(LEDEmissionColorUniformLocation, 1, col);
+
+    glBindVertexArray(statusLightVAO);
+    glDrawArrays(GL_TRIANGLES, 0, DARRAY_SIZE(statusLightVBOData)/9);
+
+    glBindVertexArray(powerLightVAO);
+    glDrawArrays(GL_TRIANGLES, 0, DARRAY_SIZE(powerLightVBOData)/9);
 
     glfwSwapBuffers(guiWindow);
     glfwPollEvents();
