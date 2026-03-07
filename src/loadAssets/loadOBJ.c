@@ -52,7 +52,7 @@ static void skipToNextLine(FILE* file)
 fscanf(file, "%*[^\n]");
 }
 
-static void getMtlDiffuse(FILE* mtlFile, struct fileMaterials* material)
+static void getMtlDiffuse(FILE* mtlFile, float retRGB[3])
 {
 // im gna do it the dumb way </3
 
@@ -68,7 +68,7 @@ switch (c)
     case 'K':
         if (fgetc(mtlFile) == 'd')
         {
-        fscanf(mtlFile, " %f %f %f", &material->r, &material->g, &material->b);
+        fscanf(mtlFile, " %f %f %f", retRGB, retRGB+1, retRGB+2);
         return;
         }
         break;
@@ -79,9 +79,8 @@ switch (c)
 }
 
 
-static struct fileMaterials getMaterialFromMtl(const char* mtlFileName, const char* mtlName) 
+static void getMaterialFromMtl(const char* mtlFileName, const char* mtlName, float retRGB[3]) 
 {
-struct fileMaterials material = {};
 
 char actualFileName[1024] = "../../../../emulator/resources/";
 
@@ -124,11 +123,11 @@ switch (c)
         {
         break;
         }
-        getMtlDiffuse(mtlFile, &material);
-        printf("%f %f %f\n", material.r, material.g, material.b);
+        getMtlDiffuse(mtlFile, retRGB);
+        printf("%f %f %f\n", *retRGB, *(retRGB+1), *(retRGB+2));
         fclose(mtlFile);
-        return material;
-    break;
+        return ;
+        break;
     default:
         break;
     }
@@ -136,38 +135,9 @@ switch (c)
 }
 
 fclose(mtlFile);
-return material;
 }
 
-static void addVertexToFileStructArray(struct fileVertexData* fileVertexData, float val) 
-{
-       
-(void)DARRAY_PUSH(fileVertexData->vertexData, val);
-
-}
-
-static void addFaceVertexIndexToFileStructArray(struct fileVertexData* fileVertexData, unsigned int val)
-{
-    // These indices are 1-based, so offset by one
-val--;
-(void)DARRAY_PUSH(fileVertexData->faceIndexData, val);
-
-}
-
-static void addVertexNormalToFileStructArray(struct fileVertexData* fileVertexData, float val)
-{
-
-(void)DARRAY_PUSH(fileVertexData->vertexNormalsData, val);
-
-}
-
-static void addFaceNormalIndexToFilestructArray(struct fileVertexData* fileVertexData, unsigned int val)
-{
-val--;
-(void)DARRAY_PUSH(fileVertexData->vertexNormalsIndices, val);
-}
-
-static void parseVertex(FILE* file, struct fileVertexData* fileVertexData)
+static void parseVertex(FILE* file, float** vertexPositionData)
 {
 
 int c;
@@ -186,7 +156,7 @@ while ((c = fgetc(file)) != '\n' && c != '\r')
                 ungetc(c, file);
                 float readFloat;
                 fscanf(file, "%f", &readFloat);
-                addVertexToFileStructArray(fileVertexData, readFloat);
+                DARRAY_PUSH_ESF(vertexPositionData, readFloat);
                 //printf("VDATA: %f\n", readFloat);
                 break;
         }
@@ -194,18 +164,21 @@ while ((c = fgetc(file)) != '\n' && c != '\r')
 
 }
 
-static void parseFaceNormalIndex(FILE* file, struct fileVertexData* fileVertexData)
+static void parseFaceNormalIndex(FILE* file, struct meshObject* meshObject, const float* currentVertexNormalsData)
 {
     // theres gonna be a float here, just read it bro
-    unsigned int readIndex;
-    fscanf(file, "%d", &readIndex);
-    addFaceNormalIndexToFilestructArray(fileVertexData, readIndex);
+    int readInt;
+    fscanf(file, "%d", &readInt);
+    readInt--;
+    DARRAY_PUSH(meshObject->vertexData, *(currentVertexNormalsData + readInt * 3));
+    DARRAY_PUSH(meshObject->vertexData, *(currentVertexNormalsData + readInt * 3 + 1));
+    DARRAY_PUSH(meshObject->vertexData, *(currentVertexNormalsData + readInt * 3 + 2));
 
     //printf("Read face normal index %f\n", readFloat);
 
 }
 
-static void parseFaceTextureIndex(FILE* file, struct fileVertexData* fileVertexData) 
+static void parseFaceTextureIndex(FILE* file, struct meshObject* meshObject, const float* currentVertexNormalsData) 
 {
 
 // check to make sure this field is not empty
@@ -214,7 +187,7 @@ switch (c)
     {
         case '/':
             //printf("Texture index skipped\n");
-            parseFaceNormalIndex(file, fileVertexData);
+            parseFaceNormalIndex(file, meshObject, currentVertexNormalsData);
             break;
         default:
             ungetc(c, file);
@@ -228,7 +201,7 @@ switch (c)
 c = fgetc(file);
 if ( c == '/' )
     {
-    parseFaceNormalIndex(file, fileVertexData);
+    parseFaceNormalIndex(file, meshObject, currentVertexNormalsData);
     }
 else
     {
@@ -236,20 +209,23 @@ else
     }
 }
 
-static void parseFaceVertexIndex(FILE* file, struct fileVertexData* fileVertexData, int lastChar) 
+static void parseFaceVertexIndex(FILE* file, struct meshObject* meshObject, const float* currentVertexPositionData, const float* currentVertexNormalsData, char lastChar) 
 {
 
 ungetc(lastChar, file);
 int readInt;
 fscanf(file, "%d", &readInt);
+readInt--;
+DARRAY_PUSH(meshObject->vertexData, *(currentVertexPositionData + readInt * 3));
+DARRAY_PUSH(meshObject->vertexData, *(currentVertexPositionData + readInt * 3 + 1));
+DARRAY_PUSH(meshObject->vertexData, *(currentVertexPositionData + readInt * 3 + 2));
 //printf("FACE VINDEX: %d\n", readInt);
 // add to array here
-addFaceVertexIndexToFileStructArray(fileVertexData, readInt);
 // Continue to next state if a / is found
 int c = fgetc(file);
 if (c == '/') 
     {
-    parseFaceTextureIndex(file, fileVertexData);
+    parseFaceTextureIndex(file, meshObject, currentVertexNormalsData);
     }
 else
     {
@@ -258,9 +234,9 @@ else
 }
 
 
-static int parseFace(FILE* file, struct fileVertexData* fileVertexData) 
+static void parseFace(FILE* file, struct meshObject* meshObject, const float* currentVertexPositionData, const float* currentVertexNormalsData, const float RGB[3]) 
 {
-int numIndicesParsed = 0;
+
 int c;
 while ((c = fgetc(file)) != '\n' && c != '\r') 
     {
@@ -276,15 +252,16 @@ while ((c = fgetc(file)) != '\n' && c != '\r')
                 
             default:
                 // Anything else implies a float next, go back 1 char and read
-                parseFaceVertexIndex(file, fileVertexData, c);
-                numIndicesParsed++;
+                parseFaceVertexIndex(file, meshObject, currentVertexPositionData, currentVertexNormalsData, c);
+                DARRAY_PUSH(meshObject->vertexData, RGB[0]);
+                DARRAY_PUSH(meshObject->vertexData, RGB[1]);
+                DARRAY_PUSH(meshObject->vertexData, RGB[2]);
                 break;
         }
     }
-return numIndicesParsed;
 }
 
-static void parseVertexNormal(FILE* file, struct fileVertexData* fileVertexData)
+static void parseVertexNormal(FILE* file, float** vertexNormalData)
 {
 int c;
 while ((c = fgetc(file)) != '\n' && c != '\r') 
@@ -300,7 +277,7 @@ while ((c = fgetc(file)) != '\n' && c != '\r')
                 ungetc(c, file);
                 float readFloat;
                 fscanf(file, "%f", &readFloat);
-                addVertexNormalToFileStructArray(fileVertexData, readFloat);
+                DARRAY_PUSH_ESF(vertexNormalData, readFloat);
                 //printf("VDATA: %f\n", readFloat);
                 break;
         }
@@ -309,13 +286,14 @@ while ((c = fgetc(file)) != '\n' && c != '\r')
 }
 
 
-struct fileVertexData loadVertexDataFromOBJ
+struct meshObject* loadVertexDataFromOBJ
     (
     const char* filepath
     ) 
 {
 
 
+/*
 struct fileVertexData vData = 
     {
         .fileMaterialsData = DARRAY_NEW(struct fileMaterials, 10),
@@ -324,6 +302,8 @@ struct fileVertexData vData =
         .faceIndexData = DARRAY_NEW(unsigned int, 100),
         .vertexNormalsIndices = DARRAY_NEW(unsigned int, 100)
     };
+*/
+
 
 FILE *srcFile = NULL;
 
@@ -343,16 +323,21 @@ srcFile = fopen(filepath, "rb");
 
 if ( srcFile == NULL ) 
     {
-        printf("[NON-SECURE FOPEN]: Failed to open %s\n", filepath);
-    return vData;
+    printf("[NON-SECURE FOPEN]: Failed to open %s\n", filepath);
+    return NULL;
     }
 
 #endif
 
+float* vertexPositionData = DARRAY_NEW(float, 100);
+float* vertexNormalData = DARRAY_NEW(float, 100);
+
 char mtlFileName[512];
 char currMtlName[512];
-char lastMtlName[512];
-ssize_t numIndicesWithCurrMtl = -1;
+
+float currMtlRGB[3];
+
+struct meshObject* meshes = DARRAY_NEW(struct meshObject, 15);
 
 int c;
 while ((c = fgetc(srcFile)) != EOF)
@@ -367,17 +352,28 @@ while ((c = fgetc(srcFile)) != EOF)
                 printf("Skipping Comment\n");
                 skipToNextLine(srcFile);
                 break;
+            case 'o':
+                int numC;
+                struct meshObject thisMesh = 
+                {
+                    .objName = {},
+                    .vertexData = DARRAY_NEW(float, 1000),
+                };
+                fscanf(srcFile, "%511s", &thisMesh.objName);
+
+                DARRAY_PUSH(meshes, thisMesh);
+                break;
             case 'v':
                 if ((c = fgetc(srcFile)) == ' ')
                 {
-                parseVertex(srcFile, &vData);
+                parseVertex(srcFile, &vertexPositionData);
                 } else if (c == 'n')
                 {
-                parseVertexNormal(srcFile, &vData);
+                parseVertexNormal(srcFile, &vertexNormalData);
                 }
                 break; 
             case 'f':
-                numIndicesWithCurrMtl+=parseFace(srcFile, &vData);
+                parseFace(srcFile, meshes + DARRAY_SIZE(meshes)-1, vertexPositionData, vertexNormalData, currMtlRGB);
                 break;
             case 'm':
                 ungetc(c, srcFile);
@@ -398,20 +394,10 @@ while ((c = fgetc(srcFile)) != EOF)
                 break;
                 }
 
-                // ITS SKIPPING MATS!!!
                 fscanf(srcFile, "%s", currMtlName);
 
-                if (numIndicesWithCurrMtl != -1) 
-                {
-                // put in mat data arr
-                struct fileMaterials mat = getMaterialFromMtl(mtlFileName, lastMtlName);
-                mat.numIndiciesUsingMat = numIndicesWithCurrMtl;
-                DARRAY_PUSH(vData.fileMaterialsData, mat);
-                } 
+                getMaterialFromMtl(mtlFileName, currMtlName, currMtlRGB);
 
-                strcpy(lastMtlName, currMtlName);
-
-                numIndicesWithCurrMtl = 0;
                 printf("Using material %s\n", currMtlName);
                 break; 
             default:
@@ -423,11 +409,7 @@ while ((c = fgetc(srcFile)) != EOF)
 printf("\n");
 fclose(srcFile);
 
-struct fileMaterials mat = getMaterialFromMtl(mtlFileName, currMtlName);
-mat.numIndiciesUsingMat = numIndicesWithCurrMtl;
-DARRAY_PUSH(vData.fileMaterialsData, mat);
-
-return vData;
+return meshes;
 }
 
 /*******************************************************************************

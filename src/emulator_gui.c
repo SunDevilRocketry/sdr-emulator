@@ -115,7 +115,7 @@ static mat4 getUserRotation()
 /*------------------------------------------------------------------------------
  Procedures                                                     
 ------------------------------------------------------------------------------*/
-static struct fileVertexData objData;
+static struct meshObject* objData;
 void emulator_gui_init
     (
     void
@@ -153,38 +153,8 @@ gladLoadGL(glfwGetProcAddress);
 
 /* Load obj */
 objData = loadVertexDataFromOBJ(MAKE_RESOURCES_PATH("FC_REV2.obj"));
-/*
-for (size_t i = 0; i < objData.vertexDataCount; i+=3) {
-    printf("VERTEX: %.2f, %.2f, %.2f\n", objData.vertexData[i], objData.vertexData[i+1], objData.vertexData[i+2]);
-}
-for (size_t i = 0; i < objData.faceIndexDataCount; i++) {
-    printf("FACE INDEX: %u\n", objData.faceIndexData[i]);
-}
-*/
-/*
-for (size_t i = 0; i < DARRAY_SIZE(objData.vertexNormalsData); i++)
-{
-printf("VERTEX NORMAL: %f\n", DARRAY_GET(objData.vertexNormalsData, i));
-}
-*/
-/*
-for (size_t i = 0; i < DARRAY_SIZE(objData.vertexNormalsIndices); i++)
-{
-printf("VERTEX NORMAL INDEX: %d; CORRESPONDING NORMAL: (%f, %f, %f)\n", 
-                DARRAY_GET(objData.vertexNormalsIndices, i), 
-                *(objData.vertexNormalsData + objData.vertexNormalsIndices[i]*3),
-                *(objData.vertexNormalsData + objData.vertexNormalsIndices[i]*3+1),
-                *(objData.vertexNormalsData + objData.vertexNormalsIndices[i]*3+2));
-}
-*/
-int runningtotal = 0;
-for (size_t i = 0; i < DARRAY_SIZE(objData.fileMaterialsData); i++)
-{
-    struct fileMaterials mat = objData.fileMaterialsData[i];
-    printf("VERTS: %d, COLOR: (%f, %f, %f)\n", mat.numIndiciesUsingMat, mat.r, mat.g, mat.b);
-    runningtotal += mat.numIndiciesUsingMat;
-}
-printf("TOTAL INDICES USING MATS: %d\n", runningtotal);
+printf("READ COMPLETE\n");
+sleep(4);
 }
 
 void emulator_gui_teardown
@@ -219,7 +189,7 @@ glGenVertexArrays(1, &VAO);
 glBindVertexArray(VAO);
 
 //TODO: The method to make the lights:
-// be able to white/blacklist certain object from being parsed by passing in a const char** to the loadobj func
+// Log the names of the different objects parsed
 // collect light vertices separate from all the rest
 // use separate vao
 // profit
@@ -227,40 +197,16 @@ glBindVertexArray(VAO);
 //TODO: THE METHOD FOR LOADING VERTICES:
 // The load obj function will populate a new array of type struct (containing material names and no. of indices defined with that material)
 // We can then load from that and interleave the data here
-float *realVBOData= DARRAY_NEW(float, 100);
-printf("FACE INDEX SIZE: %d\n", DARRAY_SIZE(objData.faceIndexData));
-printf("FACE NORMALS INDEX SIZE: %d\n", DARRAY_SIZE(objData.vertexNormalsIndices));
-for (size_t i = 0; i < DARRAY_SIZE(objData.fileMaterialsData); i++) {
-    printf("VERTS: %d; COLOR (%f, %f, %f)\n", 
-        (objData.fileMaterialsData + i)->numIndiciesUsingMat,
-        (objData.fileMaterialsData + i)->r,
-        (objData.fileMaterialsData + i)->g,
-        (objData.fileMaterialsData + i)->b
-          );
-}
-size_t vertexColorsDataIndex = 0;
-size_t numVerticesWithMat = 0;
-for (size_t i = 0; i < DARRAY_SIZE(objData.faceIndexData); i++)
+//
+
+float* realVBOData = DARRAY_NEW(float, 100);
+for (size_t i = 0; i < DARRAY_SIZE(objData); i++)
 {
-DARRAY_PUSH(realVBOData, *(objData.vertexData + objData.faceIndexData[i]*3));
-DARRAY_PUSH(realVBOData, *(objData.vertexData + objData.faceIndexData[i]*3+1));
-DARRAY_PUSH(realVBOData, *(objData.vertexData + objData.faceIndexData[i]*3+2));
-
-DARRAY_PUSH(realVBOData, *(objData.vertexNormalsData + objData.vertexNormalsIndices[i]*3));
-DARRAY_PUSH(realVBOData, *(objData.vertexNormalsData + objData.vertexNormalsIndices[i]*3+1));
-DARRAY_PUSH(realVBOData, *(objData.vertexNormalsData + objData.vertexNormalsIndices[i]*3+2));
-
-DARRAY_PUSH(realVBOData, (objData.fileMaterialsData + vertexColorsDataIndex)->r);
-DARRAY_PUSH(realVBOData, (objData.fileMaterialsData + vertexColorsDataIndex)->g);
-DARRAY_PUSH(realVBOData, (objData.fileMaterialsData + vertexColorsDataIndex)->b);
-numVerticesWithMat++;
-
-if ( numVerticesWithMat >= (objData.fileMaterialsData + vertexColorsDataIndex)->numIndiciesUsingMat )
-{
-numVerticesWithMat = 0;
-vertexColorsDataIndex++;
-}
-
+    printf ("OBJCET NAME: %s\n", objData[i].objName);
+    for(size_t vs = 0; vs < DARRAY_SIZE(objData[i].vertexData); vs++)
+    {
+        DARRAY_PUSH(realVBOData, objData[i].vertexData[vs]);
+    }
 }
 
 GLuint VBO;
@@ -275,15 +221,6 @@ glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(6 * s
 glEnableVertexAttribArray(0);
 glEnableVertexAttribArray(1);
 glEnableVertexAttribArray(2);
-
-/*
-for (size_t i = 0; i < DARRAY_SIZE(realVBOData); i+=6)
-{
-printf("VERTEX COORDS: (%f, %f, %f), VERTEX NORMALS (%f, %f, %f)\n", realVBOData[i], realVBOData[i+1], realVBOData[i+2], realVBOData[i+3], realVBOData[i+4], realVBOData[i+5]);
-}
-*/
-//TODO: I think im gna have to give up on using EBO for now and just convert indices to raw vertices so I can use normals more easily.
-// It seems you can only have one VBO per VAO, so I will just interleave normal and vert data
 
 GLuint shaderProgram = 
     genShaderProgramFromSources
@@ -309,6 +246,7 @@ int modelUniformLocation = glGetUniformLocation(shaderProgram, "model");
 int viewUniformLocation = glGetUniformLocation(shaderProgram, "view");
 int projUniformLocation = glGetUniformLocation(shaderProgram, "proj");
 
+
 //mat4_debugprint(proj);
 
 //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -325,12 +263,11 @@ while (!glfwWindowShouldClose(guiWindow))
     glUniformMatrix4fv(viewUniformLocation, 1, GL_FALSE, view.data);
     glUniformMatrix4fv(projUniformLocation, 1, GL_FALSE, proj.data);
     glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, DARRAY_SIZE(realVBOData));
+    glDrawArrays(GL_TRIANGLES, 0, DARRAY_SIZE(realVBOData)/9);
 
     glfwSwapBuffers(guiWindow);
     glfwPollEvents();
     }
-
 } /* emulator_gui_main */
 
 /*******************************************************************************
