@@ -120,10 +120,8 @@ switch (c)
         break;
         }
         fscanf(mtlFile, "%s", readMtlName);
-        printf("READ NAME : %s", readMtlName);
         if ( strcmp(readMtlName, mtlName) != 0 )
         {
-        printf("STRCMP FAIL: %s != %s\n", mtlName, readMtlName);
         break;
         }
         getMtlDiffuse(mtlFile, &material);
@@ -353,6 +351,7 @@ if ( srcFile == NULL )
 
 char mtlFileName[512];
 char currMtlName[512];
+char lastMtlName[512];
 ssize_t numIndicesWithCurrMtl = -1;
 
 int c;
@@ -378,7 +377,7 @@ while ((c = fgetc(srcFile)) != EOF)
                 }
                 break; 
             case 'f':
-                numIndicesWithCurrMtl += parseFace(srcFile, &vData);
+                numIndicesWithCurrMtl+=parseFace(srcFile, &vData);
                 break;
             case 'm':
                 ungetc(c, srcFile);
@@ -399,17 +398,19 @@ while ((c = fgetc(srcFile)) != EOF)
                 break;
                 }
 
+                // ITS SKIPPING MATS!!!
                 fscanf(srcFile, "%s", currMtlName);
 
                 if (numIndicesWithCurrMtl != -1) 
                 {
                 // put in mat data arr
-                struct fileMaterials mat = getMaterialFromMtl(mtlFileName, currMtlName);
+                struct fileMaterials mat = getMaterialFromMtl(mtlFileName, lastMtlName);
                 mat.numIndiciesUsingMat = numIndicesWithCurrMtl;
                 DARRAY_PUSH(vData.fileMaterialsData, mat);
-                }
+                } 
 
-                fscanf(srcFile, "%s", currMtlName);
+                strcpy(lastMtlName, currMtlName);
+
                 numIndicesWithCurrMtl = 0;
                 printf("Using material %s\n", currMtlName);
                 break; 

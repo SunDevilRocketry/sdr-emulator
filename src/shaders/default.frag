@@ -1,6 +1,7 @@
 #version 460 core
 in vec3 fragPos;
 in vec3 normal;
+in vec3 color;
 
 out vec4 FragColor;
 
@@ -14,7 +15,6 @@ void main() {
 
     float diff = max(dot(norm, lightDir), 0);
 
-    vec3 color = vec3(1.0f, 0.6f, 0.8f);
     vec3 diffuse = diff * vec3(1, 1, 1);
     vec3 ambient = vec3(0.1, 0.1, 0.1);
 

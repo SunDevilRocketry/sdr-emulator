@@ -218,12 +218,28 @@ GLuint VAO;
 glGenVertexArrays(1, &VAO);
 glBindVertexArray(VAO);
 
+//TODO: The method to make the lights:
+// be able to white/blacklist certain object from being parsed by passing in a const char** to the loadobj func
+// collect light vertices separate from all the rest
+// use separate vao
+// profit
+
 //TODO: THE METHOD FOR LOADING VERTICES:
 // The load obj function will populate a new array of type struct (containing material names and no. of indices defined with that material)
 // We can then load from that and interleave the data here
 float *realVBOData= DARRAY_NEW(float, 100);
 printf("FACE INDEX SIZE: %d\n", DARRAY_SIZE(objData.faceIndexData));
 printf("FACE NORMALS INDEX SIZE: %d\n", DARRAY_SIZE(objData.vertexNormalsIndices));
+for (size_t i = 0; i < DARRAY_SIZE(objData.fileMaterialsData); i++) {
+    printf("VERTS: %d; COLOR (%f, %f, %f)\n", 
+        (objData.fileMaterialsData + i)->numIndiciesUsingMat,
+        (objData.fileMaterialsData + i)->r,
+        (objData.fileMaterialsData + i)->g,
+        (objData.fileMaterialsData + i)->b
+          );
+}
+size_t vertexColorsDataIndex = 0;
+size_t numVerticesWithMat = 0;
 for (size_t i = 0; i < DARRAY_SIZE(objData.faceIndexData); i++)
 {
 DARRAY_PUSH(realVBOData, *(objData.vertexData + objData.faceIndexData[i]*3));
@@ -233,6 +249,18 @@ DARRAY_PUSH(realVBOData, *(objData.vertexData + objData.faceIndexData[i]*3+2));
 DARRAY_PUSH(realVBOData, *(objData.vertexNormalsData + objData.vertexNormalsIndices[i]*3));
 DARRAY_PUSH(realVBOData, *(objData.vertexNormalsData + objData.vertexNormalsIndices[i]*3+1));
 DARRAY_PUSH(realVBOData, *(objData.vertexNormalsData + objData.vertexNormalsIndices[i]*3+2));
+
+DARRAY_PUSH(realVBOData, (objData.fileMaterialsData + vertexColorsDataIndex)->r);
+DARRAY_PUSH(realVBOData, (objData.fileMaterialsData + vertexColorsDataIndex)->g);
+DARRAY_PUSH(realVBOData, (objData.fileMaterialsData + vertexColorsDataIndex)->b);
+numVerticesWithMat++;
+
+if ( numVerticesWithMat >= (objData.fileMaterialsData + vertexColorsDataIndex)->numIndiciesUsingMat )
+{
+numVerticesWithMat = 0;
+vertexColorsDataIndex++;
+}
+
 }
 
 GLuint VBO;
@@ -241,12 +269,13 @@ glBindBuffer(GL_ARRAY_BUFFER, VBO);
 //glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 glBufferData(GL_ARRAY_BUFFER, sizeof(float) * DARRAY_SIZE(realVBOData), realVBOData, GL_STATIC_DRAW);
 //DARRAY_FREE(objData.vertexData);
-glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
+glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
+glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(6 * sizeof(float)));
 glEnableVertexAttribArray(0);
 glEnableVertexAttribArray(1);
+glEnableVertexAttribArray(2);
 
-// TODO: I'm gonna need to write something to reorder my normals so they arent borked
 /*
 for (size_t i = 0; i < DARRAY_SIZE(realVBOData); i+=6)
 {
