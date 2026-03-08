@@ -47,6 +47,12 @@ void HAL_GPIO_WritePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIO_PinState Pin
      && ( GPIO_Pin & ( STATUS_G_PIN | STATUS_R_PIN | STATUS_B_PIN ) )
      && ( PinState == GPIO_PIN_RESET ) )
         {
+        setGUIStatusLED
+            (
+            GPIO_Pin & STATUS_R_PIN,
+            GPIO_Pin & STATUS_G_PIN,
+            GPIO_Pin & STATUS_B_PIN
+            );
         }
         // ETS TEMP: Replace with IPC to GUI
         //printf("LED color changed to: ");
@@ -61,6 +67,7 @@ GPIO_PinState HAL_GPIO_ReadPin(const GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin) {
     if ( ( GPIOx == SWITCH_GPIO_PORT )
       && ( GPIO_Pin == SWITCH_PIN) )
         {
+        printf("IGNITE FLAG READ: %d\n", ignite_flag);
         return (GPIO_PinState)ignite_flag;
         }
     if ( ( GPIOx == USB_DETECT_GPIO_PORT )

@@ -26,6 +26,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 /* necessary define for glad header-only mode */
 #include "glad/gl.h" // glad must go before glfw
@@ -51,16 +52,38 @@ const float vertices[] = {
 /*------------------------------------------------------------------------------
  Globals                                                       
 ------------------------------------------------------------------------------*/
+struct directionalLight {
+    vec3 direction;
+
+    vec3 ambient;
+    vec3 diffuse;
+    // no specular
+};
 
 /*------------------------------------------------------------------------------
  Static Variables
 ------------------------------------------------------------------------------*/
 
 GLFWwindow* guiWindow = NULL;
+static float powerLEDColor[3] = {0, 1, 0};
+static float statusLEDColor[3] = {0, 0, 0};
 
 /*------------------------------------------------------------------------------
  Static Prototypes                                                       
 ------------------------------------------------------------------------------*/
+static void glfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+
+static void GLAPIENTRY openGLErrorCallback
+    (
+    GLenum source,
+    GLenum type,
+    GLenum id,
+    GLenum severity,
+    GLsizei length,
+    const GLchar* message,
+    const void* userParam
+    );
+
 static void error_callback
     (
     int error, 
@@ -112,9 +135,17 @@ static mat4 getUserRotation()
 
 
 
+
 /*------------------------------------------------------------------------------
  Procedures                                                     
 ------------------------------------------------------------------------------*/
+void setGUIStatusLED(const float r, const float g, const float b)
+{
+statusLEDColor[0] = r;
+statusLEDColor[1] = g;
+statusLEDColor[2] = b;
+}
+
 static struct meshObject* objData;
 void emulator_gui_init
     (
@@ -145,11 +176,14 @@ if (!guiWindow)
     }
 
 glfwSetFramebufferSizeCallback(guiWindow, framebuffer_size_callback);
+glfwSetKeyCallback(guiWindow, glfwKeyCallback);
 
 glfwMakeContextCurrent(guiWindow);
 
 /* Load OpenGL functions */
 gladLoadGL(glfwGetProcAddress);
+glEnable(GL_DEBUG_OUTPUT);
+glDebugMessageCallback(openGLErrorCallback, 0);
 
 /* Load obj */
 objData = loadVertexDataFromOBJ(MAKE_RESOURCES_PATH("FC_REV2.obj"));
@@ -190,7 +224,6 @@ glBindVertexArray(defaultVAO);
 float* defaultVBOData = DARRAY_NEW(float, 100);
 for (size_t i = 0; i < DARRAY_SIZE(objData); i++)
 {
-    printf ("OBJCET NAME: %s\n", objData[i].objName);
     if ( strcmp("Power_Light", objData[i].objName) == 0 || strcmp("Status_Light", objData[i].objName) == 0) 
     {
         continue;
@@ -205,7 +238,6 @@ for (size_t i = 0; i < DARRAY_SIZE(objData); i++)
 GLuint defaultVBO;
 glGenBuffers(1, &defaultVBO);
 glBindBuffer(GL_ARRAY_BUFFER, defaultVBO);
-//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 glBufferData(GL_ARRAY_BUFFER, sizeof(float) * DARRAY_SIZE(defaultVBOData), defaultVBOData, GL_STATIC_DRAW);
 glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
 glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
@@ -213,7 +245,6 @@ glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(6 * s
 glEnableVertexAttribArray(0);
 glEnableVertexAttribArray(1);
 glEnableVertexAttribArray(2);
-//DARRAY_FREE(objData.vertexData);
 
 GLuint defaultShaderProgram = 
     genShaderProgramFromSources
@@ -226,7 +257,6 @@ GLuint defaultShaderProgram =
 float* powerLightVBOData = DARRAY_NEW(float, 100);
 for (size_t i = 0; i < DARRAY_SIZE(objData); i++)
 {
-    printf ("OBJCET NAME: %s\n", objData[i].objName);
     if ( strcmp("Power_Light", objData[i].objName) != 0 ) 
     {
         continue;
@@ -255,7 +285,6 @@ glEnableVertexAttribArray(2);
 float* statusLightVBOData = DARRAY_NEW(float, 100);
 for (size_t i = 0; i < DARRAY_SIZE(objData); i++)
 {
-    printf ("OBJCET NAME: %s\n", objData[i].objName);
     if ( strcmp("Status_Light", objData[i].objName) != 0 ) 
     {
         continue;
@@ -299,21 +328,40 @@ mat4 proj = mat4Proj(1.57, 16.0/9.0, 1, 300);
 int modelUniformLocation = glGetUniformLocation(defaultShaderProgram, "model");
 int viewUniformLocation = glGetUniformLocation(defaultShaderProgram, "view");
 int projUniformLocation = glGetUniformLocation(defaultShaderProgram, "proj");
+int directionalLightDirUniformLocation = glGetUniformLocation(defaultShaderProgram, "globalLight.direction");
+int directionalLightAmbientUniformLocation = glGetUniformLocation(defaultShaderProgram, "globalLight.ambient");
+int directionalLightDiffuseUniformLocation = glGetUniformLocation(defaultShaderProgram, "globalLight.diffuse");
 
 int LEDModelUniformLocation = glGetUniformLocation(LEDShaderProgram, "model");
 int LEDViewlUniformLocation = glGetUniformLocation(LEDShaderProgram, "view");
 int LEDProjUniformLocation = glGetUniformLocation(LEDShaderProgram, "proj");
 int LEDEmissionColorUniformLocation = glGetUniformLocation(LEDShaderProgram, "emissionColor");
 
+struct directionalLight globalLight = {
+    .direction= vec3New(-0.5, -0.5, -1),
+    .ambient = vec3New(0.1, 0.1, 0.1),
+    .diffuse = vec3New(0.9, 0.9, 0.9),
+};
 
-//mat4_debugprint(proj);
 
-//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 glEnable(GL_DEPTH_TEST);
 
 glfwShowWindow(guiWindow);
 glfwRequestWindowAttention(guiWindow);
 glfwFocusWindow(guiWindow);
+
+int defaultDrawCount = DARRAY_SIZE(defaultVBOData)/9;
+int powerLightDrawCount = DARRAY_SIZE(powerLightVBOData)/9;
+int statusLightDrawCount = DARRAY_SIZE(statusLightVBOData)/9;
+
+for (size_t i = 0; i < DARRAY_SIZE(objData); i++)
+{
+DARRAY_FREE(objData[i].vertexData);
+}
+DARRAY_FREE(objData);
+DARRAY_FREE(defaultVBOData);
+DARRAY_FREE(powerLightVBOData);
+DARRAY_FREE(statusLightVBOData);
 
 printf("[GUI STARTUP SUCCESSFUL]: Rise and shine\n");
 while (!glfwWindowShouldClose(guiWindow)) 
@@ -326,25 +374,43 @@ while (!glfwWindowShouldClose(guiWindow))
     glUniformMatrix4fv(modelUniformLocation, 1, GL_FALSE, model.data);
     glUniformMatrix4fv(viewUniformLocation, 1, GL_FALSE, view.data);
     glUniformMatrix4fv(projUniformLocation, 1, GL_FALSE, proj.data);
-    glDrawArrays(GL_TRIANGLES, 0, DARRAY_SIZE(defaultVBOData)/9);
 
-    float col[3] = {0, 0 ,1};
+    glUniform3fv(directionalLightDirUniformLocation, 1, globalLight.direction.data);
+    glUniform3fv(directionalLightAmbientUniformLocation, 1, globalLight.ambient.data);
+    glUniform3fv(directionalLightDiffuseUniformLocation, 1, globalLight.diffuse.data);
+
+    glDrawArrays(GL_TRIANGLES, 0, defaultDrawCount);
+
     glUseProgram(LEDShaderProgram);
     glUniformMatrix4fv(LEDModelUniformLocation, 1, GL_FALSE, model.data);
     glUniformMatrix4fv(LEDViewlUniformLocation, 1, GL_FALSE, view.data);
     glUniformMatrix4fv(LEDProjUniformLocation, 1, GL_FALSE, proj.data);
-    glUniform3fv(LEDEmissionColorUniformLocation, 1, col);
 
     glBindVertexArray(statusLightVAO);
-    glDrawArrays(GL_TRIANGLES, 0, DARRAY_SIZE(statusLightVBOData)/9);
+    glUniform3fv(LEDEmissionColorUniformLocation, 1, statusLEDColor);
+    glDrawArrays(GL_TRIANGLES, 0, statusLightDrawCount);
 
     glBindVertexArray(powerLightVAO);
-    glDrawArrays(GL_TRIANGLES, 0, DARRAY_SIZE(powerLightVBOData)/9);
+    glUniform3fv(LEDEmissionColorUniformLocation, 1, powerLEDColor);
+    glDrawArrays(GL_TRIANGLES, 0, powerLightDrawCount);
 
     glfwSwapBuffers(guiWindow);
     glfwPollEvents();
     }
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR) {
+        printf("ERROR: %d", err);
+    }
 } /* emulator_gui_main */
+
+static void glfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if (key == GLFW_KEY_R && action == GLFW_PRESS && mods & GLFW_MOD_CONTROL) 
+    {
+    printf("IGNITE SET\n");
+    setIgniteFlag(true);
+    }
+}
 
 /*******************************************************************************
 *                                                                              *
@@ -385,4 +451,21 @@ static void framebuffer_size_callback
 
 glViewport(0, 0, width, height);
 
+}
+
+static void GLAPIENTRY openGLErrorCallback
+    (
+    GLenum source,
+    GLenum type,
+    GLenum id,
+    GLenum severity,
+    GLsizei length,
+    const GLchar* message,
+    const void* userParam
+    )
+{
+if (type == GL_DEBUG_TYPE_ERROR) 
+    {
+    fprintf(stderr, "GLERROR: %s\n", message);
+    }
 }

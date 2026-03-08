@@ -86,7 +86,7 @@ static void printArgsHelp
 {
 
 printf("Usage: build/appa [OPTION]\n");
-printf("Runs the flight computer emulator\n\n\n");
+printf("Runs the flight computer emulator\n\n");
 printf("\t-h, --help              Displays this screen and exits\n");
 printf("\t--no-gui                Runs the emulator without the GUI (CLI only)\n");
 
@@ -175,6 +175,11 @@ void HAL_NVIC_EnableIRQ(IRQn_Type IRQn) {irq_enabled = true;}
 /*------------------------------------------------------------------------------
  Procedures                                                     
 ------------------------------------------------------------------------------*/
+
+void setIgniteFlag(bool status) 
+{
+ignite_flag = status;
+}
 
 /*******************************************************************************
 *                                                                              *

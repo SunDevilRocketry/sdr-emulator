@@ -107,7 +107,6 @@ switch (c)
     case '\n':
         break;
     case '#':
-        printf("Skipping Comment\n");
         skipToNextLine(mtlFile);
         break;
     case 'n':
@@ -124,7 +123,6 @@ switch (c)
         break;
         }
         getMtlDiffuse(mtlFile, retRGB);
-        printf("%f %f %f\n", *retRGB, *(retRGB+1), *(retRGB+2));
         fclose(mtlFile);
         return ;
         break;
@@ -144,7 +142,6 @@ int c;
 // Hopefully this covers all platforms? although I think I'm the odd one since windows lol
 while ((c = fgetc(file)) != '\n' && c != '\r') 
     {
-        //printf("PARSE VERTEX C: %c\n", c);
         switch (c) 
         {
             case ' ':
@@ -157,7 +154,6 @@ while ((c = fgetc(file)) != '\n' && c != '\r')
                 float readFloat;
                 fscanf(file, "%f", &readFloat);
                 DARRAY_PUSH_ESF(vertexPositionData, readFloat);
-                //printf("VDATA: %f\n", readFloat);
                 break;
         }
     }
@@ -174,7 +170,6 @@ static void parseFaceNormalIndex(FILE* file, struct meshObject* meshObject, cons
     DARRAY_PUSH(meshObject->vertexData, *(currentVertexNormalsData + readInt * 3 + 1));
     DARRAY_PUSH(meshObject->vertexData, *(currentVertexNormalsData + readInt * 3 + 2));
 
-    //printf("Read face normal index %f\n", readFloat);
 
 }
 
@@ -186,7 +181,6 @@ int c = fgetc(file);
 switch (c) 
     {
         case '/':
-            //printf("Texture index skipped\n");
             parseFaceNormalIndex(file, meshObject, currentVertexNormalsData);
             break;
         default:
@@ -194,7 +188,6 @@ switch (c)
             // read the float (does nothing rn)
             int readInt;
             fscanf(file, "%d", &readInt);
-            //printf("Reads texture index: %d\n", readInt);
             break;
     }
 
@@ -219,7 +212,6 @@ readInt--;
 DARRAY_PUSH(meshObject->vertexData, *(currentVertexPositionData + readInt * 3));
 DARRAY_PUSH(meshObject->vertexData, *(currentVertexPositionData + readInt * 3 + 1));
 DARRAY_PUSH(meshObject->vertexData, *(currentVertexPositionData + readInt * 3 + 2));
-//printf("FACE VINDEX: %d\n", readInt);
 // add to array here
 // Continue to next state if a / is found
 int c = fgetc(file);
@@ -240,7 +232,6 @@ static void parseFace(FILE* file, struct meshObject* meshObject, const float* cu
 int c;
 while ((c = fgetc(file)) != '\n' && c != '\r') 
     {
-        //printf("PARSE FACE C: %c\n", c);
         switch (c) 
         {
             case ' ':
@@ -278,7 +269,6 @@ while ((c = fgetc(file)) != '\n' && c != '\r')
                 float readFloat;
                 fscanf(file, "%f", &readFloat);
                 DARRAY_PUSH_ESF(vertexNormalData, readFloat);
-                //printf("VDATA: %f\n", readFloat);
                 break;
         }
     }
@@ -349,7 +339,6 @@ while ((c = fgetc(srcFile)) != EOF)
             case '\n':
                 break;
             case '#':
-                printf("Skipping Comment\n");
                 skipToNextLine(srcFile);
                 break;
             case 'o':
@@ -359,7 +348,7 @@ while ((c = fgetc(srcFile)) != EOF)
                     .objName = {},
                     .vertexData = DARRAY_NEW(float, 1000),
                 };
-                fscanf(srcFile, "%511s", &thisMesh.objName);
+                fscanf(srcFile, "%511s", thisMesh.objName);
 
                 DARRAY_PUSH(meshes, thisMesh);
                 break;
@@ -381,7 +370,6 @@ while ((c = fgetc(srcFile)) != EOF)
                 if ( strcmp("mtllib", mtlFileName) == 0 )
                 {
                 fscanf(srcFile, "%s", mtlFileName);
-                printf("%s\n", mtlFileName);
                 }
                 break;
             case 'u':
@@ -398,7 +386,6 @@ while ((c = fgetc(srcFile)) != EOF)
 
                 getMaterialFromMtl(mtlFileName, currMtlName, currMtlRGB);
 
-                printf("Using material %s\n", currMtlName);
                 break; 
             default:
                 break;
@@ -406,7 +393,6 @@ while ((c = fgetc(srcFile)) != EOF)
         }
     }
 
-printf("\n");
 fclose(srcFile);
 
 return meshes;
