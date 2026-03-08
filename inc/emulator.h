@@ -104,9 +104,17 @@ void emulator_gui_main
     void
     );
 
-void setGUIStatusLED(const float r, const float g, const float b);
+void setGUIStatusLED
+    (
+    const float r, 
+    const float g, 
+    const float b
+    );
 
-void setIgniteFlag(bool status);
+void setIgniteFlag
+    (
+    bool status
+    );
 
 void emulator_gui_init
     (

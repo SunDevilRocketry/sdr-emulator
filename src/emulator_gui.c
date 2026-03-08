@@ -204,7 +204,6 @@ glDebugMessageCallback(openGLErrorCallback, 0);
 /* Load FC obj */
 objData = loadVertexDataFromOBJ(MAKE_RESOURCES_PATH("FC_REV2.obj"));
 printf("FC OBJ READ COMPLETE\n");
-
 } /* emulator_gui_init */
 
 
@@ -430,6 +429,8 @@ while (!glfwWindowShouldClose(guiWindow))
  * Frees internal GUI resources; intended to be called before program termination
  *
  * @warning You may not call any functions that require state intialized by @ref emulator_gui_init after calling this function
+ * @note I'm not really happy with this function. It assumes the GUI state to be in the main loop or after which is not necessarily true in the case of a SIGINT. 
+ * Can't really clean up before that state unless I increase the amount of static variables though.
  */
 void emulator_gui_teardown
     (
