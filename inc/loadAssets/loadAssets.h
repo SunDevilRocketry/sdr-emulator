@@ -38,29 +38,6 @@ extern "C" {
  Structs
 ------------------------------------------------------------------------------*/
 
-// The way I have things set up right now kind of binds our mesh objects to the
-// encoding of obj files. Not really my goal. 
-//
-// 
-// The new parser will now just return an array of mesh objects with data interleaved in 
-// the expected format. 
-//
-
-struct fileMaterials {
-    unsigned int numIndiciesUsingMat;
-    float r;
-    float g;
-    float b;
-};
-
-struct fileVertexData {
-    struct fileMaterials* fileMaterialsData;
-    float *vertexData;
-    float *vertexNormalsData;
-    unsigned int *faceIndexData;
-    unsigned int *vertexNormalsIndices;
-};
-
 struct meshObject {
     char objName[512];
     // [x, y, z][nx, ny, nz][r, g, b]

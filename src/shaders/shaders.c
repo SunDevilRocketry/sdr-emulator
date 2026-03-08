@@ -1,27 +1,22 @@
-/*******************************************************************************
-*
-* FILE: 
-* 		readShader.c
-*
-* DESCRIPTION: 
-* 		Implementations of shader handling functions
-*       
-*                                                                             
-* COPYRIGHT:                                                                  
-*       Copyright (c) 2026 Sun Devil Rocketry.                                
-*       All rights reserved.                                                  
-*                                                                             
-*       This software is licensed under terms that can be found in the LICENSE
-*       file in the root directory of this software component.                 
-*       If no LICENSE file comes with this software, it is covered under the   
-*       BSD-3-Clause.                                                          
-*                                                                              
-*       https://opensource.org/license/bsd-3-clause                            
-*
-*******************************************************************************/
+/**
+ * @file readShader.c
+ *
+ * @brief Implemtations of shader handling functions
+ *
+ * @copyright
+ *       Copyright (c) 2026 Sun Devil Rocketry.                                
+ *       All rights reserved.                                                  
+ *                                                                             
+ *       This software is licensed under terms that can be found in the LICENSE
+ *       file in the root directory of this software component.                 
+ *       If no LICENSE file comes with this software, it is covered under the   
+ *       BSD-3-Clause.                                                          
+ *                                                                              
+ *       https://opensource.org/license/bsd-3-clause                            
+ */
 
 /*------------------------------------------------------------------------------
- Includes                                                         
+ Standard Includes                                                         
 ------------------------------------------------------------------------------*/
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,6 +26,9 @@
 #include <errno.h>
 #include <unistd.h>
 
+/*------------------------------------------------------------------------------
+ Project Includes                                                         
+------------------------------------------------------------------------------*/
 #include "shaders/shaders.h"
 
 /*------------------------------------------------------------------------------
