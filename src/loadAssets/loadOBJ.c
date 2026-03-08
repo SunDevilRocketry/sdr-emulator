@@ -171,7 +171,6 @@ while ((c = fgetc(srcFile)) != EOF)
             break;
         case 'o':
             /* 'o' indicates an object definition, push a new object onto the meshes DARRAY */
-            int numC;
             struct meshObject thisMesh = 
             {
                 .objName = {},
@@ -180,7 +179,7 @@ while ((c = fgetc(srcFile)) != EOF)
             /* Scan object name */
             fscanf(srcFile, "%511s", thisMesh.objName);
 
-            DARRAY_PUSH(meshes, thisMesh);
+            (void)DARRAY_PUSH(meshes, thisMesh);
             break;
         case 'v':
             /* v indicates some vertex attribute */
@@ -394,7 +393,7 @@ while ( (c = fgetc(file)) != '\n' && c != '\r' )
             ungetc(c, file);
             float readFloat;
             fscanf(file, "%f", &readFloat);
-            DARRAY_PUSH_ESF(vertexPositionData, readFloat);
+            (void)DARRAY_PUSH_ESF(vertexPositionData, readFloat);
             break;
         }
     }
@@ -420,9 +419,9 @@ static void parseFaceNormalIndex
     fscanf(file, "%d", &readInt);
     /* Decrement because obj indices are 1-based */
     readInt--;
-    DARRAY_PUSH(meshObject->vertexData, *(currentVertexNormalsData + readInt * 3));
-    DARRAY_PUSH(meshObject->vertexData, *(currentVertexNormalsData + readInt * 3 + 1));
-    DARRAY_PUSH(meshObject->vertexData, *(currentVertexNormalsData + readInt * 3 + 2));
+    (void)DARRAY_PUSH(meshObject->vertexData, *(currentVertexNormalsData + readInt * 3));
+    (void)DARRAY_PUSH(meshObject->vertexData, *(currentVertexNormalsData + readInt * 3 + 1));
+    (void)DARRAY_PUSH(meshObject->vertexData, *(currentVertexNormalsData + readInt * 3 + 2));
 
 } /* parseFaceNormalIndex */
 
@@ -488,9 +487,9 @@ static void parseFaceVertexIndex
 int readInt;
 fscanf(file, "%d", &readInt);
 readInt--;
-DARRAY_PUSH(meshObject->vertexData, *(currentVertexPositionData + readInt * 3));
-DARRAY_PUSH(meshObject->vertexData, *(currentVertexPositionData + readInt * 3 + 1));
-DARRAY_PUSH(meshObject->vertexData, *(currentVertexPositionData + readInt * 3 + 2));
+(void)DARRAY_PUSH(meshObject->vertexData, *(currentVertexPositionData + readInt * 3));
+(void)DARRAY_PUSH(meshObject->vertexData, *(currentVertexPositionData + readInt * 3 + 1));
+(void)DARRAY_PUSH(meshObject->vertexData, *(currentVertexPositionData + readInt * 3 + 2));
 // Continue to next state if a / is found
 int c = fgetc(file);
 if ( c == '/' ) 
@@ -540,9 +539,9 @@ while ( (c = fgetc(file)) != '\n' && c != '\r' )
             // Anything else implies a float next, go back 1 char and read
             ungetc(c, file);
             parseFaceVertexIndex(file, meshObject, currentVertexPositionData, currentVertexNormalsData);
-            DARRAY_PUSH(meshObject->vertexData, RGB[0]);
-            DARRAY_PUSH(meshObject->vertexData, RGB[1]);
-            DARRAY_PUSH(meshObject->vertexData, RGB[2]);
+            (void)DARRAY_PUSH(meshObject->vertexData, RGB[0]);
+            (void)DARRAY_PUSH(meshObject->vertexData, RGB[1]);
+            (void)DARRAY_PUSH(meshObject->vertexData, RGB[2]);
                 break;
         }
     }
@@ -572,7 +571,7 @@ while ( (c = fgetc(file)) != '\n' && c != '\r' )
             ungetc(c, file);
             float readFloat;
             fscanf(file, "%f", &readFloat);
-            DARRAY_PUSH_ESF(vertexNormalData, readFloat);
+            (void)DARRAY_PUSH_ESF(vertexNormalData, readFloat);
                 break;
         }
     }

@@ -236,7 +236,7 @@ for (size_t i = 0; i < DARRAY_SIZE(objData); i++)
     for(size_t vs = 0; vs < DARRAY_SIZE(objData[i].vertexData); vs++)
     {
 
-        DARRAY_PUSH(defaultVBOData, objData[i].vertexData[vs]);
+        (void)DARRAY_PUSH(defaultVBOData, objData[i].vertexData[vs]);
     }
 }
 
@@ -277,7 +277,7 @@ for (size_t i = 0; i < DARRAY_SIZE(objData); i++)
     for(size_t vs = 0; vs < DARRAY_SIZE(objData[i].vertexData); vs++)
     {
 
-        DARRAY_PUSH(powerLightVBOData, objData[i].vertexData[vs]);
+        (void)DARRAY_PUSH(powerLightVBOData, objData[i].vertexData[vs]);
     }
 }
 
@@ -309,7 +309,7 @@ for (size_t i = 0; i < DARRAY_SIZE(objData); i++)
     }
     for(size_t vs = 0; vs < DARRAY_SIZE(objData[i].vertexData); vs++)
     {
-        DARRAY_PUSH(statusLightVBOData, objData[i].vertexData[vs]);
+        (void)DARRAY_PUSH(statusLightVBOData, objData[i].vertexData[vs]);
     }
 }
 

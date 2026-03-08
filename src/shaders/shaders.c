@@ -105,7 +105,7 @@ GLuint genShaderFromSource
 int success;
 char infoLog[512];
 
-char* shaderCode = readShaderSource(path);
+const char* shaderCode = readShaderSource(path);
 if (shaderCode == NULL) 
     {
     return 0;
@@ -114,7 +114,7 @@ if (shaderCode == NULL)
 GLuint shaderID = glCreateShader(shaderType);
 glShaderSource(shaderID, 1, &shaderCode, NULL); 
 glCompileShader(shaderID);
-free(shaderCode);
+free((void*)shaderCode); /* The glShaderSource function requires type const char*, but GCC gets mad when you try to free a const pointer. Cast to fix this issue */
 
 glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success);
 if (!success) 
