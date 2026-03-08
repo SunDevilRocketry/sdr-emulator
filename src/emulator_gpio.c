@@ -67,7 +67,6 @@ GPIO_PinState HAL_GPIO_ReadPin(const GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin) {
     if ( ( GPIOx == SWITCH_GPIO_PORT )
       && ( GPIO_Pin == SWITCH_PIN) )
         {
-        printf("IGNITE FLAG READ: %d\n", ignite_flag);
         return (GPIO_PinState)ignite_flag;
         }
     if ( ( GPIOx == USB_DETECT_GPIO_PORT )
@@ -82,3 +81,12 @@ GPIO_PinState HAL_GPIO_ReadPin(const GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin) {
 /*------------------------------------------------------------------------------
  Procedures                                                     
 ------------------------------------------------------------------------------*/
+
+void setIgniteFlag
+    (
+    bool status
+    ) 
+{
+ignite_flag = status;
+}
+

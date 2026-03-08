@@ -76,7 +76,9 @@ void sigintHandler
     int dummy
     )
 {
-    emulator_exit(0);
+
+emulator_exit(0);
+
 }
 
 static void printArgsHelp
@@ -176,11 +178,6 @@ void HAL_NVIC_EnableIRQ(IRQn_Type IRQn) {irq_enabled = true;}
  Procedures                                                     
 ------------------------------------------------------------------------------*/
 
-void setIgniteFlag(bool status) 
-{
-ignite_flag = status;
-}
-
 /*******************************************************************************
 *                                                                              *
 * PROCEDURE:                                                                   * 
@@ -196,7 +193,6 @@ int main
     char* const argv[]
     )
 {
-// --no-gui command line argument
 
 parseArgs(argc, argv);
 /*------------------------------------------------------------------------------
@@ -253,10 +249,9 @@ emulator_gui_init();
  Once setup is complete, run the firmware                                                    
 ------------------------------------------------------------------------------*/
 printf("Emulator Init: Starting firmware.\n");
-//sleep(10);
 
-// Ugly cast to correct function type (might be the worst cast I've ever seen)
-// Shouldn't happen in normal execution, but if main_fut returns, likely UB
+/* Ugly cast to correct function type (might be the worst cast I've ever seen) */
+/* Shouldn't happen in normal execution, but if main_fut returns, likely UB */
 pthread_create( &firmwareThread, NULL, (void*(*)(void*))main_fut, NULL );
 
 /*------------------------------------------------------------------------------
@@ -281,9 +276,9 @@ void emulator_exit
 
 printf("Emulator terminating with exit code %d", exitCode);
 if ( gui_enable ) 
-{
+    {
     emulator_gui_teardown();
-}
+    }
 
 /* Should force kill all pthreads */
 exit(exitCode);
