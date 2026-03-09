@@ -54,12 +54,48 @@ void HAL_GPIO_WritePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIO_PinState Pin
             GPIO_Pin & STATUS_B_PIN
             );
         }
-        // ETS TEMP: Replace with IPC to GUI
-        //printf("LED color changed to: ");
+        /* This would be a good toggle with a verbose argument */
+        printf("LED color changed to: ");
+        switch (GPIO_Pin) 
+            {
+            case STATUS_G_PIN:
+                printf("LED: GREEN\n", 11);
+                break;
+            case STATUS_R_PIN:
+                printf("LED: RED\n", 9);
+                break;
+            case STATUS_B_PIN:
+                printf("LED: BLUE\n", 10);
+                break;
+            case STATUS_G_PIN | STATUS_R_PIN:
+                printf("LED: YELLOW\n", 12);
+                break;
+            case STATUS_G_PIN | STATUS_B_PIN:
+                printf("LED: CYAN\n", 10);
+                break;
+            case STATUS_R_PIN | STATUS_B_PIN:
+                printf("LED: PURPLE\n", 12);
+                break;
+            case STATUS_R_PIN | STATUS_G_PIN | STATUS_B_PIN:
+                printf("LED: WHITE\n", 11);
+                break;
+            default:
+                printf("-=Indeterminate=-\n");
+                break;
+            }
+        }
+
     if( ( GPIOx == STATUS_GPIO_PORT ) 
      && ( GPIO_Pin & ( STATUS_G_PIN | STATUS_R_PIN | STATUS_B_PIN ) )
      && ( PinState == GPIO_PIN_SET ) )
         {
+        printf("LED: RESET\n", 11); /* TEMP (I lowkey have no idea what this is supposed to do) */
+        setGUIStatusLED
+            (
+            0,
+            0,
+            0
+            );
         }
 }
 

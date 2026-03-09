@@ -177,7 +177,7 @@ for( i = 0; i < frames; i++ )
 
 free( symbol );
 
-printf( "[ETS TEMP]: The stack trace for windows builds is very imperfect. Sorry!\n" );
+printf( "Emulator: The stack trace for windows builds is very imperfect. Sorry!\n" );
 #else
 printf("Emulator: Your platform does not support backtraces for errors.\n");
 #endif
