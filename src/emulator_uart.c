@@ -132,6 +132,15 @@ HAL_StatusTypeDef HAL_UART_Receive_IT(UART_HandleTypeDef *huart, uint8_t *pData,
  Procedures                                                     
 ------------------------------------------------------------------------------*/
 
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		emulator_prompt_and_open_serial_port                                   *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Set up the serial connection to SDEC.                                  *
+*                                                                              *
+*******************************************************************************/
 bool emulator_prompt_and_open_serial_port
     (
     void
@@ -144,7 +153,6 @@ printf("Serial Init: Please enter your serial port in the format /dev/ttyXX or i
 printf("    Note for Windows users:\n");
 printf("    COM1 maps to /dev/ttyS0\n");
 printf("    COM2 maps to /dev/ttyS1\n");
-printf("    ETS Temp: use /dev/ttyS0\n");
 printf("    (etc)\n");
 #endif
 printf("Input: \n");
@@ -164,7 +172,14 @@ strncpy(com_buf, port_buf, 3);
 if(strncmp(com_buf, "COM", 3) == 0){
     sscanf(port_buf+3, "%d", &com_port_num);
     com_port_num--;
-    snprintf(port_buf, 12, "/dev/ttyS%d", com_port_num);
+    uint8_t last_two_digits = com_port_num % 100; /* least significant two digits */
+
+    /* we know this is safe, but we need to ignore the warning */
+    // ETS: THIS IS GROSS. Do not do this.
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wformat-truncation"
+    snprintf(port_buf, 12, "/dev/ttyS%02u", last_two_digits);
+    #pragma GCC diagnostic pop
 }
 
 serial_port = open(port_buf, O_RDWR | O_NOCTTY | O_NDELAY); // Open the port
@@ -224,9 +239,18 @@ else {
 
 return true;
 
-}
+} /* emulator_prompt_and_open_serial_port */
 
 
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		serial_write                                                           *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Write to the virtual serial port.                                      *
+*                                                                              *
+*******************************************************************************/
 static void serial_write
     (
     const uint8_t* msg,
@@ -243,6 +267,15 @@ write( serial_port, msg, len );
 } /* serial_write */
 
 
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		serial_read                                                            *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Read from the virtual serial port.                                     *
+*                                                                              *
+*******************************************************************************/
 static USB_STATUS serial_read
     (
     void*    rx_data_ptr , /* Buffer to export data to        */
@@ -287,10 +320,6 @@ int n = read( serial_port, rx_data_ptr, rx_data_size );
 
 } /* serial_read */
 
-
-/*------------------------------------------------------------------------------
- GPS                                                  
-------------------------------------------------------------------------------*/
 
 /*******************************************************************************
 *                                                                              *
@@ -343,9 +372,22 @@ while (recieve_gps)
 
 return 0;
 
-}
+} /* emulator_gps_it_listener */
 
-static void gps_read_handler_IT( int message_num )
+
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		gps_read_handler_IT                                                    *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Interrupt the main thread with a new GPS message.                      *
+*                                                                              *
+*******************************************************************************/
+static void gps_read_handler_IT
+    (
+    int message_num
+    )
 {
 // memset( gps_data_ptr, 0, gps_data_size );
 if (message_num >= array_size( gps_msgs ) )
@@ -354,7 +396,6 @@ if (message_num >= array_size( gps_msgs ) )
     return;
     }
 memcpy( rx_buffer, gps_msgs[message_num], strlen( gps_msgs[message_num] ) );
-// printf("[GPS DEBUG] Msg: %s\n", gps_msgs[message_num]);
 
 /* Pasted in from UART4_IRQHandler */
 if(gps_mesg_validate((char*) rx_buffer))
@@ -364,4 +405,4 @@ memset(rx_buffer, 0, sizeof(rx_buffer));
 
 gps_receive_IT(&gps_mesg_byte, 1);
 
-}
+} /* gps_read_handler_IT */

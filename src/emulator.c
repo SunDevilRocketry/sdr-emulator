@@ -174,8 +174,8 @@ while ( (gui_connection_fd = accept(gui_sock_fd, (struct sockaddr *)&client_addr
     sleep(1);
     } 
 printf("Emulator Init: Socket connected to GUI client.\n");
-printf("    [DEBUG] IP: %s\n", inet_ntoa(client_address.sin_addr));
-printf("    [DEBUG] Port: %d\n", ntohs(client_address.sin_port));
+printf("    IP: %s\n", inet_ntoa(client_address.sin_addr));
+printf("    Port: %d\n", ntohs(client_address.sin_port));
 
 printf("Emulator Init: Opening socket listener.\n");
 pthread_t socket_thread;

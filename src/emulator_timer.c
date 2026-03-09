@@ -99,14 +99,6 @@ HAL_StatusTypeDef HAL_TIM_PWM_Stop(TIM_HandleTypeDef *htim, uint32_t Channel)
     return HAL_OK;
 }
 
-void emulator_buzzer_beep_request(uint32_t duration)
-{
-    char buf[13];
-    snprintf( buf, 13, "BUZZ: %05d\n", duration);
-    guisock_put( buf, 12 );
-    HAL_Delay(duration);
-}
-
 /*------------------------------------------------------------------------------
  Procedures                                                     
 ------------------------------------------------------------------------------*/
@@ -152,3 +144,24 @@ struct timespec ts;
 
 } /* get_current_time */
 
+
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		emulator_buzzer_beep_request                                           *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Tell the GUI to beep for the duration.                                 *
+*                                                                              *
+*******************************************************************************/
+void emulator_buzzer_beep_request
+    (
+    uint32_t duration
+    )
+{
+char buf[13];
+snprintf( buf, 13, "BUZZ: %05d\n", duration);
+guisock_put( buf, 12 );
+HAL_Delay(duration);
+
+} /* emulator_buzzer_beep_request */

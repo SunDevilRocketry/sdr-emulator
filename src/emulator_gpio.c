@@ -47,36 +47,27 @@ void HAL_GPIO_WritePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIO_PinState Pin
      && ( GPIO_Pin & ( STATUS_G_PIN | STATUS_R_PIN | STATUS_B_PIN ) )
      && ( PinState == GPIO_PIN_RESET ) )
         {
-        // ETS TEMP: Replace with IPC to GUI
-        //printf("LED color changed to: ");
         switch (GPIO_Pin) 
             {
             case STATUS_G_PIN:
-                //printf("GREEN\n");
                 guisock_put("LED: GREEN\n", 11);
                 break;
             case STATUS_R_PIN:
-                //printf("RED\n");
                 guisock_put("LED: RED\n", 9);
                 break;
             case STATUS_B_PIN:
-                //printf("BLUE\n");
                 guisock_put("LED: BLUE\n", 10);
                 break;
             case STATUS_G_PIN | STATUS_R_PIN:
-                //printf("YELLOW\n");
                 guisock_put("LED: YELLOW\n", 12);
                 break;
             case STATUS_G_PIN | STATUS_B_PIN:
-                //printf("CYAN\n");
                 guisock_put("LED: CYAN\n", 10);
                 break;
             case STATUS_R_PIN | STATUS_B_PIN:
-                //printf("PURPLE\n");
                 guisock_put("LED: PURPLE\n", 12);
                 break;
             case STATUS_R_PIN | STATUS_G_PIN | STATUS_B_PIN:
-                //printf("WHITE\n");
                 guisock_put("LED: WHITE\n", 11);
                 break;
             default:
@@ -88,7 +79,6 @@ void HAL_GPIO_WritePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIO_PinState Pin
      && ( GPIO_Pin & ( STATUS_G_PIN | STATUS_R_PIN | STATUS_B_PIN ) )
      && ( PinState == GPIO_PIN_SET ) )
         {
-        //printf("LED Reset\n");
         guisock_put("LED: RESET\n", 11);
         }
 }
