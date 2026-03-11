@@ -178,7 +178,7 @@ if(strncmp(com_buf, "COM", 3) == 0){
     // ETS: THIS IS GROSS. Do not do this.
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wformat-truncation"
-    snprintf(port_buf, 12, "/dev/ttyS%02u", last_two_digits);
+    snprintf(port_buf, 12, "/dev/ttyS%u", last_two_digits);
     #pragma GCC diagnostic pop
 }
 
@@ -198,8 +198,8 @@ if(tcgetattr(serial_port, &tty) != 0) {
 }
 
 // Configure port settings (baud rate, parity, etc.)
-cfsetospeed(&tty, B921600); // Set output baud rate to 9600
-cfsetispeed(&tty, B921600); // Set input baud rate to 9600
+cfsetospeed(&tty, B921600); // Set output baud rate to 921600
+cfsetispeed(&tty, B921600); // Set input baud rate to 921600
 
 tty.c_cflag &= ~PARENB;        // No parity
 tty.c_cflag &= ~CSTOPB;        // One stop bit
