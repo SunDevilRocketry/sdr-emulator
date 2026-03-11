@@ -45,14 +45,14 @@
  * @param X string literal to concatenate
  * @warning Don't test the limits of this macro, it will probably break
  */
-#define MAKE_SHADER_PATH(X) "../../../../emulator/src/shaders/"X
+#define MAKE_SHADER_PATH(X) "../../emulator/src/shaders/"X
 /**
  * @def MAKE_RESOURCES_PATH(X)
  * Concatenates the given string literal with the path to the emulator resource directory
  * @param X string literal to concatenate
  * @warning Don't test the limits of this macro, it will probably break
  */
-#define MAKE_RESOURCES_PATH(X) "../../../../emulator/resources/"X
+#define MAKE_RESOURCES_PATH(X) "../../emulator/resources/"X
 
 /*------------------------------------------------------------------------------
  Structs 

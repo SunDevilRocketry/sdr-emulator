@@ -308,7 +308,7 @@ static void getMaterialFromMtl
     ) 
 {
 
-char actualFileName[FILE_NAME_SIZE + sizeof( "../../../../emulator/resources/" )] = "../../../../emulator/resources/";
+char actualFileName[FILE_NAME_SIZE + sizeof( "../../emulator/resources/" )] = "../../emulator/resources/";
 
 strcat(actualFileName, mtlFileName);
 

@@ -1,6 +1,6 @@
 #CC=cc
 BUILDDIR=./build
-EMUDIR=../../../../emulator
+EMUDIR=../../emulator
 
 GLFW_I_DIR=$(EMUDIR)/vendor/glfw/include/GLFW
 GLFW_SRC_DIR =$(EMUDIR)/vendor/glfw/src

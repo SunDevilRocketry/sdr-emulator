@@ -40,7 +40,7 @@
 #include "flash.h"
 #include "sdr_pin_defines_A0002.h"
 
-#define FLASH_FILENAME "../../../../emulator/resources/emulator_flash.bin"
+#define FLASH_FILENAME "../../emulator/resources/emulator_flash.bin"
 #define FLASH_TMPFILENAME FLASH_FILENAME ".tmp"
 
 /* Note that this is implicitly in bytes because flash_memory is a byte array */
