@@ -120,7 +120,7 @@ GPIO_PinState HAL_GPIO_ReadPin(const GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin) {
  Procedures                                                     
 ------------------------------------------------------------------------------*/
 
-void setIgniteFlag
+void set_ignite_flag
     (
     bool status
     ) 
