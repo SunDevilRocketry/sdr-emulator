@@ -111,7 +111,7 @@ void set_gui_status_led
     const float b
     );
 
-void setIgniteFlag
+void set_ignite_flag
     (
     bool status
     );

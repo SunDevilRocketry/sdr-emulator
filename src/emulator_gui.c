@@ -453,7 +453,7 @@ static void glfwKeyCallback
     if ( key == GLFW_KEY_R && action == GLFW_PRESS && mods & GLFW_MOD_CONTROL ) 
     {
     printf("IGNITE SET\n");
-    setIgniteFlag(true);
+    set_ignite_flag(true);
     }
 
 } /* glfwKeyCallback */
