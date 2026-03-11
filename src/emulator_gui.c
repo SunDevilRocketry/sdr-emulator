@@ -367,6 +367,8 @@ glfwRequestWindowAttention(guiWindow);
 glfwFocusWindow(guiWindow);
 
 printf("[GUI STARTUP SUCCESSFUL]: Rise and shine\n");
+
+printf("[Emulator]: Press CTRL + R to arm.\n");
 /* GUI main loop */
 while (!glfwWindowShouldClose(guiWindow)) 
     {
