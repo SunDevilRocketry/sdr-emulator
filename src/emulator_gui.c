@@ -107,7 +107,7 @@ static void GLAPIENTRY openGLErrorCallback
     const void* userParam
     );
 
-static void error_callback
+static void glfw_error_callback
     (
     int error, 
     const char* description
@@ -136,7 +136,7 @@ static mat4 getUserRotation
  * @param g The green component of the light
  * @param b The blue component of the light
  *
- * @note The expected range for each RGB value is [0, 1].
+ * @note The permitted range for each RGB value is [0, 1]; The expected range is {0, 1}
  */
 void set_gui_status_led 
     (
@@ -153,14 +153,14 @@ statusLEDColor[2] = b;
 } /* setGUIStatusLED */
 
 /**
- * Runs one-time setup for gui state
+ * The entry point for the GUI
  *
- * @warning Must be called before emulator_gui_main or the results are very much undefined
+ * @warning Make sure to call @ref emulator_gui_init before this function.
  */
-void emulator_gui_init
+void emulator_gui_main
     (
     void
-    )
+    ) 
 {
 
 if ( !glfwInit() ) 
@@ -170,7 +170,7 @@ if ( !glfwInit() )
     }
 
 /* Set window-independant callbacks */
-glfwSetErrorCallback(error_callback);
+glfwSetErrorCallback(glfw_error_callback);
 
 /* Set initial window parameters and create */
 glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -200,21 +200,6 @@ glDebugMessageCallback(openGLErrorCallback, 0);
 /* Load FC obj */
 objData = loadVertexDataFromOBJ(MAKE_RESOURCES_PATH("FC_REV2.obj"));
 printf("FC OBJ READ COMPLETE\n");
-} /* emulator_gui_init */
-
-
-
-/**
- * The entry point for the GUI
- *
- * @warning Make sure to call @ref emulator_gui_init before this function.
- */
-void emulator_gui_main
-    (
-    void
-    ) 
-{
-/* TODO: There would be a great benefit from some encapsulation here */
 
 /* Create the VAO for non-LED geometry */
 GLuint defaultVAO;
@@ -424,7 +409,7 @@ while (!glfwWindowShouldClose(guiWindow))
 /**
  * Frees internal GUI resources; intended to be called before program termination
  *
- * @warning You may not call any functions that require state intialized by @ref emulator_gui_init after calling this function
+ * @warning You may not call any functions that require gui state to be intialized 
  * @note I'm not really happy with this function. It assumes the GUI state to be in the main loop or after which is not necessarily true in the case of a SIGINT. 
  * Can't really clean up before that state unless I increase the amount of static variables though.
  */
@@ -482,7 +467,7 @@ static void glfwKeyCallback
  *
  * @note See GLFW documentation for more information
  */
-static void error_callback
+static void glfw_error_callback
     (
     int error, 
     const char* description
