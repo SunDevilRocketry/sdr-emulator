@@ -59,19 +59,15 @@
 ------------------------------------------------------------------------------*/
 
 /**
- * @struct directionalLight
  *
  * Defines parameters for a directional type light to be passed to the fragment shader
  *
- * @var directionalLight::direction The direction light is emitted
- * @var directionalLight::ambient The ambient light strength of the light
- * @var directionalLight::diffuse The diffuse strength of the liht
  */
 struct directionalLight {
-    vec3 direction;
+    vec3 direction; /**< direction The direction light is emitted */
 
-    vec3 ambient;
-    vec3 diffuse;
+    vec3 ambient;   /**< ambient The ambient light strength of the light */
+    vec3 diffuse;   /**< diffuse The diffuse strength of the light */
 };
 
 /*------------------------------------------------------------------------------
@@ -142,7 +138,7 @@ static mat4 getUserRotation
  *
  * @note The expected range for each RGB value is [0, 1].
  */
-void setGUIStatusLED
+void set_gui_status_led 
     (
     const float r, 
     const float g, 

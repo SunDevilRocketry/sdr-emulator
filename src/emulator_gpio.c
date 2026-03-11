@@ -48,7 +48,7 @@ void HAL_GPIO_WritePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIO_PinState Pin
      && ( PinState == GPIO_PIN_RESET ) )
         {
         static uint16_t lastPinColor = 0;
-        setGUIStatusLED
+        set_gui_status_led 
             (
             GPIO_Pin & STATUS_R_PIN,
             GPIO_Pin & STATUS_G_PIN,
@@ -92,7 +92,7 @@ void HAL_GPIO_WritePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIO_PinState Pin
      && ( PinState == GPIO_PIN_SET ) )
         {
         printf("LED: RESET\n"); /* TEMP (I lowkey have no idea what this is supposed to do) */
-        setGUIStatusLED
+        set_gui_status_led
             (
             0,
             0,

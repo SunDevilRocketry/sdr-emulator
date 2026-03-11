@@ -29,12 +29,8 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <sys/stat.h>
 #include <stdio.h>
-#include <errno.h>
 #include <unistd.h>
 #include <time.h>
 #include <signal.h>
@@ -65,23 +61,24 @@ volatile bool gui_enable = true;
 /*------------------------------------------------------------------------------
  Static Variables
 ------------------------------------------------------------------------------*/
-static pthread_t firmwareThread;
+
+static pthread_t firmware_thread;
 static pthread_t it_thread;
+static pthread_t gps_thread;
 
 /*------------------------------------------------------------------------------
  Static Functions
 ------------------------------------------------------------------------------*/
-void sigintHandler
+static void sigint_handler
     (
     int dummy
     )
 {
 
 emulator_exit(0);
+} /* sigint_handler */
 
-}
-
-static void printArgsHelp
+static void print_args_help
     (
     void
     ) 
@@ -91,10 +88,9 @@ printf("Usage: build/appa [OPTION]\n");
 printf("Runs the flight computer emulator\n\n");
 printf("\t-h, --help              Displays this screen and exits\n");
 printf("\t--no-gui                Runs the emulator without the GUI (CLI only)\n");
+} /* pring_args_help */
 
-}
-
-static void parseArgs
+static void parse_args
     (
     int argc, 
     char* const argv[]
@@ -102,7 +98,7 @@ static void parseArgs
 {
 
 while (1) 
-{
+    {
     int c;
     int option_index = 0;
     static struct option long_options[] = 
@@ -129,25 +125,26 @@ while (1)
                 }
             else if ( option_index == 1 )
                 {
-                printArgsHelp();
+                print_args_help();
                 exit(0);
                 }
             break;
 
         case 'h':
-            printArgsHelp();
+            print_args_help();
             exit(0);
             break;
 
         case '?':
             printf("Unknown argument -%c\n", optopt);
-            printArgsHelp();
+            print_args_help();
             exit(0);
             break;
         }
-}
+    }
 
-}
+} /* parse_args */
+
 /*------------------------------------------------------------------------------
  HAL interfaces                                                       
 ------------------------------------------------------------------------------*/
@@ -194,11 +191,11 @@ int main
     )
 {
 
-parseArgs(argc, argv);
+parse_args(argc, argv);
 /*------------------------------------------------------------------------------
  Connect sigint handler
 ------------------------------------------------------------------------------*/
-signal(SIGINT, sigintHandler);
+signal(SIGINT, sigint_handler);
 
 /*------------------------------------------------------------------------------
  Start software timers                                                    
@@ -219,7 +216,6 @@ printf("Emulator Init: Opening I2c interrupt listener.\n");
 pthread_create( &it_thread, NULL, emulator_i2c_it_listener, NULL );
 
 printf("Emulator Init: Opening GPS interrupt listener.\n");
-pthread_t gps_thread;
 pthread_create( &gps_thread, NULL, emulator_gps_it_listener, NULL );
 
 /*------------------------------------------------------------------------------
@@ -245,29 +241,29 @@ else
 ------------------------------------------------------------------------------*/
 
 if ( gui_enable ) 
-{
+    {
 
-emulator_gui_init();
+    emulator_gui_init();
 
-/*------------------------------------------------------------------------------
- Once setup is complete, run the firmware                                                    
-------------------------------------------------------------------------------*/
-printf("Emulator Init: Starting firmware.\n");
+    /*------------------------------------------------------------------------------
+     Once setup is complete, run the firmware                                                    
+    ------------------------------------------------------------------------------*/
+    printf("Emulator Init: Starting firmware.\n");
 
-/* Ugly cast to correct function type (might be the worst cast I've ever seen) */
-/* Shouldn't happen in normal execution, but if main_fut returns, likely UB */
-pthread_create( &firmwareThread, NULL, (void*(*)(void*))main_fut, NULL );
+    /* Ugly cast to correct function type (might be the worst cast I've ever seen) */
+    /* Shouldn't happen in normal execution, but if main_fut returns, likely UB */
+    pthread_create( &firmware_thread, NULL, (void*(*)(void*))main_fut, NULL );
 
-/*------------------------------------------------------------------------------
- Run and block until GUI termination
-------------------------------------------------------------------------------*/
-emulator_gui_main();
+    /*------------------------------------------------------------------------------
+     Run and block until GUI termination
+    ------------------------------------------------------------------------------*/
+    emulator_gui_main();
 
-}
+    }
 else 
-{
-main_fut();
-}
+    {
+    main_fut();
+    }
 
 emulator_exit(EXIT_SUCCESS);
 } /* main */

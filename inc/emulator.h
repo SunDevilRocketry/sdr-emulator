@@ -104,7 +104,7 @@ void emulator_gui_main
     void
     );
 
-void setGUIStatusLED
+void set_gui_status_led
     (
     const float r, 
     const float g, 
