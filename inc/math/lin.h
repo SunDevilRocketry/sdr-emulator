@@ -178,18 +178,6 @@ mat4 mat4Proj
     float far
     );
 
-/* TODO: Remove or implement this function */
-mat4 mat4Ortho
-    (
-    float x, 
-    float y, 
-    float z
-    );
-
-/* TODO: Remove these or convert to macro */
-void mat4_debugprint(mat4 mat);
-void vec3_debugprint(vec3 vec);
-
 #ifdef __cplusplus
 }
 #endif

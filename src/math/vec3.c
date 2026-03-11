@@ -125,7 +125,7 @@ float vec3Magnitude
     const vec3 vec
     )
 {
-    return sqrt(pow(vec.data[0], 2) + pow(vec.data[1], 2) + pow(vec.data[2], 2));
+    return sqrtf(powf(vec.data[0], 2) + powf(vec.data[1], 2) + powf(vec.data[2], 2));
 
 } /* vec3Magnitude */
 
@@ -203,18 +203,6 @@ retVec.data[2] = a.data[2] * scalar;
 return retVec;
 
 } /* vec3MultScalar */
-
-//TODO: DELETE
-void vec3_debugprint
-    (
-    vec3 vec
-    )
-{
-
-printf("VEC3 (ARRAY ELEMENTS): (%.4f, %.4f, %.4f)\n", vec.data[0], vec.data[1], vec.data[2]);
-printf("VEC3 (MEMBERS): (%.4f, %.4f, %.4f)\n", vec.members.x, vec.members.y, vec.members.z);
-
-} /* vec3_debugPrint */
 
 /*******************************************************************************
 * END OF FILE                                                                  *

@@ -293,12 +293,11 @@ return lookAt;
 /*******************************************************************************
 *                                                                              *
 * PROCEDURE:                                                                   * 
-* 		mat4LookAt                                                             *
+* 		mat4Proj                                                               *
 *                                                                              *
 * DESCRIPTION:                                                                 * 
-*       Uses the Gram-Schmidt process to create a matrix representing the      *
-*       camera. Do note that it is erroneous to have a up vector parallel to   *
-*       the camera's look vector                                               *
+*       Returns a perspective projection matrix initialized with the           *
+*       passed parameters.                                                     *
 *                                                                              *
 *******************************************************************************/
 mat4 mat4Proj
@@ -326,24 +325,6 @@ return proj;
 
 } /* mat4Proj */
 
-// TODO: Collect feedback on whether to implement this
-mat4 mat4Ortho(float x, float y, float z);
-
-/* TODO: DELETE */
-void mat4_debugprint
-    (
-    mat4 mat
-    )
-{
-
-for (int row = 0; row < 4; row++) {
-    for (int col = 0; col < 4; col++) {
-        printf("%.2f ", *(mat.data + row + 4 * col));
-    }
-    printf("\n");
-}
-
-}
 
 /*******************************************************************************
 * END OF FILE                                                                  *
