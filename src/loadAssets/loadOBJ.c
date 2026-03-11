@@ -21,7 +21,6 @@
 /*------------------------------------------------------------------------------
  Standard Includes                                                                    
 ------------------------------------------------------------------------------*/
-#define __STDC_WANT_LIB_EXT1__ 1
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
@@ -32,6 +31,17 @@
 ------------------------------------------------------------------------------*/
 #include "containers/darr.h"
 #include "loadAssets/loadAssets.h"
+
+/*------------------------------------------------------------------------------
+ Macros
+------------------------------------------------------------------------------*/
+
+/* https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html */
+#define FILE_NAME_SCAN_LIMIT 127
+#define FILE_NAME_SIZE (FILE_NAME_SCAN_LIMIT + 1)
+#define MAKE_STRING(X) XMAKE_STRING(X)
+#define XMAKE_STRING(X) #X
+#define FILE_NAME_FORMAT_STR "%" MAKE_STRING(FILE_NAME_SCAN_LIMIT) "s"
 
 /*------------------------------------------------------------------------------
  Static Function Prototypes
@@ -120,35 +130,21 @@ struct meshObject* loadVertexDataFromOBJ
 /* Open obj file for reading */
 FILE *srcFile = NULL;
 
-#ifdef __STDC_LIB_EXT1__
-
-errno_t fopenError = fopen_s(&srcFile, filepath, "rb");
-
-if ( fopenError != 0 ) 
-    {
-    printf("[SECURE FOPEN]: Failed to open %s, error %d\n", filepath, fopenError);
-    return vData;
-    }
-
-#else
-
 srcFile = fopen(filepath, "rb");
 
 if ( srcFile == NULL ) 
     {
-    printf("[NON-SECURE FOPEN]: Failed to open %s\n", filepath);
+    printf("Failed to open %s\n", filepath);
     return NULL;
     }
-
-#endif
 
 /* Initialize data needed for parsing */
 
 float* vertexPositionData = DARRAY_NEW(float, 100);
 float* vertexNormalData = DARRAY_NEW(float, 100);
 
-char mtlFileName[512];
-char currMtlName[512];
+char mtlFileName[FILE_NAME_SIZE];
+char currMtlName[FILE_NAME_SIZE];
 
 float currMtlRGB[3];
 
@@ -177,7 +173,7 @@ while ((c = fgetc(srcFile)) != EOF)
                 .vertexData = DARRAY_NEW(float, 1000),
             };
             /* Scan object name */
-            fscanf(srcFile, "%511s", thisMesh.objName);
+            fscanf(srcFile, FILE_NAME_FORMAT_STR, thisMesh.objName);
 
             (void)DARRAY_PUSH(meshes, thisMesh);
             break;
@@ -201,7 +197,7 @@ while ((c = fgetc(srcFile)) != EOF)
             /* m indicates the definition of a linked .mtl file for this obj file */
             /* Put that m back and ensure the statement is mtllib */
             ungetc(c, srcFile);
-            fscanf(srcFile, "%511s", mtlFileName);
+            fscanf(srcFile, FILE_NAME_FORMAT_STR, mtlFileName);
 
             if ( strcmp("mtllib", mtlFileName) != 0 )
             {
@@ -209,13 +205,13 @@ while ((c = fgetc(srcFile)) != EOF)
             }
 
             /* Read the mtlFileName and store it for use when reading usemtl information */
-            fscanf(srcFile, "%511s", mtlFileName);
+            fscanf(srcFile, FILE_NAME_FORMAT_STR, mtlFileName);
             break;
         case 'u':
             /* u indicates a potential usemtl statement */
             /* Put that u back and ensure usemtl is in fact the statement */
             ungetc(c, srcFile);
-            fscanf(srcFile, "%511s", currMtlName);
+            fscanf(srcFile, FILE_NAME_FORMAT_STR, currMtlName);
 
             if (strcmp("usemtl", currMtlName) != 0) 
             {
@@ -223,7 +219,7 @@ while ((c = fgetc(srcFile)) != EOF)
             }
 
             /* Read name of material */
-            fscanf(srcFile, "%511s", currMtlName);
+            fscanf(srcFile, FILE_NAME_FORMAT_STR, currMtlName);
             
             /* Put material diffuse into the currMtlRGB */
             getMaterialFromMtl(mtlFileName, currMtlName, currMtlRGB);
@@ -312,7 +308,7 @@ static void getMaterialFromMtl
     ) 
 {
 
-char actualFileName[1024] = "../../../../emulator/resources/";
+char actualFileName[FILE_NAME_SIZE + sizeof( "../../../../emulator/resources/" )] = "../../../../emulator/resources/";
 
 strcat(actualFileName, mtlFileName);
 
@@ -320,12 +316,14 @@ FILE* mtlFile = fopen(actualFileName, "rb");
 
 if ( mtlFile == NULL )
 {
-    /* TODO: Maybe exit gracefully instead of exploding? */
-    printf("NOOOO!\n");
-    exit(1);
+    /* Return GMod missing texture pink if material cannot be loaded */
+    retRGB[0] = 1;
+    retRGB[1] = 0;
+    retRGB[2] = 1;
+    return;
 }
 
-char readMtlName[512];
+char readMtlName[FILE_NAME_SIZE];
 
 int c;
 while ( (c = fgetc(mtlFile)) != EOF )
@@ -341,13 +339,13 @@ while ( (c = fgetc(mtlFile)) != EOF )
             break;
         case 'n':
             ungetc(c, mtlFile);
-            fscanf(mtlFile, "%511s", readMtlName);
+            fscanf(mtlFile, FILE_NAME_FORMAT_STR, readMtlName);
 
             if ( strcmp(readMtlName, "newmtl") != 0 )
             {
             break;
             }
-            fscanf(mtlFile, "%511s", readMtlName);
+            fscanf(mtlFile, FILE_NAME_FORMAT_STR, readMtlName);
             if ( strcmp(readMtlName, mtlName) != 0 )
             {
             break;
