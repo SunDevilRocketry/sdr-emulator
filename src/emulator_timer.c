@@ -161,7 +161,7 @@ void emulator_buzzer_beep_request
 {
 char buf[13];
 snprintf( buf, 13, "BUZZ: %05d\n", duration);
-guisock_put( buf, 12 );
+printf("%s\n", buf); /* TEMP until buzzer gets implemented for realz */
 HAL_Delay(duration);
 
 } /* emulator_buzzer_beep_request */

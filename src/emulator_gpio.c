@@ -47,39 +47,57 @@ void HAL_GPIO_WritePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIO_PinState Pin
      && ( GPIO_Pin & ( STATUS_G_PIN | STATUS_R_PIN | STATUS_B_PIN ) )
      && ( PinState == GPIO_PIN_RESET ) )
         {
+        static uint16_t lastPinColor = 0;
+        set_gui_status_led 
+            (
+            GPIO_Pin & STATUS_R_PIN,
+            GPIO_Pin & STATUS_G_PIN,
+            GPIO_Pin & STATUS_B_PIN
+            );
+
+        /* This would be a good toggle with a verbose argument */
+        if (lastPinColor == GPIO_Pin) { return; }
+        lastPinColor = GPIO_Pin;
         switch (GPIO_Pin) 
             {
             case STATUS_G_PIN:
-                guisock_put("LED: GREEN\n", 11);
+                printf("LED: GREEN\n");
                 break;
             case STATUS_R_PIN:
-                guisock_put("LED: RED\n", 9);
+                printf("LED: RED\n");
                 break;
             case STATUS_B_PIN:
-                guisock_put("LED: BLUE\n", 10);
+                printf("LED: BLUE\n");
                 break;
             case STATUS_G_PIN | STATUS_R_PIN:
-                guisock_put("LED: YELLOW\n", 12);
+                printf("LED: YELLOW\n");
                 break;
             case STATUS_G_PIN | STATUS_B_PIN:
-                guisock_put("LED: CYAN\n", 10);
+                printf("LED: CYAN\n");
                 break;
             case STATUS_R_PIN | STATUS_B_PIN:
-                guisock_put("LED: PURPLE\n", 12);
+                printf("LED: PURPLE\n");
                 break;
             case STATUS_R_PIN | STATUS_G_PIN | STATUS_B_PIN:
-                guisock_put("LED: WHITE\n", 11);
+                printf("LED: WHITE\n");
                 break;
             default:
                 printf("-=Indeterminate=-\n");
                 break;
             }
         }
+
     if( ( GPIOx == STATUS_GPIO_PORT ) 
      && ( GPIO_Pin & ( STATUS_G_PIN | STATUS_R_PIN | STATUS_B_PIN ) )
      && ( PinState == GPIO_PIN_SET ) )
         {
-        guisock_put("LED: RESET\n", 11);
+        printf("LED: RESET\n"); /* TEMP (I lowkey have no idea what this is supposed to do) */
+        set_gui_status_led
+            (
+            0,
+            0,
+            0
+            );
         }
 }
 
@@ -101,3 +119,12 @@ GPIO_PinState HAL_GPIO_ReadPin(const GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin) {
 /*------------------------------------------------------------------------------
  Procedures                                                     
 ------------------------------------------------------------------------------*/
+
+void setIgniteFlag
+    (
+    bool status
+    ) 
+{
+ignite_flag = status;
+}
+

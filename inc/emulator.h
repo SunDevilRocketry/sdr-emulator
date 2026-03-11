@@ -66,11 +66,10 @@ extern "C" {
 /* firmware entry point */
 int main_fut(void);
 
-/* emulator.h */
-void guisock_put
+/* emulator.c */
+void emulator_exit
     (
-    const char* message,
-    size_t size
+    int exitCode
     );
 
 /* emulator_timer.c */
@@ -99,12 +98,41 @@ void emulator_flash_init
     void
     );
 
+/* emulator_gui.c */
+void emulator_gui_main
+    (
+    void
+    );
+
+void set_gui_status_led
+    (
+    const float r, 
+    const float g, 
+    const float b
+    );
+
+void set_ignite_flag
+    (
+    bool status
+    );
+
+void emulator_gui_init
+    (
+    void
+    );
+
+void emulator_gui_teardown
+    (
+    void
+    );
+
 uint32_t emulator_flash_write
     (
     uint8_t* data,
     uint32_t address,
     uint16_t size
     );
+
 
 uint32_t emulator_flash_read
     (

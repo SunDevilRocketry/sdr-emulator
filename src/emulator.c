@@ -29,18 +29,17 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <sys/stat.h>
 #include <stdio.h>
-#include <errno.h>
 #include <unistd.h>
 #include <time.h>
+#include <signal.h>
+#include <getopt.h>
 
 #include <stddef.h>
 
 #include "emulator.h"
+
 #include "stm32h755xx.h"
 
 #include <stddef.h>
@@ -50,29 +49,101 @@
  Constants                                                       
 ------------------------------------------------------------------------------*/
 const char DEVICE_ID[] = "SW_EMULATOR";
-#define GUI_SOCK_PORT 5100
 
 /*------------------------------------------------------------------------------
  Globals                                                       
 ------------------------------------------------------------------------------*/
-int gui_sock_fd;
-int gui_connection_fd;
 
 extern volatile bool ignite_flag;
 volatile bool irq_enabled = true;
+volatile bool gui_enable = true;
 
 /*------------------------------------------------------------------------------
- Static Prototypes                                                       
+ Static Variables
 ------------------------------------------------------------------------------*/
-static void guisock_open
+
+static pthread_t firmware_thread;
+static pthread_t it_thread;
+static pthread_t gps_thread;
+
+/*------------------------------------------------------------------------------
+ Static Functions
+------------------------------------------------------------------------------*/
+static void sigint_handler
+    (
+    int dummy
+    )
+{
+
+emulator_exit(0);
+} /* sigint_handler */
+
+static void print_args_help
     (
     void
-    );
+    ) 
+{
 
-static void* sock_listener
+printf("Usage: build/appa [OPTION]\n");
+printf("Runs the flight computer emulator\n\n");
+printf("\t-h, --help              Displays this screen and exits\n");
+printf("\t--no-gui                Runs the emulator without the GUI (CLI only)\n");
+} /* pring_args_help */
+
+static void parse_args
     (
-    void* arg
-    );
+    int argc, 
+    char* const argv[]
+    )
+{
+
+while (1) 
+    {
+    int c;
+    int option_index = 0;
+    static struct option long_options[] = 
+    {
+        { "no-gui", no_argument, NULL, 0 }, /* Disables GUI */
+        { "help", no_argument, NULL, 0}, /* help me */
+        { "verbose", no_argument, NULL, 0}, /* For misc info like emulator initialized X system */
+        { "debug", no_argument, NULL, 0} /* For prints such as address writing */
+
+    };
+
+    c = getopt_long(argc, argv, "-:h", long_options, &option_index);
+    if (c == -1)
+        {
+        break;
+        }
+
+    switch (c)
+        {
+        case 0:
+            if ( option_index == 0 )
+                {
+                gui_enable = false;
+                }
+            else if ( option_index == 1 )
+                {
+                print_args_help();
+                exit(0);
+                }
+            break;
+
+        case 'h':
+            print_args_help();
+            exit(0);
+            break;
+
+        case '?':
+            printf("Unknown argument -%c\n", optopt);
+            print_args_help();
+            exit(0);
+            break;
+        }
+    }
+
+} /* parse_args */
 
 /*------------------------------------------------------------------------------
  HAL interfaces                                                       
@@ -115,9 +186,17 @@ void HAL_NVIC_EnableIRQ(IRQn_Type IRQn) {irq_enabled = true;}
 *******************************************************************************/
 int main
     (
-    void
+    int argc,
+    char* const argv[]
     )
 {
+
+parse_args(argc, argv);
+/*------------------------------------------------------------------------------
+ Connect sigint handler
+------------------------------------------------------------------------------*/
+signal(SIGINT, sigint_handler);
+
 /*------------------------------------------------------------------------------
  Start software timers                                                    
 ------------------------------------------------------------------------------*/
@@ -133,60 +212,10 @@ emulator_flash_init();
 ------------------------------------------------------------------------------*/
 srand(time(NULL));
 
-/*------------------------------------------------------------------------------
- Open socket for IPC                                                  
-------------------------------------------------------------------------------*/
-guisock_open();
-printf("Emulator Init: GUI socket opened successfully.\n");
-
-/*------------------------------------------------------------------------------
- Start GUI and wait                                                  
-------------------------------------------------------------------------------*/
-pid_t gui_pid;
-gui_pid = fork();
-
-if ( gui_pid < 0 ) 
-    {
-    fprintf(stderr, "Emulator Init: GUI Fork failed!\n");
-    return 1;
-    } 
-else if ( gui_pid == 0 ) 
-    {
-    execlp("python", "python", "../../../../emulator/gui/gui.py", (char *) NULL);
-    exit(0);
-    } 
-else {
-    printf("Emulator Init: GUI Fork success. Waiting for the GUI to initialize before continuing.\n");
-    sleep(4);
-    printf("Emulator Init: Continuing with startup.\n");
-    }
-
-/*------------------------------------------------------------------------------
- Attempt to open connection                                                  
-------------------------------------------------------------------------------*/
-struct sockaddr_in client_address;
-socklen_t addrlen = sizeof(client_address);
-
-while ( (gui_connection_fd = accept(gui_sock_fd, (struct sockaddr *)&client_address, &addrlen) ) < 0) 
-    {
-    printf("Emulator Init: Socket accept failed.\n");
-    printf("Emulator Init: Retrying...\n");
-    sleep(1);
-    } 
-printf("Emulator Init: Socket connected to GUI client.\n");
-printf("    IP: %s\n", inet_ntoa(client_address.sin_addr));
-printf("    Port: %d\n", ntohs(client_address.sin_port));
-
-printf("Emulator Init: Opening socket listener.\n");
-pthread_t socket_thread;
-pthread_create( &socket_thread, NULL, sock_listener, NULL );
-
 printf("Emulator Init: Opening I2c interrupt listener.\n");
-pthread_t it_thread;
 pthread_create( &it_thread, NULL, emulator_i2c_it_listener, NULL );
 
 printf("Emulator Init: Opening GPS interrupt listener.\n");
-pthread_t gps_thread;
 pthread_create( &gps_thread, NULL, emulator_gps_it_listener, NULL );
 
 /*------------------------------------------------------------------------------
@@ -205,129 +234,53 @@ if ( emulator_prompt_and_open_serial_port() )
 else
     {
     printf("Emulator Init: Serial connection failed. Continuing without.\n");
+    
+    }
+/*------------------------------------------------------------------------------
+ Initialize GUI
+------------------------------------------------------------------------------*/
+
+if ( gui_enable ) 
+    {
+
+    /*------------------------------------------------------------------------------
+     Once setup is complete, run the firmware                                                    
+    ------------------------------------------------------------------------------*/
+    printf("Emulator Init: Starting firmware.\n");
+
+    /* Ugly cast to correct function type (might be the worst cast I've ever seen) */
+    /* Shouldn't happen in normal execution, but if main_fut returns, likely UB */
+    pthread_create( &firmware_thread, NULL, (void*(*)(void*))main_fut, NULL );
+
+    /*------------------------------------------------------------------------------
+     Run and block until GUI termination
+    ------------------------------------------------------------------------------*/
+    emulator_gui_main();
+
+    }
+else 
+    {
+    main_fut();
     }
 
-/*------------------------------------------------------------------------------
- Once setup is complete, run the firmware                                                    
-------------------------------------------------------------------------------*/
-printf("Emulator Init: Starting firmware.\n");
-sleep(10);
-main_fut();
-
+emulator_exit(EXIT_SUCCESS);
 } /* main */
 
-
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		guisock_open                                                           *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Start the GUI socket.                                                  *
-*                                                                              *
-*******************************************************************************/
-static void guisock_open
+void emulator_exit
     (
-    void
+    int exitCode
     )
 {
 
-struct sockaddr_in sock_addr; 
-
-if ( ( gui_sock_fd = socket( AF_INET, SOCK_STREAM, 0 ) ) < 0 ) 
+printf("Emulator terminating with exit code %d", exitCode);
+if ( gui_enable ) 
     {
-    perror("Emulator Init: Error while creating the socket\n");
-    exit(1);
+    emulator_gui_teardown();
     }
 
-memset( &sock_addr, 0, sizeof(sock_addr) ); 
+/* Should force kill all pthreads */
+exit(exitCode);
 
-sock_addr.sin_family = AF_INET;
-
-sock_addr.sin_port = htons( GUI_SOCK_PORT );
-
-sock_addr.sin_addr.s_addr = htonl( INADDR_ANY ); /* allow the emulator to accept a connection on any interface */
-
-if ( bind( gui_sock_fd, (struct sockaddr *) &sock_addr, sizeof( sock_addr ) ) < 0 ) 
-    {
-    perror("Emulator Init: Error in binding GUI socket.\n");
-    exit(1);
-    } 
-
-if (listen(gui_sock_fd, 1) < 0) {
-    perror("Emulator Init: Socket listen failed.\n");
-    exit(1);
 }
-printf("Emulator Init: Socket is now listening on port %d.\n", GUI_SOCK_PORT);
-
-} /* guisock_open */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		sock_listener                                                          *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Listen on the socket for events.                                       *
-*                                                                              *
-*******************************************************************************/
-static void* sock_listener
-    (
-    void* arg
-    )
-{
-bool sock_listen = true;
-char buf[256];
-
-printf("Emulator Init: Socket listener running.\n");
-
-while (sock_listen)
-    {
-    /* Read up to 256 bytes from the socket at a time */
-    int bytes_read = 0;
-    bytes_read = read( gui_connection_fd, buf, sizeof( buf ) );
-
-    /* If there's content in the socket, tokenize it based on newlines*/
-    if ( bytes_read > 0 )
-        {
-        char* token = strtok(buf, "\n");
-
-        while ( token != NULL )
-            {
-            /* Handle each command here */
-            if ( !strncmp( token, "ignite", 6 ) )
-                {
-                ignite_flag = true;
-                }
-
-            token = strtok( NULL, "\n" );
-            }
-        }
-    /* Do not busy wait. Delay to allow the buffer to refill. */
-    usleep(10000); /* 2000 microseconds -> 2 ms */
-    }
-
-    return 0;
-
-} /* sock_listener */
-
-
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		guisock_put                                                            *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Write some string to the GUI socket.                                   *
-*                                                                              *
-*******************************************************************************/
-void guisock_put
-    (
-    const char* message,
-    size_t size
-    )
-{
-write( gui_connection_fd, message, size );
-
-} /* guisock_put */

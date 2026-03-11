@@ -1,3 +1,2 @@
-gui/__pycache__/*
+*.swp
 resources/emulator_flash.bin
-resources/emulator_flash.bin.tmp
