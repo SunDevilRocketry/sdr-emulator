@@ -74,7 +74,7 @@ The EGL specification and various glad headers (Modified MIT):
     MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
 
 Dynamic Array (MIT-0):
-    Copyright 2026 Robert Camacho
+    Copyright (c) 2026 Robert Camacho
 
     Permission is hereby granted, free of charge, to any person obtaining a copy of this
     software and associated documentation files (the "Software"), to deal in the Software
