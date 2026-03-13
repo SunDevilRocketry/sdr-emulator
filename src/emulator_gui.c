@@ -323,16 +323,6 @@ vec3 camUp = vec3New(0, 1, 0);
 mat4 view = mat4LookAt(camPos, camTarget, camUp);
 mat4 proj = mat4Proj(1.57, 16.0/9.0, 1, 300);
 
-vec3 test = vec3New(1, 2, 3);
-printf("test vec3 dataArray: %f %f %f\n", test.data[0], test.data[1], test.data[2]);
-printf("test vec3 members: %f %f %f\n", test.members.x, test.members.y, test.members.z);
-printf("Test dot: %f\n", vec3Dot(test, vec3New(2, 4, 2)));
-vec3 sub = vec3Sub(test, vec3New(1, 1, 1));
-printf("Test sub: %f %f %f\n", sub.data[0], sub.data[1], sub.data[2]);
-
-vec3 testCross = vec3Cross(test, vec3New(4, 5, 6));
-printf("Test vec3 cross: %f %f %f\n", testCross.members.x, testCross.members.y, testCross.members.z);
-
 /* Get uniform buffer location IDs from LED and non-LED shaders */
 int modelUniformLocation = glGetUniformLocation(defaultShaderProgram, "model");
 int viewUniformLocation = glGetUniformLocation(defaultShaderProgram, "view");
