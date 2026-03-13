@@ -50,12 +50,22 @@ mat4 mat4Identity
     void
     )
 {
+
+#ifdef __SSE__
+mat4 retMat4;
+retMat4._data[0] = _mm_setr_ps(1, 0, 0, 0);
+retMat4._data[1] = _mm_setr_ps(0, 1, 0, 0);
+retMat4._data[2] = _mm_setr_ps(0, 0, 1, 0);
+retMat4._data[3] = _mm_setr_ps(0, 0, 0, 1);
+#else
+/* This highkey might be faster than the simd version */
 mat4 retMat4 = {
     .data = {1, 0, 0, 0,
              0, 1, 0, 0,
              0, 0, 1, 0,
              0, 0, 0, 1}
 };
+#endif
 
 return retMat4;
 
@@ -73,12 +83,24 @@ return retMat4;
 *******************************************************************************/
 mat4 mat4Mult
     (
-    const mat4 a, 
-    const mat4 b
+    mat4 a, 
+    mat4 b
     )
 {
 mat4 retMat = {};
 
+#ifdef __SSE4_1__
+
+_MM_TRANSPOSE4_PS(a._data[0], a._data[1], a._data[2], a._data[3]);
+for (size_t row = 0; row < 4; row++)
+{
+for (size_t col = 0; col < 4; col++)
+    {
+    *(retMat.data + col * 4 + row) = _mm_dp_ps(a._data[row], b._data[col], 0xF1)[0];
+    }
+}
+
+#else
 /* I LOVE nested for loops and pointer arithmetic!!!! */
 for (size_t row = 0; row < 4; row++)
 {
@@ -91,6 +113,8 @@ for (size_t col = 0; col < 4; col++)
         *(a.data + 3 * 4 + row) * *(b.data + col * 4 + 3);
     }
 }
+
+#endif
 
 return retMat;
 
@@ -107,22 +131,28 @@ return retMat;
 *******************************************************************************/
 mat4 mat4MultScalar
     (
-    const mat4 a, 
+    mat4 a, 
     float scalar
     )
 {
-mat4 retMat = a;
-
+#ifdef __SSE__
+__m128 scalar_broad = _mm_set1_ps(scalar);
+for (size_t col = 0; col < 4; col++) 
+{
+a._data[col] = _mm_mul_ps(a._data[col], scalar_broad);
+}
+#else
 for (size_t col = 0; col < 4; col++)
 {
 for (size_t row = 0; row < 4; row++)
     {
-        *(retMat.data + col * 4 + row) *= scalar;
+        *(a.data + col * 4 + row) *= scalar;
     }
 }
 
-return retMat;
+#endif
 
+return a;
 } /* mat4MultScalar */
 
 /*******************************************************************************
@@ -141,7 +171,12 @@ mat4 mat4Add
     )
 {
 mat4 retMat = {};
-
+#ifdef __SSE__
+for (size_t col = 0; col < 4; col++)
+{
+retMat._data[col] = _mm_add_ps(a._data[col], b._data[col]);
+}
+#else
 for (size_t col = 0; col < 4; col++) 
 {
 for (size_t row = 0; row < 4; row++) 
@@ -149,6 +184,7 @@ for (size_t row = 0; row < 4; row++)
        *(retMat.data + col * 4 + row) = *(a.data + col * 4 + row) + *(b.data + col * 4 + row);
     }
 }
+#endif
 
 return retMat;
 
@@ -169,6 +205,7 @@ mat4 mat4RotY
     float angle
     )
 {
+/* No SIMD here, this will probably go away soon */
 mat4 rotMat = mat4Identity();
 rotMat.data[0] = cos(angle);
 rotMat.data[2] = -sin(angle);
@@ -195,6 +232,7 @@ mat4 mat4AxisAngle
     float angle
     )
 {
+/* No SIMD, not much it can do */
 mat4 I = mat4Identity();
 mat4 A;
 memset(A.data, 0, sizeof(float) * 16);
@@ -233,9 +271,13 @@ mat4 mat4Translation
 {
 mat4 translation = mat4Identity();
 
+#ifdef __SSE__
+translation._data[3] = _mm_setr_ps(x, y, z, 1);
+#else
 translation.data[12] = x;
 translation.data[13] = y;
 translation.data[14] = z;
+#endif
 
 return translation;
 
@@ -266,6 +308,12 @@ vec3 cameraUp = vec3Normalize(vec3Cross(zAxis, xAxis));
 /* Do note that this process has a side effect of causing issues when the up vector is the same as the zAxis (-lookDirection) */
 
 mat4 lookAt = mat4Identity(); 
+#ifdef __SSE__
+lookAt._data[0] = _mm_setr_ps(xAxis.members.x, cameraUp.members.x, zAxis.members.x, 0);
+lookAt._data[1] = _mm_setr_ps(xAxis.members.y, cameraUp.members.y, zAxis.members.y, 0);
+lookAt._data[2] = _mm_setr_ps(xAxis.members.z, cameraUp.members.z, zAxis.members.z, 0);
+lookAt._data[3] = _mm_setr_ps(-position.members.x, -position.members.y, -position.members.z, 1);
+#else
 /* First column, X_1, Y_1, Z_1 */
 lookAt.data[0] = xAxis.members.x;
 lookAt.data[1] = cameraUp.members.x;
@@ -285,7 +333,7 @@ lookAt.data[10] = zAxis.members.z;
 lookAt.data[12] = -position.members.x;
 lookAt.data[13] = -position.members.y;
 lookAt.data[14] = -position.members.z;
-
+#endif
 return lookAt;
 
 } /* mat4LookAt */
@@ -308,6 +356,8 @@ mat4 mat4Proj
     float far
     ) 
 {
+/* No SIMD, nothing for it to do */
+
 /* Dont really understand the z component modifications from a mathematical standpoint. Its some kind of non-linear mapping to provide more accuracy to vertices closer to the camera */
 
 float xMult = 1/(aspect*tan(fov/2.0));

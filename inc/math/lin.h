@@ -55,7 +55,11 @@ _Static_assert( _Alignof(vec3) == 16, "Vec3 should be 16-bit algined" );
 /* Matrices are stored in column major order per the GLSL specification. */
 /* This has no effect on their operations or use */
 typedef union mat4 {
+#ifdef __SSE__
+    _Alignas(64) __m128 _data[4];
+#endif
     _Alignas(64) float data[16];
+
     struct _mat4_members {
         /* a[row][col] */
         float a00;
@@ -78,7 +82,6 @@ typedef union mat4 {
 } mat4;
 
 _Static_assert( _Alignof(mat4) == 64, "Mat4 should be 64-bit aligned" );
-
 /*------------------------------------------------------------------------------
  Function prototypes                                             
 ------------------------------------------------------------------------------*/
