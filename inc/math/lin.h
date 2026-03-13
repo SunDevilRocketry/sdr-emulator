@@ -27,6 +27,12 @@
 extern "C" {
 #endif
 
+#ifdef GRAPHICS_DEBUG
+#define GRAPHICS_OPTIMIZED_PROCEDURE __attribute__((optimize("Og")))
+#else
+#define GRAPHICS_OPTIMIZED_PROCEDURE __attribute__((optimize("O3")))
+#endif
+
 /*------------------------------------------------------------------------------
  Typedefs
 ------------------------------------------------------------------------------*/

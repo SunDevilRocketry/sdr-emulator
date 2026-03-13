@@ -47,6 +47,7 @@
 *       passed values                                                          *
 *                                                                              *
 *******************************************************************************/
+GRAPHICS_OPTIMIZED_PROCEDURE /* defines optimization attributes */
 vec3 vec3New
     (
     const float x, 
@@ -72,6 +73,7 @@ return new;
 *       Returns the dot (scalar) product of the two passed vec3s               *
 *                                                                              *
 *******************************************************************************/
+GRAPHICS_OPTIMIZED_PROCEDURE /* defines optimization attributes */
 float vec3Dot
     (
     const vec3 a, 
@@ -94,6 +96,7 @@ return
 *       Returns the cross product of the passed vec3s as such: a X b           *
 *                                                                              *
 *******************************************************************************/
+GRAPHICS_OPTIMIZED_PROCEDURE /* defines optimization attributes */
 vec3 vec3Cross
     (
     const vec3 
@@ -120,6 +123,7 @@ return retVec;
 *       Returns the magnitude of the passed vec3                               *
 *                                                                              *
 *******************************************************************************/
+GRAPHICS_OPTIMIZED_PROCEDURE /* defines optimization attributes */
 float vec3Magnitude
     (
     const vec3 vec
@@ -139,6 +143,7 @@ float vec3Magnitude
 *       magnitude 1.                                                           *
 *                                                                              *
 *******************************************************************************/
+GRAPHICS_OPTIMIZED_PROCEDURE /* defines optimization attributes */
 vec3 vec3Normalize
     (
     const vec3 vec
@@ -165,6 +170,7 @@ return retVec;
 *       of a - b                                                               *
 *                                                                              *
 *******************************************************************************/
+GRAPHICS_OPTIMIZED_PROCEDURE /* defines optimization attributes */
 vec3 vec3Sub
     (
     const vec3 a, 
@@ -191,6 +197,7 @@ return difference;
 *       passed scalar                                                          *
 *                                                                              *
 *******************************************************************************/
+GRAPHICS_OPTIMIZED_PROCEDURE /* defines optimization attributes */
 vec3 vec3MultScalar
     (
     const vec3 a, 
