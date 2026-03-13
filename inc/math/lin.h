@@ -27,6 +27,10 @@
 extern "C" {
 #endif
 
+/*------------------------------------------------------------------------------
+ Macros
+------------------------------------------------------------------------------*/
+
 #ifdef GRAPHICS_DEBUG
 #define GRAPHICS_OPTIMIZED_PROCEDURE __attribute__((optimize("Og")))
 #else
