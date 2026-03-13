@@ -19,6 +19,8 @@
 *
 *******************************************************************************/
 
+
+
 /*------------------------------------------------------------------------------
  Standard Includes                                                                    
 ------------------------------------------------------------------------------*/
@@ -56,9 +58,13 @@ vec3 vec3New
 {
 
 vec3 new; 
+#ifdef __SSE__ 
+new._data = _mm_setr_ps(x,y,z,0);
+#else
 new.data[0] = x;
 new.data[1] = y;
 new.data[2] = z;
+#endif
 
 return new;
 } /* vec3New */
@@ -78,11 +84,15 @@ float vec3Dot
     const vec3 b
     )
 {
+#ifdef __SSE4_1__ 
+__m128 result = _mm_dp_ps(a._data, b._data, 0xF1);
+return result[0];
+#else
 return 
     (a.data[0])*(b.data[0]) + 
     (a.data[1])*(b.data[1]) + 
     (a.data[2])*(b.data[2]);
-
+#endif
 } /* vec3Dot */
 
 /*******************************************************************************
@@ -102,13 +112,33 @@ vec3 vec3Cross
     )
 {
 vec3 retVec;
+#ifdef __SSE__
+/* Note that shuffle operates as follows: 
+ * result.data[0] = a.data[shuffleIndices[3]] 
+ * result.data[1] = a.data[shuffleIndices[2]]
+ * result.data[2] = a.data[shuffleIndices[1]]
+ * result.data[3] = a.data[shuffleIndices[0]] 
+ * */
+__m128 ayazax_0 = _mm_shuffle_ps(a._data, a._data, _MM_SHUFFLE(3, 0, 2, 1));
+__m128 bzbxby_0 = _mm_shuffle_ps(b._data, b._data, _MM_SHUFFLE(3, 1, 0, 2));;
+
+__m128 azaxay_0 = _mm_shuffle_ps(a._data, a._data, _MM_SHUFFLE(3, 1, 0, 2));;
+__m128 bybzbx_0 = _mm_shuffle_ps(b._data, b._data, _MM_SHUFFLE(3, 0, 2, 1));;
+
+__m128 m1Prod = _mm_mul_ps(ayazax_0, bzbxby_0);
+__m128 m2Prod = _mm_mul_ps(azaxay_0, bybzbx_0);
+
+retVec._data = _mm_sub_ps(m1Prod, m2Prod);
+
+#else
 
 retVec.data[0] = (a.data[1])*(b.data[2]) - (a.data[2])*(b.data[1]);
 retVec.data[1] = (a.data[2])*(b.data[0]) - (a.data[0])*(b.data[2]);
 retVec.data[2] = (a.data[0])*(b.data[1]) - (a.data[1])*(b.data[0]);
 
-return retVec;
+#endif
 
+return retVec;
 } /* vec3Cross */
 
 /*******************************************************************************
@@ -125,7 +155,18 @@ float vec3Magnitude
     const vec3 vec
     )
 {
+#ifdef __SSE3__
+    /* No pow instr, just mult by self */
+    /* might actually be slower than generic implementation lol */
+    __m128 tmp = _mm_mul_ps(vec._data, vec._data);
+    __m128 hsum = _mm_hadd_ps(tmp, tmp);
+    hsum = _mm_hadd_ps(hsum, hsum);
+
+    return sqrtf(hsum[0]);
+
+#else
     return sqrtf(powf(vec.data[0], 2) + powf(vec.data[1], 2) + powf(vec.data[2], 2));
+#endif
 
 } /* vec3Magnitude */
 
@@ -145,11 +186,22 @@ vec3 vec3Normalize
     ) 
 {
 vec3 retVec;
+#ifdef __SSE__
+
+/* Inline code from magnitude to avoid re-casting to __m128 */
+__m128 mag = _mm_mul_ps(vec._data, vec._data);
+mag = _mm_hadd_ps(mag, mag);
+mag = _mm_sqrt_ps(_mm_hadd_ps(mag, mag));
+retVec._data = _mm_div_ps(vec._data, mag);
+
+#else
 
 float mag = vec3Magnitude(vec);
 retVec.data[0] = vec.data[0] / mag;
 retVec.data[1] = vec.data[1] / mag;
 retVec.data[2] = vec.data[2] / mag;
+
+#endif
 
 return retVec;
 
@@ -172,10 +224,14 @@ vec3 vec3Sub
     )
 {
 vec3 difference;
-
+#ifdef __SSE__
+/* mfw when single instruction multiple data */
+difference._data = _mm_sub_ps(a._data, b._data);
+#else
 difference.data[0] = a.members.x - b.members.x;
 difference.data[1] = a.members.y - b.members.y;
 difference.data[2] = a.members.z - b.members.z;
+#endif
 
 return difference;
 
@@ -197,9 +253,14 @@ vec3 vec3MultScalar
     float scalar) 
 {
 vec3 retVec;
+#ifdef __SSE__
+__m128 scale_r = _mm_set1_ps(scalar);
+retVec._data = _mm_mul_ps(a._data, scale_r);
+#else
 retVec.data[0] = a.data[0] * scalar;
 retVec.data[1] = a.data[1] * scalar;
 retVec.data[2] = a.data[2] * scalar;
+#endif
 return retVec;
 
 } /* vec3MultScalar */

@@ -28,24 +28,34 @@ extern "C" {
 #endif
 
 /*------------------------------------------------------------------------------
+ GCC Specific Includes
+------------------------------------------------------------------------------*/
+
+#include <immintrin.h> /* Provides intrinsics for SIMD instructions */
+
+/*------------------------------------------------------------------------------
  Typedefs
 ------------------------------------------------------------------------------*/
 
 typedef union vec3 {
-    float data[3];
+#ifdef __SSE__
+    _Alignas(16) __m128 _data;
+#endif
+    _Alignas(16) float data[4]; /* The w component is 0 and should not be changed; exists for alignment purposes */
     struct _vec3_members {
         float x;
         float y;
         float z;
+        float w;
     } members;
 } vec3;
 
-_Static_assert( sizeof(vec3) == 12, "vec3s should only contain 3 floats" );
+_Static_assert( _Alignof(vec3) == 16, "Vec3 should be 16-bit algined" );
 
 /* Matrices are stored in column major order per the GLSL specification. */
 /* This has no effect on their operations or use */
 typedef union mat4 {
-    float data[16];
+    _Alignas(64) float data[16];
     struct _mat4_members {
         /* a[row][col] */
         float a00;
@@ -67,7 +77,7 @@ typedef union mat4 {
     } members;
 } mat4;
 
-_Static_assert( sizeof(mat4) == 64, "mat4s should only contain 16 floats" );
+_Static_assert( _Alignof(mat4) == 64, "Mat4 should be 64-bit aligned" );
 
 /*------------------------------------------------------------------------------
  Function prototypes                                             
