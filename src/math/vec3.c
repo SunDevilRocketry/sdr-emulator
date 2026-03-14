@@ -186,7 +186,7 @@ vec3 vec3Normalize
     ) 
 {
 vec3 retVec;
-#ifdef __SSE__
+#ifdef __SSE3__
 
 /* Inline code from magnitude to avoid re-casting to __m128 */
 __m128 mag = _mm_mul_ps(vec._data, vec._data);
