@@ -34,6 +34,16 @@ extern "C" {
 #include <immintrin.h> /* Provides intrinsics for SIMD instructions */
 
 /*------------------------------------------------------------------------------
+ Macros
+------------------------------------------------------------------------------*/
+
+#ifdef GRAPHICS_DEBUG
+#define GRAPHICS_OPTIMIZED_PROCEDURE __attribute__((optimize("Og")))
+#else
+#define GRAPHICS_OPTIMIZED_PROCEDURE __attribute__((optimize("O3")))
+#endif
+
+/*------------------------------------------------------------------------------
  Typedefs
 ------------------------------------------------------------------------------*/
 
