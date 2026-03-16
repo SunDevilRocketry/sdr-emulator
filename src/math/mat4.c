@@ -71,6 +71,7 @@ return retMat4;
 *       Returns a mat4 equal to the product of a * b                           *
 *                                                                              *
 *******************************************************************************/
+GRAPHICS_OPTIMIZED_PROCEDURE /* defines optimization attributes */
 mat4 mat4Mult
     (
     const mat4 a, 
@@ -105,6 +106,7 @@ return retMat;
 *       Returns a mat4 multiplied component-wise by the given scalar           *
 *                                                                              *
 *******************************************************************************/
+GRAPHICS_OPTIMIZED_PROCEDURE /* defines optimization attributes */
 mat4 mat4MultScalar
     (
     const mat4 a, 
@@ -134,6 +136,7 @@ return retMat;
 *       Returns a mat4 equal to the component-wise sum of of a + b             *
 *                                                                              *
 *******************************************************************************/
+GRAPHICS_OPTIMIZED_PROCEDURE /* defines optimization attributes */
 mat4 mat4Add
     (
     const mat4 a, 
@@ -164,6 +167,7 @@ return retMat;
 *       y-axis                                                                 *
 *                                                                              *
 *******************************************************************************/
+GRAPHICS_OPTIMIZED_PROCEDURE /* defines optimization attributes */
 mat4 mat4RotY
     (
     float angle
@@ -189,6 +193,7 @@ return rotMat;
 *       rotation of angle radians about the passed axis                        *
 *                                                                              *
 *******************************************************************************/
+GRAPHICS_OPTIMIZED_PROCEDURE /* defines optimization attributes */
 mat4 mat4AxisAngle
     (
     vec3 axis, 
@@ -224,6 +229,7 @@ return mat4Add(I, mat4Add(A2, A));
 *       Returns a mat4 representing a translation of (x, y, z)                 *
 *                                                                              *
 *******************************************************************************/
+GRAPHICS_OPTIMIZED_PROCEDURE /* defines optimization attributes */
 mat4 mat4Translation
     (
     float x, 
@@ -252,6 +258,7 @@ return translation;
 *       the camera's look vector                                               *
 *                                                                              *
 *******************************************************************************/
+GRAPHICS_OPTIMIZED_PROCEDURE /* defines optimization attributes */
 mat4 mat4LookAt
     (
     vec3 position, 
@@ -300,6 +307,7 @@ return lookAt;
 *       passed parameters.                                                     *
 *                                                                              *
 *******************************************************************************/
+GRAPHICS_OPTIMIZED_PROCEDURE /* defines optimization attributes */
 mat4 mat4Proj
     (
     float fov,
