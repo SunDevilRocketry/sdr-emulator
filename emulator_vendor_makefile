@@ -4,13 +4,13 @@ EMUDIR=../../emulator
 
 GLFW_I_DIR=$(EMUDIR)/vendor/glfw/include/GLFW
 GLFW_SRC_DIR =$(EMUDIR)/vendor/glfw/src
-GLFW_CFLAGS=-I$(GLFW_I_DIR) -I$(GLFW_SRC_DIR) 
+GLFW_CFLAGS=-I$(GLFW_I_DIR) -I$(GLFW_SRC_DIR) -O3
 GLFW_ODIR=$(BUILDDIR)/glfw/obj
 GLFW_LIBDIR=$(BUILDDIR)/glfw/lib
 
 GLAD_I_DIR=$(EMUDIR)/vendor/glad/include
 GLAD_SRC_DIR=$(EMUDIR)/vendor/glad/src
-GLAD_CFLAGS=-I$(GLAD_I_DIR)
+GLAD_CFLAGS=-I$(GLAD_I_DIR) -O3
 GLAD_ODIR=$(BUILDDIR)/glad/obj
 GLAD_LIBDIR=$(BUILDDIR)/glad/lib
 
