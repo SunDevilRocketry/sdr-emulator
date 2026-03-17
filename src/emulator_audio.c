@@ -1,10 +1,10 @@
 /*******************************************************************************
 *
 * FILE: 
-* 		emulator_error.c
+* 		emulator_audio.c
 *
 * DESCRIPTION: 
-* 		Procedures related to error handling in emulated applications.
+* 		Implements a cross-platform audio device for the emulator's buzzer.
 *                                                                             
 * COPYRIGHT:                                                                  
 *       Copyright (c) 2026 Sun Devil Rocketry.                                
@@ -22,47 +22,47 @@
 /*------------------------------------------------------------------------------
  Includes                                                         
 ------------------------------------------------------------------------------*/
-#include <string.h>
-#include <stdbool.h>
+#include <time.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <stdio.h>
-#include <stddef.h>
-
-#if defined(__GLIBC__)
-#include <execinfo.h>
-#elif defined( _WIN32 ) || defined( __CYGWIN__ )
-#include <windows.h>
-#include <DbgHelp.h>
-#else
-#warning "Your platform does not support backtraces. Please contribute this feature or report your toolchain information."
-#endif
+#include <unistd.h>
 
 #include "emulator.h"
+#include "stm32h7xx_hal.h"
 
-#include "error_sdr.h"
-
-/*------------------------------------------------------------------------------
- Constants                                                       
-------------------------------------------------------------------------------*/
-#define MAX_FRAMES 128
+/* External libs */
+#include "miniaudio.h"
 
 /*------------------------------------------------------------------------------
- Globals                                                       
+ Defines                                                         
 ------------------------------------------------------------------------------*/
-extern volatile ERROR_CALLBACK default_error_handler;
+#define PIEZO_FREQ 3800
+#define BUZZ_VOL 1
+
+/* Audio format */
+#define DEVICE_FORMAT       ma_format_f32
+#define DEVICE_CHANNELS     1 /* mono */
+#define DEVICE_SAMPLE_RATE  48000 /* 48 kHz sample rate */
 
 /*------------------------------------------------------------------------------
- Static Prototypes                                                       
+ Global Variables                                                     
 ------------------------------------------------------------------------------*/
-static void emulator_error_handler
+
+/* Audio playback */
+static bool buzzer_on = false;
+static ma_device device;
+static ma_waveform sawWave;
+
+/*------------------------------------------------------------------------------
+ Static Procedure Prototypes                                                   
+------------------------------------------------------------------------------*/
+
+static void buzzer_wave_callback
     (
-    ERROR_CODE error_code
-    );
-
-static void print_stack_trace
-    (
-    void
+    ma_device* pDevice, 
+    void* pOutput, 
+    const void* pInput, 
+    ma_uint32 frameCount
     );
 
 /*------------------------------------------------------------------------------
@@ -72,137 +72,126 @@ static void print_stack_trace
 /*******************************************************************************
 *                                                                              *
 * PROCEDURE:                                                                   * 
-* 		emulator_internal_error                                                *
+* 		emulator_buzzer_init                                                   *
 *                                                                              *
 * DESCRIPTION:                                                                 * 
-*       Report an error from the emulator itself.                              *
+*       Initialize the audio library used for the buzzer.                      *
 *                                                                              *
 *******************************************************************************/
-void emulator_internal_error
-    (
-    const char* file,
-    const int line,
-    const char* msg
-    )
-{
-printf( "Emulator: Error reported in %s at line %d: %s\n", file, line, msg );
-print_stack_trace();
-printf( "\nThis error is terminal. The emulator will now exit.\n" );
-emulator_exit(1);
-
-} /* emulator_internal_error */
-
-
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		emulator_setup_error                                                   *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Set up the error handler on the emulator.                              *
-*                                                                              *
-*******************************************************************************/
-void emulator_setup_error
+void emulator_buzzer_init
     (
     void
     )
 {
-default_error_handler = (ERROR_CALLBACK){ 0, emulator_error_handler };
+ma_device_config deviceConfig;
+ma_waveform_config sawWaveConfig;
 
-} /* emulator_setup_error */
+deviceConfig = ma_device_config_init(ma_device_type_playback);
+deviceConfig.playback.format   = DEVICE_FORMAT;
+deviceConfig.playback.channels = DEVICE_CHANNELS;
+deviceConfig.sampleRate        = DEVICE_SAMPLE_RATE;
+deviceConfig.dataCallback      = buzzer_wave_callback;
+deviceConfig.pUserData         = &sawWave;
 
+if (ma_device_init(NULL, &deviceConfig, &device) != MA_SUCCESS) {
+    printf("Emulator Init: Failed to open playback device.\n");
+    emulator_exit(-1);
+}
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		emulator_error_handler                                                 *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Start the GUI socket.                                                  *
-*                                                                              *
-*******************************************************************************/
-static void emulator_error_handler
-    (
-    ERROR_CODE error_code
-    )
-{
-printf( "\nEmulator: A terminal error has been reached.\n" );
-printf( "Emulator: FW-reported error code - %d.\n", error_code );
-print_stack_trace();
-printf( "\nEmulator: The emulator will now exit.\n");
-emulator_exit(0);
+printf("Device Name: %s\n", device.playback.name);
 
-} /* emulator_error_handler */
+sawWaveConfig = ma_waveform_config_init(device.playback.format, device.playback.channels, device.sampleRate, ma_waveform_type_sawtooth, BUZZ_VOL, PIEZO_FREQ);
+ma_waveform_init(&sawWaveConfig, &sawWave);
+
+} /* emulator_buzzer_init */
 
 
 /*******************************************************************************
 *                                                                              *
 * PROCEDURE:                                                                   * 
-* 		print_stack_trace                                                      *
+* 		emulator_buzzer_teardown                                               *
 *                                                                              *
 * DESCRIPTION:                                                                 * 
-*       Print the current call stack to the console.                           *
+*       De-initializes the emulator buzzer.                                    *
 *                                                                              *
 *******************************************************************************/
-static void print_stack_trace
+void emulator_buzzer_teardown
     (
     void
-    ) 
+    )
 {
-#if defined(__GLIBC__)
-void* callstack[MAX_FRAMES];
-int frames, i;
-char** strs;
+ma_device_uninit(&device);
 
-frames = backtrace(callstack, MAX_FRAMES);
-strs = backtrace_symbols(callstack, frames);
+} /* emulator_buzzer_teardown */
 
-if (strs == NULL) {
-    perror("Emulator: A backtrace could not be completed.");
-    exit(EXIT_FAILURE);
-}
 
-printf("Emulator: Stack trace (max %d frames):\n", MAX_FRAMES);
-for (i = 0; i < frames; ++i) {
-    printf("%s\n", strs[i]);
-}
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		emulator_buzzer_beep_request                                           *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Tell the GUI to beep for the duration (blocking).                      *
+*                                                                              *
+*******************************************************************************/
+void emulator_buzzer_beep_request
+    (
+    uint32_t duration
+    )
+{
+/* Local Variables */
+buzzer_on = true;
+uint64_t start_time = HAL_GetTick();
 
-free(strs);
-#elif defined( _WIN32 ) || defined( __CYGWIN__ )
-/**
- * The following code is exempt from software licensing on this project.
- * This is not original code and Sun Devil Rocketry does not claim ownership.
- * Source:
- * 
- * https://stackoverflow.com/questions/5693192/win32-backtrace-from-c-code
- */
-unsigned int   i;
-void         * stack[ 100 ];
-unsigned short frames;
-SYMBOL_INFO  * symbol;
-HANDLE         process;
-
-process = GetCurrentProcess();
-
-SymInitialize( process, NULL, TRUE );
-
-frames               = CaptureStackBackTrace( 0, 100, stack, NULL );
-symbol               = ( SYMBOL_INFO * )calloc( sizeof( SYMBOL_INFO ) + 256 * sizeof( char ), 1 );
-symbol->MaxNameLen   = 255;
-symbol->SizeOfStruct = sizeof( SYMBOL_INFO );
-
-printf( "Emulator: Stack trace:\n" );
-for( i = 0; i < frames; i++ )
+/* Start playback */
+if (ma_device_start(&device) != MA_SUCCESS) 
     {
-    SymFromAddr( process, ( DWORD64 )( stack[ i ] ), 0, symbol );
-
-    printf( "%i: %s - 0x%0llX\n", frames - i - 1, symbol->Name, symbol->Address );
+    printf("Buzzer: Failed to start playback device.\n");
+    emulator_exit(-1);
     }
 
-free( symbol );
+/* Poll for stop */
+while( buzzer_on )
+    {
+    if( start_time + duration <= HAL_GetTick() )
+        {
+        buzzer_on = false;
+        }
+        sleep(1);
+    }
 
-printf( "Emulator: The stack trace for windows builds is very imperfect. Sorry!\n" );
-#else
-printf("Emulator: Your platform does not support backtraces for errors.\n");
-#endif
-} /* print_stack_trace */
+/* Stop playback */
+ma_device_stop(&device);
+
+} /* emulator_buzzer_beep_request */
+
+
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		buzzer_wave_callback                                                   *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Refill the wave buffer.                                                *
+*                                                                              *
+*******************************************************************************/
+static void buzzer_wave_callback
+    (
+    ma_device* pDevice, 
+    void* pOutput, 
+    const void* pInput, 
+    ma_uint32 frameCount
+    )
+{
+ma_waveform* pSawWave;
+
+EMULATOR_QUICK_ASSERT(pDevice->playback.channels == DEVICE_CHANNELS, "Invariant: Audio device channels mismatched." );
+
+pSawWave = (ma_waveform*)pDevice->pUserData;
+EMULATOR_QUICK_ASSERT(pSawWave != NULL, "Invariant: Wave buffer is a null pointer.");
+
+ma_waveform_read_pcm_frames(pSawWave, pOutput, frameCount, NULL);
+
+(void)pInput;   /* Unused. */
+
+} /* buzzer_wave_callback */

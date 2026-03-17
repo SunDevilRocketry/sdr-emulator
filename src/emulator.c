@@ -234,12 +234,16 @@ if ( emulator_prompt_and_open_serial_port() )
 else
     {
     printf("Emulator Init: Serial connection failed. Continuing without.\n");
-    
     }
+
+/*------------------------------------------------------------------------------
+ Initialize audio device                                                  
+------------------------------------------------------------------------------*/
+emulator_buzzer_init();
+
 /*------------------------------------------------------------------------------
  Initialize GUI
 ------------------------------------------------------------------------------*/
-
 if ( gui_enable ) 
     {
 
@@ -256,7 +260,6 @@ if ( gui_enable )
      Run and block until GUI termination
     ------------------------------------------------------------------------------*/
     emulator_gui_main();
-
     }
 else 
     {
@@ -264,6 +267,7 @@ else
     }
 
 emulator_exit(EXIT_SUCCESS);
+
 } /* main */
 
 void emulator_exit
@@ -277,6 +281,9 @@ if ( gui_enable )
     {
     emulator_gui_teardown();
     }
+
+/* Cleanly exit audio device */
+emulator_buzzer_teardown();
 
 /* Should force kill all pthreads */
 exit(exitCode);

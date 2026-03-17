@@ -40,11 +40,6 @@ extern "C" {
 
 
 /*------------------------------------------------------------------------------
- Macros  
-------------------------------------------------------------------------------*/
-
-
-/*------------------------------------------------------------------------------
  Typedefs
 ------------------------------------------------------------------------------*/
 
@@ -72,18 +67,39 @@ void emulator_exit
     int exitCode
     );
 
+/* emulator_audio.c */
+void emulator_buzzer_init
+    (
+    void
+    );
+
+void emulator_buzzer_teardown
+    (
+    void
+    );
+
+void emulator_buzzer_beep_request
+    (
+    uint32_t duration
+    );
+
 /* emulator_timer.c */
 void emulator_start_timers
     (
     void
     );
 
-void emulator_buzzer_beep_request(uint32_t duration);
-
 /* emulator_error.c */
 void emulator_setup_error
     (
     void
+    );
+
+void emulator_internal_error
+    (
+    const char* file,
+    const int line,
+    const char* msg
     );
 
 /* emulator_i2c.c */
@@ -162,6 +178,12 @@ void* emulator_gps_it_listener
     (
     void* arg
     );
+
+/*------------------------------------------------------------------------------
+ Shortcut macros  
+------------------------------------------------------------------------------*/
+#define EMULATOR_ERROR( msg ) emulator_internal_error( __FILE__, __LINE__, msg )
+#define EMULATOR_QUICK_ASSERT( a, msg ) do { if (!(a)) EMULATOR_ERROR( msg ); } while(0) /* gross but it works*/
 
 #ifdef __cplusplus
 }

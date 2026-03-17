@@ -14,6 +14,12 @@ GLAD_CFLAGS=-I$(GLAD_I_DIR) -O3
 GLAD_ODIR=$(BUILDDIR)/glad/obj
 GLAD_LIBDIR=$(BUILDDIR)/glad/lib
 
+MINIAUDIO_I_DIR=$(EMUDIR)/vendor/miniaudio
+MINIAUDIO_SRC_DIR=$(EMUDIR)/vendor/miniaudio
+MINIAUDIO_CFLAGS=-I$(MINIAUDIO_I_DIR) -O3
+MINIAUDIO_ODIR=$(BUILDDIR)/miniaudio/obj
+MINIAUDIO_LIBDIR=$(BUILDDIR)/miniaudio/lib
+
 GLAD_SRC_GENERAL=    \
 $(GLAD_SRC_DIR)/gl.c \
 $(GLAD_SRC_DIR)/egl.c\
@@ -70,6 +76,7 @@ $(GLFW_SRC_DIR)/wl_window.c	\
 
 GLFW_SRC += $(GLFW_SRC_GENERAL)
 
+MINIAUDIO_SRC = $(MINIAUDIO_SRC_DIR)/miniaudio.c
 
 
 ifeq ($(OS),Windows_NT)
@@ -100,6 +107,8 @@ GLFW_OBJS=$(patsubst $(GLFW_SRC_DIR)/%.c, $(GLFW_ODIR)/%.o, $(GLFW_SRC))
 
 GLAD_OBJS=$(patsubst $(GLAD_SRC_DIR)/%.c, $(GLAD_ODIR)/%.o, $(GLAD_SRC))
 
+MINIAUDIO_OBJS=$(patsubst $(MINIAUDIO_SRC_DIR)/%.c, $(MINIAUDIO_ODIR)/%.o, $(MINIAUDIO_SRC))
+
 $(GLFW_ODIR)/%.o: $(GLFW_SRC_DIR)/%.c
 	@mkdir -p $(GLFW_ODIR)
 	$(CC) -c -o $@ $< $(GLFW_CFLAGS)
@@ -108,7 +117,11 @@ $(GLAD_ODIR)/%.o: $(GLAD_SRC_DIR)/%.c
 	@mkdir -p $(GLAD_ODIR)
 	$(CC) -c -o $@ $< $(GLAD_CFLAGS)
 
-all: libglfw libglad
+$(MINIAUDIO_ODIR)/%.o: $(MINIAUDIO_SRC_DIR)/%.c
+	@mkdir -p $(MINIAUDIO_ODIR)
+	$(CC) -c -o $@ $< $(MINIAUDIO_CFLAGS)
+
+all: libglfw libglad miniaudio
 
 libglfw: $(GLFW_OBJS)
 	@mkdir -p $(GLFW_LIBDIR)
@@ -120,3 +133,8 @@ libglad: $(GLAD_OBJS)
 	@mkdir -p $(GLAD_LIBDIR)
 	ar rcs -o $(GLAD_LIBDIR)/$@.a $^
 	@echo "====== glad Compilation Complete ======"
+
+miniaudio: $(MINIAUDIO_OBJS)
+	@mkdir -p $(MINIAUDIO_LIBDIR)
+	ar rcs -o $(MINIAUDIO_LIBDIR)/$@.a $^
+	@echo "====== miniaudio Compilation Complete ======"

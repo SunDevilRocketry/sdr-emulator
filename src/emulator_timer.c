@@ -30,6 +30,7 @@
 #include "stm32h7xx_hal.h"
 #include "sdr_pin_defines_A0002.h"
 
+
 /*------------------------------------------------------------------------------
  Global Variables                                                     
 ------------------------------------------------------------------------------*/
@@ -143,25 +144,3 @@ struct timespec ts;
            (uint64_t)ts.tv_nsec / 1000000ULL;  
 
 } /* get_current_time */
-
-
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		emulator_buzzer_beep_request                                           *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Tell the GUI to beep for the duration.                                 *
-*                                                                              *
-*******************************************************************************/
-void emulator_buzzer_beep_request
-    (
-    uint32_t duration
-    )
-{
-char buf[13];
-snprintf( buf, 13, "BUZZ: %05d\n", duration);
-printf("%s\n", buf); /* TEMP until buzzer gets implemented for realz */
-HAL_Delay(duration);
-
-} /* emulator_buzzer_beep_request */
