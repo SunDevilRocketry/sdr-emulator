@@ -338,9 +338,9 @@ static void imu_read_handler_IT()
 {
 memset(imu_data_ptr, 0, imu_data_size);
 /* accX, accY, accZ */
-uint16_t accX = sensor_acc_inv(sensor_add_random_noise( 0, 0.2 ));
+uint16_t accX = sensor_acc_inv(sensor_add_random_noise( 9.8, 0.2 ));
 uint16_t accY = sensor_acc_inv(sensor_add_random_noise( 0, 0.2 ));
-uint16_t accZ = sensor_acc_inv(sensor_add_random_noise( 9.8, 0.2 ));
+uint16_t accZ = sensor_acc_inv(sensor_add_random_noise( 0, 0.2 ));
 memcpy( imu_data_ptr, &accX, 2 );
 memcpy( imu_data_ptr + 2, &accY, 2 );
 memcpy( imu_data_ptr + 4, &accZ, 2 );
