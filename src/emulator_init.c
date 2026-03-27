@@ -39,6 +39,7 @@
  HAL interfaces                                                       
 ------------------------------------------------------------------------------*/
 void BUZZER_TIM_Init() {}
+void MICRO_TIM_Init() {}
 void FLASH_SPI_Init() {}
 void IMU_GPS_I2C_Init() {}
 void Baro_I2C_Init() {}
