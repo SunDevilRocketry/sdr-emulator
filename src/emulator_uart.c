@@ -34,7 +34,7 @@
 #include "sdr_pin_defines_A0002.h"
 #include "usb.h"
 #include "gps.h"
-#include "common.h"
+#include "math_sdr.h"
 
 /* POSIX */
 #include <termios.h>
