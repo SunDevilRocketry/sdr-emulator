@@ -48,6 +48,7 @@ void USB_UART_Init() {}
 void GPIO_Init() {}
 void SystemClock_Config() {}
 void PeriphCommonClock_Config() {}
+void LORA_SPI_Init() {}
 HAL_StatusTypeDef HAL_Init() { return HAL_OK; }
 
 /* HTIM inits are in emulator_timer.c */
