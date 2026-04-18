@@ -109,6 +109,14 @@ HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, const uint8_t *pD
     return HAL_OK;
 }
 
+HAL_StatusTypeDef HAL_UART_Transmit_IT(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size) {
+    if ( huart == &(USB_HUART) )
+        {
+        serial_write( pData, (size_t)Size );
+        }
+    return HAL_OK;
+}
+
 HAL_StatusTypeDef HAL_UART_Receive(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size, uint32_t Timeout) {
     if ( huart == &(USB_HUART) )
         {
