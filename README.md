@@ -1,8 +1,14 @@
-# sdr-emulator
+# SDR Emulator
 
-### Project Lead - [@butchhartman](https://github.com/butchhartman)
+An emulator/simulator for Sun Devil Rocketry's embedded controllers. Runs embedded code at the mod level and above on local hardware.
 
-The SDR Emulator is a standalone application that is intended to enable development of embedded firmware without access to the hardware platform. 
-This submodule provides the code that is needed to augment the build process and enable hardware-dependent features to be simulated on local machines.
+**Currently supported projects:**
+- None yet
 
-The main branch is currently empty as there have been no official releases since the creation of the emulator submodule. This will change when Flight Computer Firmware v2.6.0 is released, likely by May 2026.
+**Project support in development for:**
+- Flight Computer Rev 2 (A0002-Rev2)
+
+### Testing
+
+As this project is still in its early stages, automated test support has not yet been introduced. Despite this, we want to be very careful to maintain cross-platform compatibility across different systems used by our developers. 
+We test frequently on Windows and X11 Linux, including in our CI. We want Wayland and MacOS support, but lack developers with those systems.
