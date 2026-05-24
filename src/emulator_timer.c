@@ -25,6 +25,7 @@
 #include <time.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "emulator.h"
 #include "stm32h7xx_hal.h"
