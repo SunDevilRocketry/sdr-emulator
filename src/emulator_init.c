@@ -49,6 +49,7 @@ void GPIO_Init() {}
 void SystemClock_Config() {}
 void PeriphCommonClock_Config() {}
 void LORA_SPI_Init() {}
+void ITM_Init() {}
 HAL_StatusTypeDef HAL_Init() { return HAL_OK; }
 
 /* HTIM inits are in emulator_timer.c */
