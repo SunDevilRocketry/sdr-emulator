@@ -40,11 +40,6 @@ extern "C" {
 
 
 /*------------------------------------------------------------------------------
- Macros  
-------------------------------------------------------------------------------*/
-
-
-/*------------------------------------------------------------------------------
  Typedefs
 ------------------------------------------------------------------------------*/
 
@@ -84,6 +79,13 @@ void emulator_buzzer_beep_request(uint32_t duration);
 void emulator_setup_error
     (
     void
+    );
+
+void emulator_debug_log
+    (
+    const char* msg,
+    size_t msg_len,
+    const char* from_subsystem /* name of subsystem that logged the message */
     );
 
 /* emulator_i2c.c */
@@ -163,6 +165,11 @@ void* emulator_gps_it_listener
     void* arg
     );
 
+/*------------------------------------------------------------------------------
+ Alias Macros                                             
+------------------------------------------------------------------------------*/
+#define emulator_log( msg, subsystem ) \
+    emulator_debug_log( msg, sizeof( msg ), subsystem );
 #ifdef __cplusplus
 }
 #endif

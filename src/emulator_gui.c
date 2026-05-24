@@ -165,7 +165,7 @@ void emulator_gui_main
 
 if ( !glfwInit() ) 
     {
-    fprintf(stderr, "[GUI]: GLFW Initialization failed");
+    emulator_log("GLFW Initialization failed.", "GUI-INIT");
     exit(1);
     }
 
@@ -181,7 +181,7 @@ guiWindow = glfwCreateWindow(640, 480, "SDR HW Emulator", NULL, NULL);
 
 if ( !guiWindow ) 
     {
-    fprintf(stderr, "[GUI]: Window Initialization failed");
+    emulator_log("Window Initialization failed.", "GUI-INIT");
     glfwTerminate();
     exit(1);
     }
@@ -199,7 +199,7 @@ glDebugMessageCallback(openGLErrorCallback, 0);
 
 /* Load FC obj */
 objData = loadVertexDataFromOBJ(MAKE_RESOURCES_PATH("FC_REV2.obj"));
-printf("FC OBJ READ COMPLETE\n");
+emulator_log("FC obj read complete.", "GUI-INIT");
 
 /* Create the VAO for non-LED geometry */
 GLuint defaultVAO;
@@ -366,9 +366,9 @@ glfwShowWindow(guiWindow);
 glfwRequestWindowAttention(guiWindow);
 glfwFocusWindow(guiWindow);
 
-printf("[GUI STARTUP SUCCESSFUL]: Rise and shine\n");
+emulator_log("Startup successful. Rise and shine!", "GUI-INIT");
+emulator_log("Press CTRL + R to arm.", "EM-INSTRUCTION");
 
-printf("[Emulator]: Press CTRL + R to arm.\n");
 /* GUI main loop */
 while (!glfwWindowShouldClose(guiWindow)) 
     {
@@ -454,8 +454,8 @@ static void glfwKeyCallback
 
     if ( key == GLFW_KEY_R && action == GLFW_PRESS && mods & GLFW_MOD_CONTROL ) 
     {
-    printf("IGNITE SET\n");
     set_ignite_flag(true);
+    emulator_log("Ignition input handled", "GUI");
     }
 
 } /* glfwKeyCallback */
@@ -475,8 +475,7 @@ static void glfw_error_callback
     const char* description
     ) 
 {
-
-fprintf(stderr, "[GLFW ERROR]: %s\n", description);
+emulator_debug_log(description, strlen(description), "GLFW");
 
 } /* error_callback */
 
@@ -527,7 +526,7 @@ static void GLAPIENTRY openGLErrorCallback
 {
 if ( type == GL_DEBUG_TYPE_ERROR ) 
     {
-    fprintf(stderr, "GLERROR: %s\n", message);
+    emulator_debug_log(message, strlen(message), "OPENGL");
     }
 
 } /* openGLErrorCallback */

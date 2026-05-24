@@ -209,9 +209,10 @@ void emulator_buzzer_beep_request
     uint32_t duration
     )
 {
-char buf[13];
-snprintf( buf, 13, "BUZZ: %05d\n", duration);
-printf("%s\n", buf); /* TEMP until buzzer gets implemented for realz */
+char dbg_msg[128];
+size_t true_size = 0;
+true_size = snprintf(dbg_msg, 128, "Beeping for %d ms.", duration);
+emulator_debug_log(dbg_msg, true_size, "BUZZER");
 HAL_Delay(duration);
 
 } /* emulator_buzzer_beep_request */

@@ -29,23 +29,15 @@
 #include <stdio.h>
 #include <stddef.h>
 
-#if defined(__GLIBC__)
-#include <execinfo.h>
-#elif defined( _WIN32 ) || defined( __CYGWIN__ )
-#include <windows.h>
-#include <DbgHelp.h>
-#else
-#warning "Your platform does not support backtraces. Please contribute this feature or report your toolchain information."
-#endif
-
 #include "emulator.h"
-
 #include "error_sdr.h"
+#include "debug_sdr.h"
 
 /*------------------------------------------------------------------------------
  Constants                                                       
 ------------------------------------------------------------------------------*/
 #define MAX_FRAMES 128
+#define LOGGING_DIRECTORY "../../emulator/logs/"
 
 /*------------------------------------------------------------------------------
  Globals                                                       
@@ -60,14 +52,55 @@ static void emulator_error_handler
     ERROR_CODE error_code
     );
 
-static void print_stack_trace
-    (
-    void
-    );
-
 /*------------------------------------------------------------------------------
  Procedures                                                     
 ------------------------------------------------------------------------------*/
+
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		emulator_debug_log                                                     *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Log to the console.                                                    *
+*                                                                              *
+*******************************************************************************/
+void emulator_debug_log
+    (
+    const char* msg,
+    size_t msg_len,
+    const char* from_subsystem /* name of subsystem that logged the message */
+    )
+{
+char log_msg[DEBUG_MSG_MAX_LEN + 32] = "[";
+size_t new_len = 1;
+if( from_subsystem != NULL )
+    {
+    new_len += strlcpy(log_msg + 1, from_subsystem, 29);
+    }
+else
+    {
+    new_len += strlcpy(log_msg + 1, "EMULATOR", 29);
+    }
+log_msg[new_len] = ']';
+log_msg[new_len + 1] = ' ';
+new_len += 2;
+
+// Override newline logic to make sure we have it here
+if( msg_len > 0 && msg[msg_len - 1] == '\n' )
+    {
+    msg_len--;
+    }
+memcpy(log_msg + new_len, msg, msg_len);
+new_len += msg_len;
+log_msg[new_len] = '\n';
+new_len++;
+fwrite(log_msg, 1, (int)new_len, stdout);
+fflush(stdout); /* put and flush immediately */
+
+// ETS TODO: Log to subsystem file
+
+}
 
 /*******************************************************************************
 *                                                                              *
@@ -85,6 +118,8 @@ void emulator_setup_error
 {
 default_error_handler = (ERROR_CALLBACK){ 0, emulator_error_handler };
 
+/* clear last logs */
+// ETS TODO
 } /* emulator_setup_error */
 
 
@@ -94,7 +129,7 @@ default_error_handler = (ERROR_CALLBACK){ 0, emulator_error_handler };
 * 		emulator_error_handler                                                 *
 *                                                                              *
 * DESCRIPTION:                                                                 * 
-*       Start the GUI socket.                                                  *
+*       Handle an error in the emulator.                                       *
 *                                                                              *
 *******************************************************************************/
 static void emulator_error_handler
@@ -102,83 +137,11 @@ static void emulator_error_handler
     ERROR_CODE error_code
     )
 {
-printf( "\nEmulator: A terminal error has been reached.\n" );
-printf( "Emulator: FW-reported error code - %d.\n", error_code );
-print_stack_trace();
-printf( "\nEmulator: The emulator will now exit.\n");
+char error_msg[64];
+size_t error_len = 0;
+emulator_log("The emulator has encountered a terminal error and will now exit.\n", "ERROR-HANDLER");
+error_len = snprintf(error_msg, 64, "Provided error code: %d\n", error_code);
+emulator_debug_log(error_msg, error_len, "ERROR-HANDLER" );
 exit(0);
 
 } /* emulator_error_handler */
-
-
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		print_stack_trace                                                      *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Print the current call stack to the console.                           *
-*                                                                              *
-*******************************************************************************/
-static void print_stack_trace
-    (
-    void
-    ) 
-{
-#if defined(__GLIBC__)
-void* callstack[MAX_FRAMES];
-int frames, i;
-char** strs;
-
-frames = backtrace(callstack, MAX_FRAMES);
-strs = backtrace_symbols(callstack, frames);
-
-if (strs == NULL) {
-    perror("Emulator: A backtrace could not be completed.");
-    exit(EXIT_FAILURE);
-}
-
-printf("Emulator: Stack trace (max %d frames):\n", MAX_FRAMES);
-for (i = 0; i < frames; ++i) {
-    printf("%s\n", strs[i]);
-}
-
-free(strs);
-#elif defined( _WIN32 ) || defined( __CYGWIN__ )
-/**
- * The following code is exempt from software licensing on this project.
- * This is not original code and Sun Devil Rocketry does not claim ownership.
- * Source:
- * 
- * https://stackoverflow.com/questions/5693192/win32-backtrace-from-c-code
- */
-unsigned int   i;
-void         * stack[ 100 ];
-unsigned short frames;
-SYMBOL_INFO  * symbol;
-HANDLE         process;
-
-process = GetCurrentProcess();
-
-SymInitialize( process, NULL, TRUE );
-
-frames               = CaptureStackBackTrace( 0, 100, stack, NULL );
-symbol               = ( SYMBOL_INFO * )calloc( sizeof( SYMBOL_INFO ) + 256 * sizeof( char ), 1 );
-symbol->MaxNameLen   = 255;
-symbol->SizeOfStruct = sizeof( SYMBOL_INFO );
-
-printf( "Emulator: Stack trace:\n" );
-for( i = 0; i < frames; i++ )
-    {
-    SymFromAddr( process, ( DWORD64 )( stack[ i ] ), 0, symbol );
-
-    printf( "%i: %s - 0x%0llX\n", frames - i - 1, symbol->Name, symbol->Address );
-    }
-
-free( symbol );
-
-printf( "Emulator: The stack trace for windows builds is very imperfect. Sorry!\n" );
-#else
-printf("Emulator: Your platform does not support backtraces for errors.\n");
-#endif
-} /* print_stack_trace */

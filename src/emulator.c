@@ -212,16 +212,16 @@ emulator_flash_init();
 ------------------------------------------------------------------------------*/
 srand(time(NULL));
 
-printf("Emulator Init: Opening I2c interrupt listener.\n");
+emulator_log("Opening I2c interrupt listener.", "EM-INIT");
 pthread_create( &it_thread, NULL, emulator_i2c_it_listener, NULL );
 
-printf("Emulator Init: Opening GPS interrupt listener.\n");
+emulator_log("Opening GPS interrupt listener.", "EM-INIT");
 pthread_create( &gps_thread, NULL, emulator_gps_it_listener, NULL );
 
 /*------------------------------------------------------------------------------
  Register Default Error Callback                                                   
 ------------------------------------------------------------------------------*/
-printf("Emulator Init: Registering default error handler.\n");
+emulator_log("Registering default error handler.", "EM-INIT");
 emulator_setup_error();
 
 /*------------------------------------------------------------------------------
@@ -229,12 +229,11 @@ emulator_setup_error();
 ------------------------------------------------------------------------------*/
 if ( emulator_prompt_and_open_serial_port() )
     {
-    printf("Emulator Init: Serial connection OK.\n");
+    emulator_log("Serial connection OK.", "EM-INIT");
     }
 else
     {
-    printf("Emulator Init: Serial connection failed. Continuing without.\n");
-    
+    emulator_log("Serial connection failed -- continuing without.", "EM-INIT");
     }
 /*------------------------------------------------------------------------------
  Initialize GUI
@@ -242,11 +241,10 @@ else
 
 if ( gui_enable ) 
     {
-
     /*------------------------------------------------------------------------------
      Once setup is complete, run the firmware                                                    
     ------------------------------------------------------------------------------*/
-    printf("Emulator Init: Starting firmware.\n");
+    emulator_log("Starting firmware.", "EM-INIT");
 
     /* Ugly cast to correct function type (might be the worst cast I've ever seen) */
     /* Shouldn't happen in normal execution, but if main_fut returns, likely UB */
@@ -271,8 +269,10 @@ void emulator_exit
     int exitCode
     )
 {
-
-printf("Emulator terminating with exit code %d", exitCode);
+char dbg_msg[128];
+size_t true_size = 0;
+true_size = snprintf(dbg_msg, 128, "Emulator terminating with exit code %d.", exitCode);
+emulator_debug_log(dbg_msg, true_size, "EM-EXIT");
 if ( gui_enable ) 
     {
     emulator_gui_teardown();
