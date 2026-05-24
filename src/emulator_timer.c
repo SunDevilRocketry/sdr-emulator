@@ -170,7 +170,7 @@ struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts); /* monotonic never adjusts back */
 
     return (uint64_t)ts.tv_sec * (uint64_t)MICROSEC_PER_SEC  +
-           (uint64_t)ts.tv_nsec / (uint64_t)NANOSEC_PER_MICROSEC;  
+           (uint64_t)ts.tv_nsec / 1000UL;  
 
 } /* get_current_time */
 
