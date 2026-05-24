@@ -28,6 +28,7 @@
 #include <unistd.h>
 
 #include "emulator.h"
+#include "timer.h"
 #include "stm32h7xx_hal.h"
 #include "sdr_pin_defines_A0002.h"
 
@@ -76,14 +77,14 @@ servo_4_pulse = &(htim2.Instance->CCR1);
 }
 
 /*
- * Mock function for timer driver us tick (UNIMPLEMENTED)
+ * Mock function for timer driver us tick
  */
 uint64_t get_us_tick
-(
+    (
     void
-)
+    )
 {
-    return 0;
+return (get_current_time() - timers_start_time);
 }
 
 /*
@@ -94,14 +95,17 @@ void delay_ms
     uint32_t delay
     )
 {
-
-/* Convert milliseconds to microseconds */
-usleep(delay*1000);
+struct timespec req = 
+        {
+        .tv_sec  = delay / 1000,
+        .tv_nsec = (delay % 1000) * 1000000L
+        };
+nanosleep(&req, NULL);
 
 } /* delay_ms */
 
 uint32_t HAL_GetTick() {
-    return get_current_time() - timers_start_time;
+    return (get_current_time() - timers_start_time) / 1000;
 }
 
 void HAL_Delay(uint32_t delay_time) {
@@ -154,7 +158,7 @@ timers_start_time = get_current_time();
 * 		get_current_time                                                       *
 *                                                                              *
 * DESCRIPTION:                                                                 * 
-*       Gets the current time in milliseconds.                                 *
+*       Gets the current time in microseconds.                                 *
 *                                                                              *
 *******************************************************************************/
 static uint64_t get_current_time
@@ -163,10 +167,10 @@ static uint64_t get_current_time
     )
 {
 struct timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts);
+    clock_gettime(CLOCK_MONOTONIC, &ts); /* monotonic never adjusts back */
 
-    return (uint64_t)ts.tv_sec * 1000ULL +
-           (uint64_t)ts.tv_nsec / 1000000ULL;  
+    return (uint64_t)ts.tv_sec * (uint64_t)MICROSEC_PER_SEC  +
+           (uint64_t)ts.tv_nsec / (uint64_t)NANOSEC_PER_MICROSEC;  
 
 } /* get_current_time */
 
