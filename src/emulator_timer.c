@@ -129,6 +129,26 @@ HAL_StatusTypeDef HAL_TIM_PWM_Stop(TIM_HandleTypeDef *htim, uint32_t Channel)
     return HAL_OK;
 }
 
+/**
+ * @brief Gets the current time since epoch (startup).
+ */
+SYSTEM_TIME get_system_time
+    (
+    void
+    )
+{
+uint32_t systick = HAL_GetTick();
+SYSTEM_TIME retval;
+
+retval.millis = (uint16_t)(systick % MILLISEC_PER_SEC);
+retval.secs = (uint8_t)((systick / MILLISEC_PER_SEC) % SEC_PER_MIN);
+retval.mins = (uint8_t)((systick / (MILLISEC_PER_SEC * SEC_PER_MIN)) % MIN_PER_HOUR);
+retval.hours = (uint16_t)((systick / (MILLISEC_PER_SEC * SEC_PER_MIN * MIN_PER_HOUR)));
+
+return retval;
+
+} /* get_system_time */
+
 /*------------------------------------------------------------------------------
  Procedures                                                     
 ------------------------------------------------------------------------------*/
