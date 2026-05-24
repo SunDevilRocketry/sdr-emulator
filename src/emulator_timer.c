@@ -74,6 +74,31 @@ htim2.Instance = &htim2_instance;
 servo_4_pulse = &(htim2.Instance->CCR1);
 }
 
+/*
+ * Mock function for timer driver us tick (UNIMPLEMENTED)
+ */
+uint64_t get_us_tick
+(
+    void
+)
+{
+    return 0;
+}
+
+/*
+ * Mock function for timer driver delay_ms
+ */
+void delay_ms
+    (
+    uint32_t delay
+    )
+{
+
+/* Convert milliseconds to microseconds */
+usleep(delay*1000);
+
+} /* delay_ms */
+
 uint32_t HAL_GetTick() {
     return get_current_time() - timers_start_time;
 }
