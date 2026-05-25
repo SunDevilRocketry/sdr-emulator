@@ -54,6 +54,7 @@ const char DEVICE_ID[] = "SW_EMULATOR";
  Globals                                                       
 ------------------------------------------------------------------------------*/
 
+extern volatile bool ignite_fast_arm;
 extern volatile bool ignite_flag;
 volatile bool irq_enabled = true;
 volatile bool gui_enable = true;
@@ -106,7 +107,8 @@ while (1)
         { "no-gui", no_argument, NULL, 0 }, /* Disables GUI */
         { "help", no_argument, NULL, 0}, /* help me */
         { "verbose", no_argument, NULL, 0}, /* For misc info like emulator initialized X system */
-        { "debug", no_argument, NULL, 0} /* For prints such as address writing */
+        { "debug", no_argument, NULL, 0}, /* For prints such as address writing */
+        { "fast-arm", no_argument, NULL, 0} /* Arms the FC immediately on startup */
 
     };
 
@@ -127,6 +129,10 @@ while (1)
                 {
                 print_args_help();
                 exit(0);
+                }
+            else if ( option_index == 4 )
+                {
+                ignite_fast_arm = true;
                 }
             break;
 

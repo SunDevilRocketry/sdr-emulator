@@ -36,6 +36,7 @@
  Globals                                                       
 ------------------------------------------------------------------------------*/
 volatile bool ignite_flag = false;
+volatile bool ignite_fast_arm = false;
 extern int serial_port; /* DO NOT MODIFY IN THIS FILE */
 
 /*------------------------------------------------------------------------------
@@ -105,6 +106,13 @@ GPIO_PinState HAL_GPIO_ReadPin(const GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin) {
     if ( ( GPIOx == SWITCH_GPIO_PORT )
       && ( GPIO_Pin == SWITCH_PIN) )
         {
+        if( ignite_fast_arm )
+            {
+            /* Skip the first check of readpin to avoid data hazard error, then ignite */
+            ignite_fast_arm = false;
+            ignite_flag = true;
+            return false;
+            }
         return (GPIO_PinState)ignite_flag;
         }
     if ( ( GPIOx == USB_DETECT_GPIO_PORT )
