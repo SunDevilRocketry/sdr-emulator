@@ -202,6 +202,7 @@ parse_args(argc, argv);
  Connect sigint handler
 ------------------------------------------------------------------------------*/
 signal(SIGINT, sigint_handler);
+signal(SIGTERM, sigint_handler);
 
 /*------------------------------------------------------------------------------
  Start software timers                                                    
@@ -277,12 +278,14 @@ void emulator_exit
     int exitCode
     )
 {
-
 printf("Emulator terminating with exit code %d", exitCode);
 if ( gui_enable ) 
     {
     emulator_gui_teardown();
     }
+
+/* Make sure cov data is written */
+fflush(NULL);
 
 /* Should force kill all pthreads */
 exit(exitCode);
