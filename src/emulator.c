@@ -54,10 +54,6 @@ const char DEVICE_ID[] = "SW_EMULATOR";
  Globals                                                       
 ------------------------------------------------------------------------------*/
 
-extern volatile bool ignite_flag;
-volatile bool irq_enabled = true;
-volatile bool gui_enable = true;
-
 /*------------------------------------------------------------------------------
  Static Variables
 ------------------------------------------------------------------------------*/
@@ -65,6 +61,8 @@ volatile bool gui_enable = true;
 static pthread_t firmware_thread;
 static pthread_t it_thread;
 static pthread_t gps_thread;
+
+static EMULATOR_FLAGS_TYPE emulator_flags = IRQ_ENABLED_FLAG_BIT | GUI_ENABLED_FLAG_BIT;
 
 /*------------------------------------------------------------------------------
  Static Functions
@@ -121,7 +119,7 @@ while (1)
         case 0:
             if ( option_index == 0 )
                 {
-                gui_enable = false;
+                emulator_flags_unset_bits(GUI_ENABLED_FLAG_BIT);
                 }
             else if ( option_index == 1 )
                 {
@@ -168,8 +166,8 @@ uint32_t HAL_GetUIDw2(void) {
 }
 
 /* checked by emulator_uart and emulator_i2c before mocking ISRs */
-void HAL_NVIC_DisableIRQ(IRQn_Type IRQn) {irq_enabled = false;}
-void HAL_NVIC_EnableIRQ(IRQn_Type IRQn) {irq_enabled = true;}
+void HAL_NVIC_DisableIRQ(IRQn_Type IRQn) {emulator_flags_unset_bits(IRQ_ENABLED_FLAG_BIT);}
+void HAL_NVIC_EnableIRQ(IRQn_Type IRQn) {emulator_flags_set_bits(IRQ_ENABLED_FLAG_BIT);}
 
 /*------------------------------------------------------------------------------
  Procedures                                                     
@@ -240,7 +238,9 @@ else
  Initialize GUI
 ------------------------------------------------------------------------------*/
 
-if ( gui_enable ) 
+printf( "%d", emulator_flags_check_bits(GUI_ENABLED_FLAG_BIT) );
+
+if ( emulator_flags_check_bits(GUI_ENABLED_FLAG_BIT) ) 
     {
 
     /*------------------------------------------------------------------------------
@@ -273,7 +273,7 @@ void emulator_exit
 {
 
 printf("Emulator terminating with exit code %d", exitCode);
-if ( gui_enable ) 
+if ( emulator_flags_check_bits(GUI_ENABLED_FLAG_BIT) )
     {
     emulator_gui_teardown();
     }
@@ -282,5 +282,76 @@ if ( gui_enable )
 exit(exitCode);
 
 }
+
+/*
+ * Bitwise ORs the passed flags with the flag bitfield
+ */
+void emulator_flags_set_bits
+    (
+    EMULATOR_FLAGS_TYPE flags
+    )
+{
+emulator_flags |= flags;
+
+}
+
+/*
+ * Bitwise ANDs the negation of the passed flags to set the passed flag bits to zero
+ */
+void emulator_flags_unset_bits
+    (
+    EMULATOR_FLAGS_TYPE flags
+    )
+{
+emulator_flags &= ~flags;
+
+}
+
+static bool emulator_flags_check_bits_iter
+    (
+     EMULATOR_FLAGS_TYPE flags,
+     int bit_index,
+     EMULATOR_FLAGS_TYPE runner
+    )
+{
+EMULATOR_FLAGS_TYPE mask = (flags & (~flags | 1 << bit_index));
+bool thisFlag = emulator_flags & mask;
+if ( (emulator_flags & mask) == 0 && (flags & mask) == 1)
+    {
+    return false;
+
+    }
+
+runner |= (thisFlag << bit_index);
+
+if (bit_index != 0)
+    {
+    return emulator_flags_check_bits_iter(flags, --bit_index, runner);
+
+    } 
+else
+    {
+    return (flags & runner) == flags;
+
+    }
+}
+
+/*
+ * Returns TRUE only if all passed flags are enabled 
+ */
+bool emulator_flags_check_bits
+    (
+    EMULATOR_FLAGS_TYPE flags
+    )
+{
+
+if ( (emulator_flags & flags) == 0 )
+    {
+        return false;
+    }
+
+return emulator_flags_check_bits_iter(flags, (sizeof(EMULATOR_FLAGS_TYPE) * 8) - 1, 0);
+}
+
 
 

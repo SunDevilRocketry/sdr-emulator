@@ -455,7 +455,7 @@ static void glfwKeyCallback
     if ( key == GLFW_KEY_R && action == GLFW_PRESS && mods & GLFW_MOD_CONTROL ) 
     {
     printf("IGNITE SET\n");
-    set_ignite_flag(true);
+    emulator_flags_set_bits(IGNITE_FLAG_BIT);
     }
 
 } /* glfwKeyCallback */
