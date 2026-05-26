@@ -35,6 +35,7 @@
 /*------------------------------------------------------------------------------
  Globals                                                       
 ------------------------------------------------------------------------------*/
+
 extern int serial_port; /* DO NOT MODIFY IN THIS FILE */
 
 /*------------------------------------------------------------------------------
@@ -104,6 +105,13 @@ GPIO_PinState HAL_GPIO_ReadPin(const GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin) {
     if ( ( GPIOx == SWITCH_GPIO_PORT )
       && ( GPIO_Pin == SWITCH_PIN) )
         {
+        if( emulator_flags_check_bits(IGNITE_FAST_ARM_FLAG_BIT) )
+            {
+            /* Skip the first check of readpin to avoid data hazard error, then ignite */
+            emulator_flags_unset_bits(IGNITE_FAST_ARM_FLAG_BIT);
+            emulator_flags_set_bits(IGNITE_FLAG_BIT);
+            return false;
+            }
         return (GPIO_PinState)emulator_flags_check_bits(IGNITE_FLAG_BIT);
         }
     if ( ( GPIOx == USB_DETECT_GPIO_PORT )

@@ -47,6 +47,7 @@ extern "C" {
 #define IGNITE_FLAG_BIT (1 << 0)
 #define IRQ_ENABLED_FLAG_BIT (1 << 1)
 #define GUI_ENABLED_FLAG_BIT (1 << 2)
+#define IGNITE_FAST_ARM_FLAG_BIT (1 << 3)
 
 /*------------------------------------------------------------------------------
  Typedefs

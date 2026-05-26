@@ -104,7 +104,8 @@ while (1)
         { "no-gui", no_argument, NULL, 0 }, /* Disables GUI */
         { "help", no_argument, NULL, 0}, /* help me */
         { "verbose", no_argument, NULL, 0}, /* For misc info like emulator initialized X system */
-        { "debug", no_argument, NULL, 0} /* For prints such as address writing */
+        { "debug", no_argument, NULL, 0}, /* For prints such as address writing */
+        { "fast-arm", no_argument, NULL, 0} /* Arms the FC immediately on startup */
 
     };
 
@@ -125,6 +126,10 @@ while (1)
                 {
                 print_args_help();
                 exit(0);
+                }
+            else if ( option_index == 4 )
+                {
+                emulator_flags_set_bits(IGNITE_FAST_ARM_FLAG_BIT);
                 }
             break;
 
@@ -194,6 +199,7 @@ parse_args(argc, argv);
  Connect sigint handler
 ------------------------------------------------------------------------------*/
 signal(SIGINT, sigint_handler);
+signal(SIGTERM, sigint_handler);
 
 /*------------------------------------------------------------------------------
  Start software timers                                                    
@@ -272,11 +278,14 @@ void emulator_exit
     )
 {
 
-printf("Emulator terminating with exit code %d", exitCode);
+printf("Emulator terminating with exit code %d\n", exitCode);
 if ( emulator_flags_check_bits(GUI_ENABLED_FLAG_BIT) )
     {
     emulator_gui_teardown();
     }
+
+/* Make sure cov data is written */
+fflush(NULL);
 
 /* Should force kill all pthreads */
 exit(exitCode);
