@@ -244,8 +244,6 @@ else
  Initialize GUI
 ------------------------------------------------------------------------------*/
 
-printf( "%d", emulator_flags_check_bits(GUI_ENABLED_FLAG_BIT) );
-
 if ( emulator_flags_check_bits(GUI_ENABLED_FLAG_BIT) ) 
     {
 
