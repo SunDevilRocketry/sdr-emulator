@@ -278,7 +278,7 @@ void emulator_exit
     int exitCode
     )
 {
-printf("Emulator terminating with exit code %d", exitCode);
+printf("Emulator terminating with exit code %d\n", exitCode);
 if ( gui_enable ) 
     {
     emulator_gui_teardown();
