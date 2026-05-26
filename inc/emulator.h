@@ -42,7 +42,7 @@ extern "C" {
 /*------------------------------------------------------------------------------
  Macros  
 ------------------------------------------------------------------------------*/
-#define EMULATOR_FLAGS_TYPE uint8_t
+typedef uint8_t EMULATOR_FLAGS_TYPE; 
 
 #define IGNITE_FLAG_BIT (1 << 0)
 #define IRQ_ENABLED_FLAG_BIT (1 << 1)
