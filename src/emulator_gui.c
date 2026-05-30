@@ -454,8 +454,8 @@ static void glfwKeyCallback
 
     if ( key == GLFW_KEY_R && action == GLFW_PRESS && mods & GLFW_MOD_CONTROL ) 
     {
-    set_ignite_flag(true);
     emulator_log("Ignition input handled", "GUI");
+    emulator_flags_set_bits(IGNITE_FLAG_BIT);
     }
 
 } /* glfwKeyCallback */

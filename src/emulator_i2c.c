@@ -42,7 +42,6 @@
 /*------------------------------------------------------------------------------
  Globals                                                       
 ------------------------------------------------------------------------------*/
-extern volatile bool irq_enabled;
 
 volatile bool imu_data_it_flag = false;
 volatile bool baro_data_it_flag = false;
@@ -183,7 +182,7 @@ while ( listening )
     pthread_mutex_lock(&it_mutex); /* lock to safely access shared flags */
     bool call_imu = false, call_baro = false, call_mag = false;
         
-        if (irq_enabled) {
+        if ( emulator_flags_check_bits(IRQ_ENABLED_FLAG_BIT) ) {
             if (imu_data_it_flag) {
                 imu_data_it_flag = false;
                 call_imu = true;

@@ -48,7 +48,6 @@
 /*------------------------------------------------------------------------------
  Globals                                                       
 ------------------------------------------------------------------------------*/
-extern volatile bool      irq_enabled;
 extern uint8_t            gps_mesg_byte;
 extern uint8_t            rx_buffer[GPSBUFSIZE];
 extern GPS_DATA           gps_data;
@@ -359,7 +358,7 @@ while (recieve_gps)
     req.tv_nsec = GPS_SIM_DELAY * 1000000L; /* milliseconds to nanoseconds */
     nanosleep(&req, NULL);
 
-    if (irq_enabled) 
+    if ( emulator_flags_check_bits(IRQ_ENABLED_FLAG_BIT) ) 
         {
         pthread_mutex_lock(&uart_it_mutex); /* lock to safely access shared flags */
         gps_data_it_flag = false;

@@ -40,9 +40,17 @@ extern "C" {
 
 
 /*------------------------------------------------------------------------------
+ Macros  
+------------------------------------------------------------------------------*/
+#define IGNITE_FLAG_BIT (1 << 0)
+#define IRQ_ENABLED_FLAG_BIT (1 << 1)
+#define GUI_ENABLED_FLAG_BIT (1 << 2)
+#define IGNITE_FAST_ARM_FLAG_BIT (1 << 3)
+
+/*------------------------------------------------------------------------------
  Typedefs
 ------------------------------------------------------------------------------*/
-
+typedef uint32_t EMULATOR_FLAGS_TYPE; 
 
 /*------------------------------------------------------------------------------
  Global Variables                                             
@@ -113,11 +121,6 @@ void set_gui_status_led
     const float b
     );
 
-void set_ignite_flag
-    (
-    bool status
-    );
-
 void emulator_gui_init
     (
     void
@@ -165,11 +168,27 @@ void* emulator_gps_it_listener
     void* arg
     );
 
+void emulator_flags_set_bits
+    (
+    EMULATOR_FLAGS_TYPE flags
+    );
+
+void emulator_flags_unset_bits
+    (
+    EMULATOR_FLAGS_TYPE flags
+    );
+
+bool emulator_flags_check_bits
+    (
+    EMULATOR_FLAGS_TYPE flags
+    );
+
 /*------------------------------------------------------------------------------
  Alias Macros                                             
 ------------------------------------------------------------------------------*/
 #define emulator_log( msg, subsystem ) \
     emulator_debug_log( msg, sizeof( msg ), subsystem );
+
 #ifdef __cplusplus
 }
 #endif
