@@ -114,6 +114,7 @@ void emulator_debug_log
     const char* from_subsystem /* name of subsystem that logged the message */
     );
 
+/* emulator_error.c */
 void emulator_debug_logf
     (
     const char* msg,
