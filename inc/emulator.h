@@ -47,6 +47,15 @@ extern "C" {
 #define GUI_ENABLED_FLAG_BIT (1 << 2)
 #define IGNITE_FAST_ARM_FLAG_BIT (1 << 3)
 
+#define EMULATOR_SUBSYSTEM_INIT "EM-INIT"
+#define EMULATOR_SUBSYSTEM_GUI_INIT "GUI-INIT"
+#define EMULATOR_SUBSYSTEM_GUI_INFO "INFO"
+#define EMULATOR_SUBSYSTEM_I2C_THREAD "I2C-THREAD"
+#define EMULATOR_SUBSYSTEM_FLASH "FLASH"
+#define EMULATOR_SUBSYSTEM_BUZZER "BUZZER"
+#define EMULATOR_SUBSYSTEM_SERIAL "SERIAL"
+#define EMULATOR_SUBSYSTEM_GPS "GPS"
+
 /*------------------------------------------------------------------------------
  Typedefs
 ------------------------------------------------------------------------------*/
@@ -89,6 +98,7 @@ void emulator_setup_error
     void
     );
 
+/* emulator_error.c */
 void emulator_debug_log
     (
     const char* msg,

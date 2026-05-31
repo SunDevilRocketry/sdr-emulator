@@ -136,7 +136,7 @@ if (flashFileFd == -1 && errno == 2)
     /* Create new flash file if not alreay present */
     /* Do note that the created file has full permissions */
     flashFileFd = open(FLASH_FILENAME, O_CREAT | O_RDWR, S_IRWXO | S_IRWXG | S_IRWXU);
-    emulator_log("Could not find flash file, creating new.", "EM-INIT");
+    emulator_log("Could not find flash file, creating new.", EMULATOR_SUBSYSTEM_INIT);
 }
 
 if ( flashFileFd == -1 ) 
@@ -144,11 +144,11 @@ if ( flashFileFd == -1 )
     char dbg_msg[64];
     size_t true_size = 0;
     true_size = snprintf(dbg_msg, 64, "Flash file failed to open with errno %d.", errno);
-    emulator_debug_log(dbg_msg, true_size, "EM-INIT");
+    emulator_debug_log(dbg_msg, true_size, EMULATOR_SUBSYSTEM_INIT);
     emulator_exit(1);
     }
 
-emulator_log("Successfully opened flash file.", "EM-INIT");
+emulator_log("Successfully opened flash file.", EMULATOR_SUBSYSTEM_INIT);
 
 /* Resize the file to the proper size. */
 /* If the file is the correct format, does nothing. If too long/short, corrects it */
@@ -159,7 +159,7 @@ if ( resizeStatus == -1)
     char dbg_msg[64];
     size_t true_size = 0;
     true_size = snprintf(dbg_msg, 64, "Failed to truncate flash file with errno %d.", errno);
-    emulator_debug_log(dbg_msg, true_size, "EM-INIT");
+    emulator_debug_log(dbg_msg, true_size, EMULATOR_SUBSYSTEM_INIT);
     emulator_exit(1);
     }
 
@@ -179,7 +179,7 @@ if ( flash_memory == MAP_FAILED )
     char dbg_msg[64];
     size_t true_size = 0;
     true_size = snprintf(dbg_msg, 64, "Flash file mmap failed with errno %d.", errno);
-    emulator_debug_log(dbg_msg, true_size, "EM-INIT");
+    emulator_debug_log(dbg_msg, true_size, EMULATOR_SUBSYTEM_INIT);
     emulator_exit(1);
     }
 
@@ -191,14 +191,14 @@ if ( closeRet == -1 )
     char dbg_msg[64];
     size_t true_size = 0;
     true_size = snprintf(dbg_msg, 64, "Failed to close inital flash file with errno %d.", errno);
-    emulator_debug_log(dbg_msg, true_size, "EM-INIT");
+    emulator_debug_log(dbg_msg, true_size, EMULATOR_SUBSYTEM_INIT);
     emulator_exit(1);
     }
 
 char dbg_msg[128];
 size_t true_size = 0;
 true_size = snprintf(dbg_msg, 128, "Successfully mapped %s to memory.", FLASH_FILENAME);
-emulator_debug_log(dbg_msg, true_size, "EM-INIT");
+emulator_debug_log(dbg_msg, true_size, EMULATOR_SUBSYTEM_INIT);
 
 } /* emulator_flash_init */
 
@@ -222,14 +222,14 @@ uint32_t emulator_flash_write
 /* Make sure flash has been initialized */
 if ( flash_memory == NULL ) 
     {
-    emulator_log("Emulator flash is NULL", "FLASH");
+    emulator_log("Emulator flash is NULL", EMULATOR_SUBSYSTEM_FLASH);
     return FLASH_INIT_FAIL;
     }
 
 /* Check invariants */
 if( address + ( size - 1 ) > FLASH_MAX_ADDR )
     {
-    emulator_log("OOB write attempted. Uncomment the printf in emulator_flash_write to debug.", "FLASH");
+    emulator_log("OOB write attempted. Uncomment the printf in emulator_flash_write to debug.", EMULATOR_SUBSYSTEM_FLASH);
     //printf("Flash Write: OOB write at %x with size %d\n", address, size);
     return FLASH_ADDR_OUT_OF_BOUNDS;
     }
