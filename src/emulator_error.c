@@ -77,21 +77,19 @@ void emulator_debug_log
 /* We have RAM privileges so we can ignore the firmware's feeble 'max message size' */
 (void)msg_len;
 
-const char* fmt_string = "[%02u:%02u:%02u:%03u] [%s] %s\n";
+const char* fmt_string = "[%02u:%02u:%02u.%03u] [%s] %s\n";
 
 if ( from_subsystem == NULL )
     {
     from_subsystem = "EMULATOR";
     }
-// TODO: Make debug_writer is main.c use the firmware subsystem macro
-// I'm not doing that rn because I dont want to make a second pr :P
 else if ( strcmp(EMULATOR_SUBSYSTEM_FIRMWARE, from_subsystem) == 0 )
     {
-    // Skip the timestamp in the preamble
-    // This will have to change if the preamble format changes
+    /* The firmware computes its own timestamp, but we can override this since
+    the async circular buffer goes unused in the emulator case. */
     size_t offset = sizeof("[XX:XX:XX.XXX");
     msg += offset;
-    fmt_string = "[%02u:%02u:%02u:%03u] [%s] [%s\n";
+    fmt_string = "[%02u:%02u:%02u.%03u] [%s] [%s"; // skip trailing newline -- handled in dbg module
     }
 
 SYSTEM_TIME curr_time = get_system_time();
@@ -132,13 +130,27 @@ snprintf
     msg
     );
 
-// ETS TODO: Log to subsystem file
+// At some point, we may want to consider categorizing logs based on subsystem
+// For now, just write and flush immediately.
 fwrite(msg_buf, sizeof(char), fmt_size, stdout);
 fflush(stdout); /* put and flush immediately */
 
 free(msg_buf);
-}
 
+} /* emulator_debug_log */
+
+
+/*******************************************************************************
+*                                                                              *
+* PROCEDURE:                                                                   * 
+* 		emulator_debug_logf                                                    *
+*                                                                              *
+* DESCRIPTION:                                                                 * 
+*       Log to the console using a format string. Checks variadic arguments at *
+*       compile time. Thanks, GCC!                                             *
+*                                                                              *
+*******************************************************************************/
+__attribute__((format(printf, 1, 3)))
 void emulator_debug_logf
     (
     const char* msg,
@@ -167,7 +179,8 @@ free(new_msg);
 
 va_end(vargs);
 
-}
+} /* emulator_debug_logf */
+
 
 /*******************************************************************************
 *                                                                              *
@@ -186,7 +199,7 @@ void emulator_setup_error
 default_error_handler = (ERROR_CALLBACK){ 0, emulator_error_handler };
 
 /* clear last logs */
-// ETS TODO
+// TODO
 } /* emulator_setup_error */
 
 
