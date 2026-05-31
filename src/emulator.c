@@ -273,10 +273,7 @@ void emulator_exit
     int exitCode
     )
 {
-char dbg_msg[128];
-size_t true_size = 0;
-true_size = snprintf(dbg_msg, 128, "Emulator terminating with exit code %d.", exitCode);
-emulator_debug_log(dbg_msg, true_size, "EM-EXIT");
+emulator_logf("Emulator terminating with exit code %d.", EMULATOR_SUBSYSTEM_GUI_INFO, exitCode);
 if ( emulator_flags_check_bits(GUI_ENABLED_FLAG_BIT) )
     {
     emulator_gui_teardown();

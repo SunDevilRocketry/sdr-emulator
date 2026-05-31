@@ -55,6 +55,7 @@ extern "C" {
 #define EMULATOR_SUBSYSTEM_SERIAL "SERIAL"
 #define EMULATOR_SUBSYSTEM_GPS "GPS"
 #define EMULATOR_SUBSYSTEM_FIRMWARE "FW-DBG"
+#define EMULATOR_SUBSYSTEM_ERROR "ERROR"
 
 /*------------------------------------------------------------------------------
  Typedefs

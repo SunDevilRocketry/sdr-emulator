@@ -217,11 +217,7 @@ static void emulator_error_handler
     ERROR_CODE error_code
     )
 {
-char error_msg[64];
-size_t error_len = 0;
-emulator_log("The emulator has encountered a fatal error and will now exit.\n", "ERROR-HANDLER");
-error_len = snprintf(error_msg, 64, "Provided error code: %d\n", error_code);
-emulator_debug_log(error_msg, error_len, "ERROR-HANDLER" );
+emulator_logf("The emulator has encountered a fatal error and will now exit. Code: %d\n", EMULATOR_SUBSYSTEM_ERROR, error_code);
 exit(0);
 
 } /* emulator_error_handler */
