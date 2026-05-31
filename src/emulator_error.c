@@ -87,11 +87,11 @@ if ( from_subsystem == NULL )
 // I'm not doing that rn because I dont want to make a second pr :P
 else if ( strcmp(EMULATOR_SUBSYSTEM_FIRMWARE, from_subsystem) == 0 )
     {
-        // Skip the timestamp in the preamble
-        // This will have to change if the preamble format changes
-        size_t offset = sizeof("[XX:XX:XX.XXX");
-        msg += offset;
-        fmt_string = "[%02u:%02u:%02u:%03u] [%s] [%s\n";
+    // Skip the timestamp in the preamble
+    // This will have to change if the preamble format changes
+    size_t offset = sizeof("[XX:XX:XX.XXX");
+    msg += offset;
+    fmt_string = "[%02u:%02u:%02u:%03u] [%s] [%s\n";
     }
 
 SYSTEM_TIME curr_time = get_system_time();
@@ -153,12 +153,12 @@ size_t msg_len = vsnprintf(NULL, 0, msg, vargs) + 1;
 char* new_msg = malloc(sizeof(char) * msg_len); 
 
 if (new_msg == NULL)
-{
+    {
     va_end(vargs);
     const char failed_str[] = "Log message allocation failed\n";
     fwrite(failed_str, sizeof(char), sizeof(failed_str), stdout);
     return;
-}
+    }
 
 vsnprintf(new_msg, msg_len, msg, vargs); 
 emulator_debug_log( new_msg, msg_len, from_subsystem ); 
