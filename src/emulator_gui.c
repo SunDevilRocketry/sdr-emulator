@@ -526,7 +526,7 @@ static void GLAPIENTRY openGLErrorCallback
 {
 if ( type == GL_DEBUG_TYPE_ERROR ) 
     {
-    emulator_debug_log(message, strlen(message), "OPENGL");
+    emulator_debug_log(message, length, "OPENGL");
     }
 
 } /* openGLErrorCallback */
