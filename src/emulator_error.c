@@ -72,34 +72,68 @@ void emulator_debug_log
     const char* from_subsystem /* name of subsystem that logged the message */
     )
 {
-char log_msg[DEBUG_MSG_MAX_LEN + 32] = "[";
-size_t new_len = 1;
-if( from_subsystem != NULL )
-    {
-    new_len += strlcpy(log_msg + 1, from_subsystem, 29);
-    }
-else
-    {
-    new_len += strlcpy(log_msg + 1, "EMULATOR", 29);
-    }
-log_msg[new_len] = ']';
-log_msg[new_len + 1] = ' ';
-new_len += 2;
+/* We have RAM privlieges so we can ignore the firmware's feeble 'max message size' */
+(void)msg_len;
 
-// Override newline logic to make sure we have it here
-if( msg_len > 0 && msg[msg_len - 1] == '\n' )
+char* fmt_string = "[%02u:%02u:%02u:%03u] [%s] %s\n";
+
+if ( from_subsystem == NULL )
     {
-    msg_len--;
+    from_subsystem = "EMULATOR";
     }
-memcpy(log_msg + new_len, msg, msg_len);
-new_len += msg_len;
-log_msg[new_len] = '\n';
-new_len++;
-fwrite(log_msg, 1, (int)new_len, stdout);
+// TODO: Make debug_writer is main.c use the firmware subsystem macro
+// I'm not doing that rn because I dont want to make a second pr :P
+else if ( strcmp(EMULATOR_SUBSYSTEM_FIRMWARE, from_subsystem) == 0 )
+    {
+        // Skip the timestamp in the preamble
+        // This will have to change if the preamble format changes
+        size_t offset = sizeof("[XX:XX:XX.XXX");
+        msg += offset;
+        fmt_string = "[%02u:%02u:%02u:%03u] [%s] [%s\n";
+    }
+
+SYSTEM_TIME curr_time = get_system_time();
+
+/* +1 for null terminator */
+size_t fmt_size = snprintf
+                    (
+                    NULL, 
+                    0, 
+                    fmt_string, 
+                    curr_time.hours,
+                    curr_time.mins,
+                    curr_time.secs,
+                    curr_time.millis,
+                    from_subsystem,
+                    msg
+                    ) + 1;
+
+char* msg_buf = malloc(sizeof(char) * fmt_size);
+
+if ( msg_buf == NULL )
+    {
+    const char failed_str[] = "Log message allocation failed\n";
+    fwrite(failed_str, sizeof(char), sizeof(failed_str), stdout);
+    return;
+    }
+
+snprintf
+    (
+    msg_buf, 
+    fmt_size, 
+    fmt_string, 
+    curr_time.hours,
+    curr_time.mins,
+    curr_time.secs,
+    curr_time.millis,
+    from_subsystem,
+    msg
+    );
+
+fwrite(msg_buf, sizeof(char), fmt_size, stdout);
 fflush(stdout); /* put and flush immediately */
 
-// ETS TODO: Log to subsystem file
-
+free(msg_buf);
 }
 
 /*******************************************************************************

@@ -37,7 +37,7 @@ extern "C" {
 /*------------------------------------------------------------------------------
  Project Includes  
 ------------------------------------------------------------------------------*/
-
+#include "timer.h"
 
 /*------------------------------------------------------------------------------
  Macros  
@@ -55,6 +55,7 @@ extern "C" {
 #define EMULATOR_SUBSYSTEM_BUZZER "BUZZER"
 #define EMULATOR_SUBSYSTEM_SERIAL "SERIAL"
 #define EMULATOR_SUBSYSTEM_GPS "GPS"
+#define EMULATOR_SUBSYSTEM_FIRMWARE "FW-DBG"
 
 /*------------------------------------------------------------------------------
  Typedefs
@@ -86,6 +87,12 @@ void emulator_exit
 
 /* emulator_timer.c */
 void emulator_start_timers
+    (
+    void
+    );
+
+/* emulator_timer.c */
+SYSTEM_TIME get_system_time
     (
     void
     );
