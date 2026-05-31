@@ -28,10 +28,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stddef.h>
+#include <stdarg.h>
 
 #include "emulator.h"
 #include "error_sdr.h"
 #include "debug_sdr.h"
+#include "timer.h"
 
 /*------------------------------------------------------------------------------
  Constants                                                       
@@ -136,6 +138,36 @@ fflush(stdout); /* put and flush immediately */
 free(msg_buf);
 }
 
+void emulator_debug_logf
+    (
+    const char* msg,
+    const char* from_subsystem, 
+    ...
+    )
+{
+va_list vargs;
+va_start(vargs, from_subsystem); 
+
+size_t msg_len = vsnprintf(NULL, 0, msg, vargs) + 1; 
+char* new_msg = malloc(sizeof(char) * msg_len); 
+
+if (new_msg == NULL)
+{
+    va_end(vargs);
+    const char failed_str[] = "Log message allocation failed\n";
+    fwrite(failed_str, sizeof(char), sizeof(failed_str), stdout);
+    return;
+}
+
+vsnprintf(new_msg, msg_len, msg, vargs); 
+emulator_debug_log( new_msg, msg_len, from_subsystem ); 
+
+free(new_msg);
+
+va_end(vargs);
+
+}
+
 /*******************************************************************************
 *                                                                              *
 * PROCEDURE:                                                                   * 
@@ -173,7 +205,7 @@ static void emulator_error_handler
 {
 char error_msg[64];
 size_t error_len = 0;
-emulator_log("The emulator has encountered a terminal error and will now exit.\n", "ERROR-HANDLER");
+emulator_log("The emulator has encountered a fatal error and will now exit.\n", "ERROR-HANDLER");
 error_len = snprintf(error_msg, 64, "Provided error code: %d\n", error_code);
 emulator_debug_log(error_msg, error_len, "ERROR-HANDLER" );
 exit(0);
