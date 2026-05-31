@@ -132,6 +132,7 @@ snprintf
     msg
     );
 
+// ETS TODO: Log to subsystem file
 fwrite(msg_buf, sizeof(char), fmt_size, stdout);
 fflush(stdout); /* put and flush immediately */
 
