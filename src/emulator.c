@@ -216,16 +216,16 @@ emulator_flash_init();
 ------------------------------------------------------------------------------*/
 srand(time(NULL));
 
-emulator_log("Opening I2c interrupt listener.", "EM-INIT");
+emulator_log("Opening I2c interrupt listener.", EMULATOR_SUBSYSTEM_INIT);
 pthread_create( &it_thread, NULL, emulator_i2c_it_listener, NULL );
 
-emulator_log("Opening GPS interrupt listener.", "EM-INIT");
+emulator_log("Opening GPS interrupt listener.", EMULATOR_SUBSYSTEM_INIT);
 pthread_create( &gps_thread, NULL, emulator_gps_it_listener, NULL );
 
 /*------------------------------------------------------------------------------
  Register Default Error Callback                                                   
 ------------------------------------------------------------------------------*/
-emulator_log("Registering default error handler.", "EM-INIT");
+emulator_log("Registering default error handler.", EMULATOR_SUBSYSTEM_INIT);
 emulator_setup_error();
 
 /*------------------------------------------------------------------------------
@@ -233,11 +233,11 @@ emulator_setup_error();
 ------------------------------------------------------------------------------*/
 if ( emulator_prompt_and_open_serial_port() )
     {
-    emulator_log("Serial connection OK.", "EM-INIT");
+    emulator_log("Serial connection OK.", EMULATOR_SUBSYSTEM_INIT);
     }
 else
     {
-    emulator_log("Serial connection failed -- continuing without.", "EM-INIT");
+    emulator_log("Serial connection failed -- continuing without.", EMULATOR_SUBSYSTEM_INIT);
     }
 /*------------------------------------------------------------------------------
  Initialize GUI
@@ -248,7 +248,7 @@ if ( emulator_flags_check_bits(GUI_ENABLED_FLAG_BIT) )
     /*------------------------------------------------------------------------------
      Once setup is complete, run the firmware                                                    
     ------------------------------------------------------------------------------*/
-    emulator_log("Starting firmware.", "EM-INIT");
+    emulator_log("Starting firmware.", EMULATOR_SUBSYSTEM_INIT);
 
     /* Ugly cast to correct function type (might be the worst cast I've ever seen) */
     /* Shouldn't happen in normal execution, but if main_fut returns, likely UB */

@@ -209,10 +209,7 @@ void emulator_buzzer_beep_request
     uint32_t duration
     )
 {
-char dbg_msg[128];
-size_t true_size = 0;
-true_size = snprintf(dbg_msg, 128, "Beeping for %d ms.", duration);
-emulator_debug_log(dbg_msg, true_size, "BUZZER");
+emulator_logf("Beeping for %d ms", EMULATOR_SUBSYSTEM_BUZZER, duration);
 HAL_Delay(duration);
 
 } /* emulator_buzzer_beep_request */

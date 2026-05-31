@@ -28,10 +28,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stddef.h>
+#include <stdarg.h>
 
 #include "emulator.h"
 #include "error_sdr.h"
 #include "debug_sdr.h"
+#include "timer.h"
 
 /*------------------------------------------------------------------------------
  Constants                                                       
@@ -72,33 +74,98 @@ void emulator_debug_log
     const char* from_subsystem /* name of subsystem that logged the message */
     )
 {
-char log_msg[DEBUG_MSG_MAX_LEN + 32] = "[";
-size_t new_len = 1;
-if( from_subsystem != NULL )
-    {
-    new_len += strlcpy(log_msg + 1, from_subsystem, 29);
-    }
-else
-    {
-    new_len += strlcpy(log_msg + 1, "EMULATOR", 29);
-    }
-log_msg[new_len] = ']';
-log_msg[new_len + 1] = ' ';
-new_len += 2;
+/* We have RAM privileges so we can ignore the firmware's feeble 'max message size' */
+(void)msg_len;
 
-// Override newline logic to make sure we have it here
-if( msg_len > 0 && msg[msg_len - 1] == '\n' )
+const char* fmt_string = "[%02u:%02u:%02u:%03u] [%s] %s\n";
+
+if ( from_subsystem == NULL )
     {
-    msg_len--;
+    from_subsystem = "EMULATOR";
     }
-memcpy(log_msg + new_len, msg, msg_len);
-new_len += msg_len;
-log_msg[new_len] = '\n';
-new_len++;
-fwrite(log_msg, 1, (int)new_len, stdout);
-fflush(stdout); /* put and flush immediately */
+// TODO: Make debug_writer is main.c use the firmware subsystem macro
+// I'm not doing that rn because I dont want to make a second pr :P
+else if ( strcmp(EMULATOR_SUBSYSTEM_FIRMWARE, from_subsystem) == 0 )
+    {
+    // Skip the timestamp in the preamble
+    // This will have to change if the preamble format changes
+    size_t offset = sizeof("[XX:XX:XX.XXX");
+    msg += offset;
+    fmt_string = "[%02u:%02u:%02u:%03u] [%s] [%s\n";
+    }
+
+SYSTEM_TIME curr_time = get_system_time();
+
+/* +1 for null terminator */
+size_t fmt_size = snprintf
+                    (
+                    NULL, 
+                    0, 
+                    fmt_string, 
+                    curr_time.hours,
+                    curr_time.mins,
+                    curr_time.secs,
+                    curr_time.millis,
+                    from_subsystem,
+                    msg
+                    ) + 1;
+
+char* msg_buf = malloc(sizeof(char) * fmt_size);
+
+if ( msg_buf == NULL )
+    {
+    const char failed_str[] = "Log message allocation failed\n";
+    fwrite(failed_str, sizeof(char), sizeof(failed_str), stdout);
+    return;
+    }
+
+snprintf
+    (
+    msg_buf, 
+    fmt_size, 
+    fmt_string, 
+    curr_time.hours,
+    curr_time.mins,
+    curr_time.secs,
+    curr_time.millis,
+    from_subsystem,
+    msg
+    );
 
 // ETS TODO: Log to subsystem file
+fwrite(msg_buf, sizeof(char), fmt_size, stdout);
+fflush(stdout); /* put and flush immediately */
+
+free(msg_buf);
+}
+
+void emulator_debug_logf
+    (
+    const char* msg,
+    const char* from_subsystem, 
+    ...
+    )
+{
+va_list vargs;
+va_start(vargs, from_subsystem); 
+
+size_t msg_len = vsnprintf(NULL, 0, msg, vargs) + 1; 
+char* new_msg = malloc(sizeof(char) * msg_len); 
+
+if (new_msg == NULL)
+    {
+    va_end(vargs);
+    const char failed_str[] = "Log message allocation failed\n";
+    fwrite(failed_str, sizeof(char), sizeof(failed_str), stdout);
+    return;
+    }
+
+vsnprintf(new_msg, msg_len, msg, vargs); 
+emulator_debug_log( new_msg, msg_len, from_subsystem ); 
+
+free(new_msg);
+
+va_end(vargs);
 
 }
 
@@ -139,7 +206,7 @@ static void emulator_error_handler
 {
 char error_msg[64];
 size_t error_len = 0;
-emulator_log("The emulator has encountered a terminal error and will now exit.\n", "ERROR-HANDLER");
+emulator_log("The emulator has encountered a fatal error and will now exit.\n", "ERROR-HANDLER");
 error_len = snprintf(error_msg, 64, "Provided error code: %d\n", error_code);
 emulator_debug_log(error_msg, error_len, "ERROR-HANDLER" );
 exit(0);
