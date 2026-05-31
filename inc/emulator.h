@@ -60,7 +60,7 @@ extern "C" {
  Typedefs
 ------------------------------------------------------------------------------*/
 typedef uint32_t EMULATOR_FLAGS_TYPE; 
-/* forward decl */
+/* forward decl from FW timer.h */
 typedef struct _SYSTEM_TIME SYSTEM_TIME;
 
 /*------------------------------------------------------------------------------
