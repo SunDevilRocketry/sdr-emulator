@@ -74,7 +74,7 @@ void emulator_debug_log
     const char* from_subsystem /* name of subsystem that logged the message */
     )
 {
-/* We have RAM privlieges so we can ignore the firmware's feeble 'max message size' */
+/* We have RAM privileges so we can ignore the firmware's feeble 'max message size' */
 (void)msg_len;
 
 const char* fmt_string = "[%02u:%02u:%02u:%03u] [%s] %s\n";
