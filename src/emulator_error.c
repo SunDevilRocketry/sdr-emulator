@@ -77,7 +77,7 @@ void emulator_debug_log
 /* We have RAM privlieges so we can ignore the firmware's feeble 'max message size' */
 (void)msg_len;
 
-char* fmt_string = "[%02u:%02u:%02u:%03u] [%s] %s\n";
+const char* fmt_string = "[%02u:%02u:%02u:%03u] [%s] %s\n";
 
 if ( from_subsystem == NULL )
     {
