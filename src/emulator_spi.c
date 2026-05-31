@@ -179,7 +179,7 @@ if ( flash_memory == MAP_FAILED )
     char dbg_msg[64];
     size_t true_size = 0;
     true_size = snprintf(dbg_msg, 64, "Flash file mmap failed with errno %d.", errno);
-    emulator_debug_log(dbg_msg, true_size, EMULATOR_SUBSYTEM_INIT);
+    emulator_debug_log(dbg_msg, true_size, EMULATOR_SUBSYSTEM_INIT);
     emulator_exit(1);
     }
 
@@ -191,14 +191,14 @@ if ( closeRet == -1 )
     char dbg_msg[64];
     size_t true_size = 0;
     true_size = snprintf(dbg_msg, 64, "Failed to close inital flash file with errno %d.", errno);
-    emulator_debug_log(dbg_msg, true_size, EMULATOR_SUBSYTEM_INIT);
+    emulator_debug_log(dbg_msg, true_size, EMULATOR_SUBSYSTEM_INIT);
     emulator_exit(1);
     }
 
 char dbg_msg[128];
 size_t true_size = 0;
 true_size = snprintf(dbg_msg, 128, "Successfully mapped %s to memory.", FLASH_FILENAME);
-emulator_debug_log(dbg_msg, true_size, EMULATOR_SUBSYTEM_INIT);
+emulator_debug_log(dbg_msg, true_size, EMULATOR_SUBSYSTEM_INIT);
 
 } /* emulator_flash_init */
 
