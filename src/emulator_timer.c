@@ -129,6 +129,26 @@ HAL_StatusTypeDef HAL_TIM_PWM_Stop(TIM_HandleTypeDef *htim, uint32_t Channel)
     return HAL_OK;
 }
 
+/**
+ * @brief Gets the current time since epoch (startup).
+ */
+SYSTEM_TIME get_system_time
+    (
+    void
+    )
+{
+uint32_t systick = HAL_GetTick();
+SYSTEM_TIME retval;
+
+retval.millis = (uint16_t)(systick % MILLISEC_PER_SEC);
+retval.secs = (uint8_t)((systick / MILLISEC_PER_SEC) % SEC_PER_MIN);
+retval.mins = (uint8_t)((systick / (MILLISEC_PER_SEC * SEC_PER_MIN)) % MIN_PER_HOUR);
+retval.hours = (uint16_t)((systick / (MILLISEC_PER_SEC * SEC_PER_MIN * MIN_PER_HOUR)));
+
+return retval;
+
+} /* get_system_time */
+
 /*------------------------------------------------------------------------------
  Procedures                                                     
 ------------------------------------------------------------------------------*/
@@ -189,9 +209,7 @@ void emulator_buzzer_beep_request
     uint32_t duration
     )
 {
-char buf[13];
-snprintf( buf, 13, "BUZZ: %05d\n", duration);
-printf("%s\n", buf); /* TEMP until buzzer gets implemented for realz */
+emulator_logf("Beeping for %d ms", EMULATOR_SUBSYSTEM_BUZZER, duration);
 HAL_Delay(duration);
 
 } /* emulator_buzzer_beep_request */

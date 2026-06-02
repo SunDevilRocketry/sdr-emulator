@@ -155,17 +155,13 @@ bool emulator_prompt_and_open_serial_port
 {
 /* Prompt for serial port */
 char port_buf[12];
-printf("Serial Init: Please enter your serial port in the format /dev/ttyXX or in the format COMX.\n\n");
+emulator_log("Please enter your serial port in the format /dev/ttyXX or in the format COMX.", EMULATOR_SUBSYSTEM_SERIAL);
 #if defined( _WIN32 ) || defined( __CYGWIN__ )
-printf("    Note for Windows users:\n");
-printf("    COM1 maps to /dev/ttyS0\n");
-printf("    COM2 maps to /dev/ttyS1\n");
-printf("    (etc)\n");
 #endif
 printf("Input: \n");
 
 if(fgets(port_buf, sizeof(port_buf), stdin) == NULL){
-    perror("Serial Init: invalid port input\n");
+    emulator_log("Invalid port input.", EMULATOR_SUBSYSTEM_SERIAL);
     return false;
 }
 
@@ -192,7 +188,7 @@ if(strncmp(com_buf, "COM", 3) == 0){
 serial_port = open(port_buf, O_RDWR | O_NOCTTY | O_NDELAY); // Open the port
 
 if (serial_port < 0) {
-    perror("Serial Init: error opening serial port\n");
+    emulator_log("Error opening serial port.", EMULATOR_SUBSYSTEM_SERIAL);
     return false;
 }
 
@@ -200,7 +196,7 @@ struct termios tty;
 
 // Read in existing settings, handle errors
 if(tcgetattr(serial_port, &tty) != 0) {
-    perror("Serial Init: tcgetattr failed.\n");
+    emulator_log("tcgetattr failed.", EMULATOR_SUBSYSTEM_SERIAL);
     return false;
 }
 
@@ -232,16 +228,16 @@ tty.c_cc[VMIN] = 0;    // Minimum number of characters to read
 
 // Save TTY settings, handle errors
 if (tcsetattr(serial_port, TCSANOW, &tty) != 0) {
-    perror("Serial Init: tcsetattr failed.\n");
+    emulator_log("tcsetattr failed.", EMULATOR_SUBSYSTEM_SERIAL);
     return false;
 }
 
 if (fcntl(serial_port, F_GETFD) == -1) {
-    fprintf(stderr, "Serial Init: File descriptor became invalid\n");
+    emulator_log("FD became invalid.", EMULATOR_SUBSYSTEM_SERIAL);
     return false;
 }
 else {
-    printf("Serial Init: File descriptor is still valid at end of init\n");
+    emulator_log("FD remails valid at end of init.", EMULATOR_SUBSYSTEM_SERIAL);
 }
 
 return true;
@@ -292,7 +288,7 @@ static USB_STATUS serial_read
 
 // Verify fd is still valid before reading
 if (fcntl(serial_port, F_GETFD) == -1) {
-    fprintf(stderr, "Serial: Read: File descriptor became invalid\n");
+    emulator_log("Read: File descriptor became invalid.", EMULATOR_SUBSYSTEM_SERIAL);
     return USB_FAIL;
 }
 
@@ -307,7 +303,7 @@ FD_SET(serial_port, &rfds);
 
 int ret = select(serial_port + 1, &rfds, NULL, NULL, &tv);
 if (ret < 0) {
-    perror("Serial: Select Failed");
+    emulator_log("Select failed.", EMULATOR_SUBSYSTEM_SERIAL);
     return USB_FAIL;
 } else if (ret == 0) {
     return USB_TIMEOUT;
@@ -317,7 +313,7 @@ memset( rx_data_ptr, 0, rx_data_size );
 int n = read( serial_port, rx_data_ptr, rx_data_size );
     
     if (n < 0) {
-        perror("Serial: Read Failed");
+        emulator_log("Read failed.", EMULATOR_SUBSYSTEM_SERIAL);
         return USB_FAIL;
     } else if (n == 0) {
         return USB_TIMEOUT;
@@ -399,7 +395,7 @@ static void gps_read_handler_IT
 // memset( gps_data_ptr, 0, gps_data_size );
 if (message_num >= array_size( gps_msgs ) )
     {
-    printf("[GPS DEBUG] Error: index out of range\n");
+    emulator_log("Index out of range.", EMULATOR_SUBSYSTEM_GPS);
     return;
     }
 memcpy( rx_buffer, gps_msgs[message_num], strlen( gps_msgs[message_num] ) );

@@ -61,28 +61,28 @@ void HAL_GPIO_WritePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIO_PinState Pin
         switch (GPIO_Pin) 
             {
             case STATUS_G_PIN:
-                printf("LED: GREEN\n");
+                //printf("LED: GREEN\n");
                 break;
             case STATUS_R_PIN:
-                printf("LED: RED\n");
+                //printf("LED: RED\n");
                 break;
             case STATUS_B_PIN:
-                printf("LED: BLUE\n");
+                //printf("LED: BLUE\n");
                 break;
             case STATUS_G_PIN | STATUS_R_PIN:
-                printf("LED: YELLOW\n");
+                //printf("LED: YELLOW\n");
                 break;
             case STATUS_G_PIN | STATUS_B_PIN:
-                printf("LED: CYAN\n");
+                //printf("LED: CYAN\n");
                 break;
             case STATUS_R_PIN | STATUS_B_PIN:
-                printf("LED: PURPLE\n");
+                //printf("LED: PURPLE\n");
                 break;
             case STATUS_R_PIN | STATUS_G_PIN | STATUS_B_PIN:
-                printf("LED: WHITE\n");
+                //printf("LED: WHITE\n");
                 break;
             default:
-                printf("-=Indeterminate=-\n");
+                //printf("-=Indeterminate=-\n");
                 break;
             }
         }
@@ -91,7 +91,7 @@ void HAL_GPIO_WritePin(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, GPIO_PinState Pin
      && ( GPIO_Pin & ( STATUS_G_PIN | STATUS_R_PIN | STATUS_B_PIN ) )
      && ( PinState == GPIO_PIN_SET ) )
         {
-        printf("LED: RESET\n"); /* TEMP (I lowkey have no idea what this is supposed to do) */
+        //printf("LED: RESET\n"); /* TEMP (I lowkey have no idea what this is supposed to do) */
         set_gui_status_led
             (
             0,

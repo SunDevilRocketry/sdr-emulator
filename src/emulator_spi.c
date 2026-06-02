@@ -136,16 +136,16 @@ if (flashFileFd == -1 && errno == 2)
     /* Create new flash file if not alreay present */
     /* Do note that the created file has full permissions */
     flashFileFd = open(FLASH_FILENAME, O_CREAT | O_RDWR, S_IRWXO | S_IRWXG | S_IRWXU);
-    printf("Emulator Init: Could not find %s, creating new\n", FLASH_FILENAME);
+    emulator_logf("Could not find %s, creating new.", EMULATOR_SUBSYSTEM_INIT, FLASH_FILENAME);
 }
 
 if ( flashFileFd == -1 ) 
     {
-    fprintf(stderr, "Emulator Init: Flash file failed to open with errno %d", errno);
-    exit(1);
+    emulator_logf("Flash file failed to open with errno %d.", EMULATOR_SUBSYSTEM_INIT, errno);
+    emulator_exit(1);
     }
 
-printf("Emulator Init: Successfully opened flash file\n");
+emulator_log("Successfully opened flash file.", EMULATOR_SUBSYSTEM_INIT);
 
 /* Resize the file to the proper size. */
 /* If the file is the correct format, does nothing. If too long/short, corrects it */
@@ -153,8 +153,8 @@ int resizeStatus = ftruncate(flashFileFd, FLASH_FILESIZE);
 
 if ( resizeStatus == -1)
     {
-    fprintf(stderr, "Emulator Init: Failed to truncate flash file with errno %d\n", errno);
-    exit(1);
+    emulator_logf("Failed to truncate flash file with errno %d", EMULATOR_SUBSYSTEM_INIT, errno);
+    emulator_exit(1);
     }
 
 /* Maps the file to memory; when flash_memory is written the file changes simultaneously* */
@@ -170,8 +170,8 @@ if ( !foundFlashFile )
 
 if ( flash_memory == MAP_FAILED ) 
     {
-    fprintf(stderr, "Emulator Init: Flash file mmap failed with errno %d\n", errno);
-    exit(1);
+    emulator_logf("Flash file mmap failed with errno %d.", EMULATOR_SUBSYSTEM_INIT, errno);
+    emulator_exit(1);
     }
 
 /* File descriptor can be closed without invalidating the mapping, per the man */
@@ -179,11 +179,11 @@ int closeRet = close(flashFileFd);
 
 if ( closeRet == -1 ) 
     {
-    fprintf(stderr, "Emulator Init: Failed to close inital flash file with errno %d\n", errno);
-    exit(1);
+    emulator_logf("Failed to close initial flash file with errno %d.", EMULATOR_SUBSYSTEM_INIT, errno);
+    emulator_exit(1);
     }
 
-printf("Emulator Init: Successfully mapped %s to memory\n", FLASH_FILENAME);
+emulator_logf("Successfully mapped %s to memory.", EMULATOR_SUBSYSTEM_INIT, FLASH_FILENAME);
 
 } /* emulator_flash_init */
 
@@ -207,14 +207,14 @@ uint32_t emulator_flash_write
 /* Make sure flash has been initialized */
 if ( flash_memory == NULL ) 
     {
-    printf("Flash Write: Emulator flash is NULL\n");
+    emulator_log("Emulator flash is NULL", EMULATOR_SUBSYSTEM_FLASH);
     return FLASH_INIT_FAIL;
     }
 
 /* Check invariants */
 if( address + ( size - 1 ) > FLASH_MAX_ADDR )
     {
-    printf("Flash Write: OOB write at %x with size %d\n", address, size);
+    emulator_logf("OOB write attempted at %x with size %d", EMULATOR_SUBSYSTEM_FLASH, address, size);
     return FLASH_ADDR_OUT_OF_BOUNDS;
     }
 
