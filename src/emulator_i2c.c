@@ -162,15 +162,9 @@ return HAL_OK;
  Procedures                                                     
 ------------------------------------------------------------------------------*/
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		emulator_i2c_it_listener                                               *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Listen for and fulfill i2c IT I/O.                                     *
-*                                                                              *
-*******************************************************************************/
+/**
+* Listen for and fulfill i2c IT I/O.                                     
+*/
 void* emulator_i2c_it_listener
     (
     void* arg
@@ -231,15 +225,9 @@ while ( listening )
 }
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		baro_read_handler                                                      *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Handle blocking I2C reg reads for the barometer.                       *
-*                                                                              *
-*******************************************************************************/
+/**
+* Handle blocking I2C reg reads for the barometer.                       
+*/
 static HAL_StatusTypeDef baro_read_handler(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, uint16_t MemAddress,
                                     uint16_t MemAddSize, uint8_t *pData, uint16_t Size, uint32_t Timeout)
 {
@@ -270,15 +258,9 @@ return HAL_OK;
 } /* baro_read_handler */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		imu_read_handler                                                       *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Handle blocking I2C reg reads for the IMU.                             *
-*                                                                              *
-*******************************************************************************/
+/**
+* Handle blocking I2C reg reads for the IMU.                             
+*/
 static HAL_StatusTypeDef imu_read_handler(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, uint16_t MemAddress,
                                     uint16_t MemAddSize, uint8_t *pData, uint16_t Size, uint32_t Timeout)
 {
@@ -301,15 +283,9 @@ return HAL_OK;
 } /* imu_read_handler */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		mag_read_handler                                                       *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Handle blocking I2C reg reads for the magnetometer.                    *
-*                                                                              *
-*******************************************************************************/
+/**
+* Handle blocking I2C reg reads for the magnetometer.                    
+*/
 static HAL_StatusTypeDef mag_read_handler(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, uint16_t MemAddress,
                                     uint16_t MemAddSize, uint8_t *pData, uint16_t Size, uint32_t Timeout)
 {
@@ -340,15 +316,9 @@ return HAL_OK;
 } /* mag_read_handler */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		baro_read_handler_IT                                                   *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Handle interrupt-based I2C reg reads for the barometer.                *
-*                                                                              *
-*******************************************************************************/
+/**
+*       Handle interrupt-based I2C reg reads for the barometer.                
+*/
 static void baro_read_handler_IT()
 {
 float pres_pa;
@@ -371,15 +341,9 @@ baro_IT_handler();
 } /* baro_read_handler_IT */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		imu_read_handler_IT                                                    *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Handle interrupt-based I2C reg reads for the IMU.                      *
-*                                                                              *
-*******************************************************************************/
+/*
+* Handle interrupt-based I2C reg reads for the IMU.                      
+*/
 static void imu_read_handler_IT()
 {
 memset(imu_data_ptr, 0, imu_data_size);
@@ -404,15 +368,9 @@ imu_it_handler();
 } /* imu_read_handler_IT */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		mag_read_handler_IT                                                    *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Handle interrupt-based I2C reg reads for the magnetometer.             *
-*                                                                              *
-*******************************************************************************/
+/**
+* Handle interrupt-based I2C reg reads for the magnetometer.             
+*/
 static void mag_read_handler_IT()
 {
 int16_t mag_x_raw;
@@ -444,15 +402,9 @@ imu_it_handler();
  Helpers                                                     
 ------------------------------------------------------------------------------*/
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		sensor_add_random_noise                                                *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Adds linear noise around the given value.                              *
-*                                                                              *
-*******************************************************************************/
+/**
+* Adds linear noise around the given value.                              
+*/
 static float sensor_add_random_noise(float readout_in, float noise_max)
 {
 float random = rand() / (float)RAND_MAX; /* 0 - 1 */
@@ -467,15 +419,9 @@ return readout_in + (random * noise_max);
 } /* sensor_add_random_noise */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   *
-* 		sensor_baro_raw_store                                                  *
-*                                                                              *
-* DESCRIPTION:                                                                 *
-*       Store a 24-bit BMP390 ADC value into three registers (LSB first).      *
-*                                                                              *
-*******************************************************************************/
+/**
+* Store a 24-bit BMP390 ADC value into three registers (LSB first).      
+*/
 static void sensor_baro_raw_store(uint32_t raw, uint8_t *bytes)
 {
 bytes[0] = (uint8_t)( raw & 0xFF );
@@ -485,15 +431,9 @@ bytes[2] = (uint8_t)( ( raw >> 16 ) & 0xFF );
 } /* sensor_baro_raw_store */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   *
-* 		sensor_mag_xy_pack                                                     *
-*                                                                              *
-* DESCRIPTION:                                                                 *
-*       Pack 13-bit XY mag ADC into BMM150 register bytes (driver/imu/imu.c).  *
-*                                                                              *
-*******************************************************************************/
+/**
+* Pack 13-bit XY mag ADC into BMM150 register bytes (driver/imu/imu.c). 
+*/
 static void sensor_mag_xy_pack(int16_t raw, uint8_t *lsb, uint8_t *msb)
 {
 uint16_t val = (uint16_t)raw & 0x1FFF;
@@ -504,15 +444,9 @@ uint16_t val = (uint16_t)raw & 0x1FFF;
 } /* sensor_mag_xy_pack */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   *
-* 		sensor_mag_z_pack                                                      *
-*                                                                              *
-* DESCRIPTION:                                                                 *
-*       Pack 15-bit Z mag ADC into BMM150 register bytes (driver/imu/imu.c).   *
-*                                                                              *
-*******************************************************************************/
+/**
+* Pack 15-bit Z mag ADC into BMM150 register bytes (driver/imu/imu.c). 
+*/
 static void sensor_mag_z_pack(int16_t raw, uint8_t *lsb, uint8_t *msb)
 {
 uint16_t val = (uint16_t)(int16_t)raw;
@@ -526,15 +460,9 @@ if (raw < -16384) { raw = -16384; val = (uint16_t)raw; }
 } /* sensor_mag_z_pack */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   *
-* 		sensor_mag_rhall_pack                                                  *
-*                                                                              *
-* DESCRIPTION:                                                                 *
-*       Pack hall resistance into BMM150 register bytes (driver/imu/imu.c).  *
-*                                                                              *
-*******************************************************************************/
+/**
+* Pack hall resistance into BMM150 register bytes (driver/imu/imu.c). 
+*/
 static void sensor_mag_rhall_pack(uint16_t rhall, uint8_t *lsb, uint8_t *msb)
 {
 *msb = (uint8_t)( ( rhall >> MAG_RHALL_MSB_BITSHIFT ) & 0xFF );
@@ -543,15 +471,9 @@ static void sensor_mag_rhall_pack(uint16_t rhall, uint8_t *lsb, uint8_t *msb)
 } /* sensor_mag_rhall_pack */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		sensor_acc_inv                                                         *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Convert a float value to the IMU accel reg format.                     *
-*                                                                              *
-*******************************************************************************/
+/**
+* Convert a float value to the IMU accel reg format.                     
+*/
 static uint16_t sensor_acc_inv(float accel)
 {
 uint8_t g_setting = 16;
@@ -571,15 +493,9 @@ return (uint16_t)((int16_t)raw);
 } /* sensor_acc_inv */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		sensor_gyro_inv                                                        *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Convert a float value to the IMU gyro reg format.                      *
-*                                                                              *
-*******************************************************************************/
+/**
+* Convert a float value to the IMU gyro reg format.                      
+*/
 static uint16_t sensor_gyro_inv(float dps)
 {
 float gyro_setting = 2000.0f;
@@ -598,16 +514,10 @@ return (uint16_t)((int16_t)raw);
 } /* sensor_gyro_inv */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   *
-* 		sensor_mag_xy_inv                                                      *
-*                                                                              *
-* DESCRIPTION:                                                                 *
-*       Convert a float value to BMM150 XY magnetometer raw (13-bit) format.   *
-*       Inverse of sensor_conv_mag XY scaling (mod/sensor/sensor.c).             *
-*                                                                              *
-*******************************************************************************/
+/**
+* Convert a float value to BMM150 XY magnetometer raw (13-bit) format.   
+* Inverse of sensor_conv_mag XY scaling (mod/sensor/sensor.c).             
+*/
 static int16_t sensor_mag_xy_inv(float ut)
 {
 MAG_TRIM trim = imu_get_mag_trim();
@@ -624,16 +534,10 @@ return (int16_t)raw;
 } /* sensor_mag_xy_inv */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   *
-* 		sensor_mag_z_inv                                                       *
-*                                                                              *
-* DESCRIPTION:                                                                 *
-*       Convert a float value to BMM150 Z magnetometer raw (15-bit) format.    *
-*       Inverse of sensor_conv_mag Z scaling (mod/sensor/sensor.c).            *
-*                                                                              *
-*******************************************************************************/
+/**
+* Convert a float value to BMM150 Z magnetometer raw (15-bit) format.    
+* Inverse of sensor_conv_mag Z scaling (mod/sensor/sensor.c).            
+*/
 static int16_t sensor_mag_z_inv(float ut)
 {
 MAG_TRIM trim = imu_get_mag_trim();
@@ -658,15 +562,9 @@ return (int16_t)raw;
 } /* sensor_mag_z_inv */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   *
-* 		emulator_temp_compensate                                               *
-*                                                                              *
-* DESCRIPTION:                                                                 *
-*       BMP390 temperature compensation (driver/baro/baro.c temp_compensate).  *
-*                                                                              *
-*******************************************************************************/
+/**
+* BMP390 temperature compensation (driver/baro/baro.c temp_compensate).  
+*/
 static float emulator_temp_compensate(uint32_t raw_readout)
 {
 float partial_data1;
@@ -681,15 +579,9 @@ return emulator_baro_cal.comp_temp;
 } /* emulator_temp_compensate */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   *
-* 		emulator_press_compensate                                              *
-*                                                                              *
-* DESCRIPTION:                                                                 *
-*       BMP390 pressure compensation (driver/baro/baro.c press_compensate).    *
-*                                                                              *
-*******************************************************************************/
+/**
+* BMP390 pressure compensation (driver/baro/baro.c press_compensate).  
+*/
 static float emulator_press_compensate(uint32_t raw_readout)
 {
 float partial_data1;
@@ -725,16 +617,10 @@ return partial_out1 + partial_out2 + partial_data4;
 } /* emulator_press_compensate */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   *
-* 		sensor_baro_temp_inv                                                   *
-*                                                                              *
-* DESCRIPTION:                                                                 *
-*       Convert a temperature (deg C) to BMP390 raw register format.           *
-*       Inverse of temp_compensate (driver/baro/baro.c).                       *
-*                                                                              *
-*******************************************************************************/
+/**
+* Convert a temperature (deg C) to BMP390 raw register format.           
+* Inverse of temp_compensate (driver/baro/baro.c).                       
+*/
 static uint32_t sensor_baro_temp_inv(float temp_c)
 {
 float partial_data1;
@@ -770,16 +656,10 @@ return (uint32_t)partial_data1;
 } /* sensor_baro_temp_inv */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   *
-* 		sensor_baro_pres_inv                                                   *
-*                                                                              *
-* DESCRIPTION:                                                                 *
-*       Convert a pressure (Pa) to BMP390 raw register format.                 *
-*       Inverse of press_compensate (driver/baro/baro.c).                      *
-*                                                                              *
-*******************************************************************************/
+/**
+* Convert a pressure (Pa) to BMP390 raw register format.                 
+* Inverse of press_compensate (driver/baro/baro.c).                      
+*/
 static uint32_t sensor_baro_pres_inv(float pres_pa, float temp_c)
 {
 uint32_t raw_lo = 0;
@@ -843,15 +723,9 @@ uint16_t bytes_comb = emulator_bytes_to_uint16_t( lsb_byte, msb_byte );
 return (int16_t) bytes_comb;
 }
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   *
-* 		emulator_apply_baro_cal_buffer                                         *
-*                                                                              *
-* DESCRIPTION:                                                                 *
-*       Parse emulator NVM bytes into float coeffs (driver/baro/baro.c).       *
-*                                                                              *
-*******************************************************************************/
+/**
+* Parse emulator NVM bytes into float coeffs (driver/baro/baro.c).       
+*/
 static void emulator_apply_baro_cal_buffer(void)
 {
 BARO_CAL_DATA_INT cal_data_int;
@@ -897,15 +771,9 @@ emulator_baro_cal.comp_temp = 0.0f;
 } /* emulator_apply_baro_cal_buffer */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   *
-* 		emulator_mag_trim_reg_read                                           *
-*                                                                              *
-* DESCRIPTION:                                                                 *
-*       Return magnetometer trim register bytes (driver/imu/imu.c mag_init).   *
-*                                                                              *
-*******************************************************************************/
+/**
+* Return magnetometer trim register bytes (driver/imu/imu.c mag_init).   *
+*/
 static uint8_t emulator_mag_trim_reg_read(uint8_t reg_addr)
 {
 switch( reg_addr )
@@ -948,15 +816,9 @@ switch( reg_addr )
 } /* emulator_mag_trim_reg_read */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   *
-* 		emulator_i2c_cal_init                                                  *
-*                                                                              *
-* DESCRIPTION:                                                                 *
-*       Load baro NVM and mag trim values served on blocking I2C reads.       *
-*                                                                              *
-*******************************************************************************/
+/**
+* Load baro NVM and mag trim values served on blocking I2C reads.       
+*/
 static void emulator_i2c_cal_init(void)
 {
 BARO_CAL_DATA_INT cal;

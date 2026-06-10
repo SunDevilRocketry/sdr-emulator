@@ -66,11 +66,11 @@ static EMULATOR_FLAGS_TYPE emulator_flags = IRQ_ENABLED_FLAG_BIT | GUI_ENABLED_F
  Static Functions
 ------------------------------------------------------------------------------*/
 
-/*
- * Callback function to handle SIGINTs and SIGTERMs from the user. Wraps @ref emulator_exit
- * @param dummy Dummy parameter to match the callback's expected signature.
- * @warning Do not call this function by itself.
- */
+/**
+* Callback function to handle SIGINTs and SIGTERMs from the user. Wraps @ref emulator_exit
+* @param dummy Dummy parameter to match the callback's expected signature.
+* @warning Do not call this function by itself.
+*/
 static void sigint_handler
     (
     int dummy
@@ -81,8 +81,8 @@ emulator_exit(0);
 } /* sigint_handler */
 
 /**
- * Helper function which prints information detailing how to use th emulator from the command line.
- */
+* Helper function which prints information detailing how to use th emulator from the command line.
+*/
 static void print_args_help
     (
     void
@@ -96,10 +96,10 @@ printf("\t--no-gui                Runs the emulator without the GUI (CLI only)\n
 } /* pring_args_help */
 
 /**
- * Parses command line arguments.
- * @param argc The number of arguments
- * @param argv Array of arguments
- */
+* Parses command line arguments.
+* @param argc The number of arguments
+* @param argv Array of arguments
+*/
 static void parse_args
     (
     int argc, 
@@ -190,10 +190,9 @@ void HAL_NVIC_EnableIRQ(IRQn_Type IRQn) {emulator_flags_set_bits(IRQ_ENABLED_FLA
  Procedures                                                     
 ------------------------------------------------------------------------------*/
 
-/*
+/**
 * Emulator application entry point.                                      
 */                                                                              
-
 int main
     (
     int argc,
@@ -288,7 +287,7 @@ exit(exitCode);
 
 }
 
-/*
+/**
  * Bitwise ORs the passed flags with the flag bitfield
  *
  * @param flags The list of flags to set.
@@ -303,12 +302,12 @@ emulator_flags |= flags;
 
 }
 
-/*
- * Bitwise ANDs the negation of the passed flags to set the passed flag bits to zero
- *
- * @param flags The list of flags to unset
- * @note All flags passed to flags will be unset in the emulator flags
- */
+/**
+* Bitwise ANDs the negation of the passed flags to set the passed flag bits to zero
+*
+* @param flags The list of flags to unset
+* @note All flags passed to flags will be unset in the emulator flags
+*/
 void emulator_flags_unset_bits
     (
     EMULATOR_FLAGS_TYPE flags
@@ -319,10 +318,10 @@ emulator_flags &= ~flags;
 }
 
 /**
- * Iterative helper function for @ref emulator_flags_check_bits
- *
- * @note Should only be called by @ref emulator_flags_check_bits
- */
+* Iterative helper function for @ref emulator_flags_check_bits
+*
+* @note Should only be called by @ref emulator_flags_check_bits
+*/
 static bool emulator_flags_check_bits_iter
     (
      EMULATOR_FLAGS_TYPE flags,
@@ -359,10 +358,10 @@ else
 }
 
 /*
- * Returns TRUE ONLY IF all passed flags are enabled internally, else false
- *
- * @param flags Bitfield of flags to check
- */
+* Returns TRUE ONLY IF all passed flags are enabled internally, else false
+*
+* @param flags Bitfield of flags to check
+*/
 bool emulator_flags_check_bits
     (
     EMULATOR_FLAGS_TYPE flags

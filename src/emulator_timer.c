@@ -74,7 +74,7 @@ htim2.Instance = &htim2_instance;
 servo_4_pulse = &(htim2.Instance->CCR1);
 }
 
-/*
+/**
  * Mock function for timer driver us tick
  */
 uint64_t get_us_tick
@@ -85,7 +85,7 @@ uint64_t get_us_tick
 return (get_current_time() - timers_start_time);
 }
 
-/*
+/**
  * Mock function for timer driver delay_ms
  */
 void delay_ms
@@ -131,15 +131,9 @@ HAL_StatusTypeDef HAL_TIM_PWM_Stop(TIM_HandleTypeDef *htim, uint32_t Channel)
  Procedures                                                     
 ------------------------------------------------------------------------------*/
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		emulator_start_timers                                                  *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Initializes the timers used by the emulator.                           *
-*                                                                              *
-*******************************************************************************/
+/**
+* Initializes the timers used by the emulator.                           
+*/
 void emulator_start_timers
     (
     void
@@ -150,15 +144,9 @@ timers_start_time = get_current_time();
 } /* emulator_start_timers */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		get_current_time                                                       *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Gets the current time in microseconds.                                 *
-*                                                                              *
-*******************************************************************************/
+/**
+* Gets the current time in microseconds.                                 
+*/
 static uint64_t get_current_time
     (
     void
@@ -173,15 +161,9 @@ struct timespec ts;
 } /* get_current_time */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		emulator_buzzer_beep_request                                           *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Tell the GUI to beep for the duration.                                 *
-*                                                                              *
-*******************************************************************************/
+/**
+* Tell the GUI to beep for the duration.                                 
+*/
 void emulator_buzzer_beep_request
     (
     uint32_t duration

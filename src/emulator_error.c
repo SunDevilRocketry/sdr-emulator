@@ -67,15 +67,9 @@ static void print_stack_trace
  Procedures                                                     
 ------------------------------------------------------------------------------*/
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		emulator_setup_error                                                   *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Set up the error handler on the emulator.                              *
-*                                                                              *
-*******************************************************************************/
+/**
+* Set up the error handler on the emulator.                              
+*/
 void emulator_setup_error
     (
     void
@@ -86,15 +80,9 @@ default_error_handler = (ERROR_CALLBACK){ 0, emulator_error_handler };
 } /* emulator_setup_error */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		emulator_error_handler                                                 *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Start the GUI socket.                                                  *
-*                                                                              *
-*******************************************************************************/
+/**
+* Reports the firmware error and terminates the emulator
+*/
 static void emulator_error_handler
     (
     ERROR_CODE error_code
@@ -104,20 +92,14 @@ printf( "\nEmulator: A terminal error has been reached.\n" );
 printf( "Emulator: FW-reported error code - %d.\n", error_code );
 print_stack_trace();
 printf( "\nEmulator: The emulator will now exit.\n");
-exit(0);
+emulator_exit(0);
 
 } /* emulator_error_handler */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		print_stack_trace                                                      *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Print the current call stack to the console.                           *
-*                                                                              *
-*******************************************************************************/
+/**
+* Prints a stack trace
+*/
 static void print_stack_trace
     (
     void
