@@ -1,13 +1,11 @@
-/*******************************************************************************
+/**
+* @file emulator.c 
+* 
 *
-* FILE: 
-* 		emulator.c
-*
-* DESCRIPTION: 
-* 		Large mock library for SDR hardware to allow builds of the firmware
-*       on local hardware for testing,
+* Large mock library for SDR hardware to allow builds of the firmware
+* on local hardware for testing,
 *                                                                             
-* COPYRIGHT:                                                                  
+* @copyright                                                                  
 *       Copyright (c) 2026 Sun Devil Rocketry.                                
 *       All rights reserved.                                                  
 *                                                                             
@@ -18,7 +16,7 @@
 *                                                                              
 *       https://opensource.org/license/bsd-3-clause                            
 *
-*******************************************************************************/
+*/
 
 /*------------------------------------------------------------------------------
  Includes                                                         

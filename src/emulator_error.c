@@ -1,12 +1,10 @@
-/*******************************************************************************
+/**
+* @file emulator_error.c
 *
-* FILE: 
-* 		emulator_error.c
-*
-* DESCRIPTION: 
-* 		Procedures related to error handling in emulated applications.
+* 
+* Procedures related to error handling in emulated applications.
 *                                                                             
-* COPYRIGHT:                                                                  
+* @copyright
 *       Copyright (c) 2026 Sun Devil Rocketry.                                
 *       All rights reserved.                                                  
 *                                                                             
@@ -17,7 +15,7 @@
 *                                                                              
 *       https://opensource.org/license/bsd-3-clause                            
 *
-*******************************************************************************/
+*/
 
 /*------------------------------------------------------------------------------
  Includes                                                         

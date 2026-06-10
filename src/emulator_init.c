@@ -1,12 +1,9 @@
-/*******************************************************************************
+/**
+* @file emulator_init.c
 *
-* FILE: 
-* 		emulator_init.c
-*
-* DESCRIPTION: 
-* 		Stubs out the init routines on the FC.
+* Stubs out the init routines on the FC.
 *                                                                             
-* COPYRIGHT:                                                                  
+* @copyright                                                                  
 *       Copyright (c) 2026 Sun Devil Rocketry.                                
 *       All rights reserved.                                                  
 *                                                                             

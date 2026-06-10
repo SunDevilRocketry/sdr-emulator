@@ -1,12 +1,10 @@
-/*******************************************************************************
+/**
+* @file: emulator_spi.c
 *
-* FILE: 
-* 		emulator_spi.c
-*
-* DESCRIPTION: 
-* 		Mocks the functionality of SPI peripherals on the FC.
+* Mocks the functionality of SPI peripherals on the FC.
 *                                                                             
-* COPYRIGHT:                                                                  
+*
+* @copyright:                                                                  
 *       Copyright (c) 2026 Sun Devil Rocketry.                                
 *       All rights reserved.                                                  
 *                                                                             
@@ -17,7 +15,7 @@
 *                                                                              
 *       https://opensource.org/license/bsd-3-clause                            
 *
-*******************************************************************************/
+*/
 
 /*------------------------------------------------------------------------------
  Includes                                                         

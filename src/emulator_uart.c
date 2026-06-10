@@ -1,12 +1,9 @@
-/*******************************************************************************
+/**
+* @file emulator_uart.c
 *
-* FILE: 
-* 		emulator_uart.c
-*
-* DESCRIPTION: 
-* 		Mocks the functionality of UART peripherals on the FC.
+* Mocks the functionality of UART peripherals on the FC.
 *                                                                             
-* COPYRIGHT:                                                                  
+* @copyright
 *       Copyright (c) 2026 Sun Devil Rocketry.                                
 *       All rights reserved.                                                  
 *                                                                             
@@ -17,7 +14,7 @@
 *                                                                              
 *       https://opensource.org/license/bsd-3-clause                            
 *
-*******************************************************************************/
+*/
 
 /*------------------------------------------------------------------------------
  Includes                                                         

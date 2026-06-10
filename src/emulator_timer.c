@@ -1,12 +1,10 @@
-/*******************************************************************************
+/**
 *
-* FILE: 
-* 		emulator_timer.c
+* @file emulator_timer.c
 *
-* DESCRIPTION: 
-* 		Mocks out HAL timers.
+* Mocks out HAL timers.
 *                                                                             
-* COPYRIGHT:                                                                  
+* @copyright                                                                  
 *       Copyright (c) 2026 Sun Devil Rocketry.                                
 *       All rights reserved.                                                  
 *                                                                             
@@ -17,7 +15,7 @@
 *                                                                              
 *       https://opensource.org/license/bsd-3-clause                            
 *
-*******************************************************************************/
+*/
 
 /*------------------------------------------------------------------------------
  Includes                                                         
