@@ -1,12 +1,10 @@
-/*******************************************************************************
+/**
+* @file: emulator_spi.c
 *
-* FILE: 
-* 		emulator_spi.c
-*
-* DESCRIPTION: 
-* 		Mocks the functionality of SPI peripherals on the FC.
+* Mocks the functionality of SPI peripherals on the FC.
 *                                                                             
-* COPYRIGHT:                                                                  
+*
+* @copyright:                                                                  
 *       Copyright (c) 2026 Sun Devil Rocketry.                                
 *       All rights reserved.                                                  
 *                                                                             
@@ -17,7 +15,7 @@
 *                                                                              
 *       https://opensource.org/license/bsd-3-clause                            
 *
-*******************************************************************************/
+*/
 
 /*------------------------------------------------------------------------------
  Includes                                                         
@@ -108,15 +106,9 @@ HAL_StatusTypeDef HAL_SPI_Receive(SPI_HandleTypeDef *hspi, uint8_t *pData, uint1
  Procedures                                                     
 ------------------------------------------------------------------------------*/
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		emulator_flash_init                                                    *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Set up the fake flash file.                                            *
-*                                                                              *
-*******************************************************************************/
+/**
+* Set up the fake flash file.                                            
+*/
 void emulator_flash_init
     (
     void
@@ -188,15 +180,9 @@ printf("Emulator Init: Successfully mapped %s to memory\n", FLASH_FILENAME);
 } /* emulator_flash_init */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		emulator_flash_write                                                   *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Write to the fake flash.                                               *
-*                                                                              *
-*******************************************************************************/
+/**
+* Write to the fake flash.                                               
+*/
 uint32_t emulator_flash_write
     (
     uint8_t* data,
@@ -228,15 +214,9 @@ return FLASH_OK;
 } /* emulator_flash_write */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		emulator_flash_read                                                    *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Read from the fake flash file.                                         *
-*                                                                              *
-*******************************************************************************/
+/**
+* Read from the fake flash file.                                         
+*/
 uint32_t emulator_flash_read
     (
     uint8_t* data,
@@ -268,15 +248,9 @@ return FLASH_OK;
 } /* emulator_flash_read */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		emulator_flash_erase                                                   *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Erase the contents of the fake flash file.                             *
-*                                                                              *
-*******************************************************************************/
+/**
+* Erase the contents of the fake flash file.                             
+*/
 uint32_t emulator_flash_erase
     (
     void
@@ -296,15 +270,9 @@ return FLASH_OK;
 } /* emulator_flash_erase */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		emulator_flash_block_erase                                             *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Erase a block in the fake flash file.                                  *
-*                                                                              *
-*******************************************************************************/
+/**
+* Erase a block in the fake flash file.                                  
+*/
 uint32_t emulator_flash_block_erase
     (
     uint32_t        flash_block_num, /* Block of flash to erase */
@@ -357,15 +325,9 @@ return FLASH_OK;
 } /* emulator_flash_block_erase */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		flash_spi_transmit                                                     *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Helper for SPI transmissions to the flash.                             *
-*                                                                              *
-*******************************************************************************/
+/**
+* Helper for SPI transmissions to the flash.                             
+*/
 static HAL_StatusTypeDef flash_spi_transmit(SPI_HandleTypeDef *hspi, const uint8_t *pData, uint16_t Size, uint32_t Timeout) 
 {
 
@@ -383,15 +345,9 @@ return HAL_OK;
 } /* flash_spi_transmit */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		flash_spi_receive                                                      *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Helper for SPI recieve ops from the flash.                             *
-*                                                                              *
-*******************************************************************************/
+/**
+* Helper for SPI recieve ops from the flash.                             
+*/
 static HAL_StatusTypeDef flash_spi_receive(SPI_HandleTypeDef *hspi, uint8_t *pData, uint16_t Size, uint32_t Timeout) 
 {
 /* handle flash opcode*/
@@ -414,16 +370,10 @@ return HAL_OK;
 }
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		flash_spi_delay                                                        *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Helper that waits based on the performance profiled model of Rev2      *
-*       flash.                                                                 *
-*                                                                              *
-*******************************************************************************/
+/**
+*       Helper that waits based on the performance profiled model of Rev2      
+*       flash.                                                                 
+*/
 static void flash_spi_delay
     (
     uint32_t num_bytes

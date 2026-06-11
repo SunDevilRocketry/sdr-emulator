@@ -1,13 +1,11 @@
-/*******************************************************************************
+/**
+* @file emulator.c 
+* 
 *
-* FILE: 
-* 		emulator.c
-*
-* DESCRIPTION: 
-* 		Large mock library for SDR hardware to allow builds of the firmware
-*       on local hardware for testing,
+* Large mock library for SDR hardware to allow builds of the firmware
+* on local hardware for testing,
 *                                                                             
-* COPYRIGHT:                                                                  
+* @copyright                                                                  
 *       Copyright (c) 2026 Sun Devil Rocketry.                                
 *       All rights reserved.                                                  
 *                                                                             
@@ -18,7 +16,7 @@
 *                                                                              
 *       https://opensource.org/license/bsd-3-clause                            
 *
-*******************************************************************************/
+*/
 
 /*------------------------------------------------------------------------------
  Includes                                                         
@@ -67,6 +65,12 @@ static EMULATOR_FLAGS_TYPE emulator_flags = IRQ_ENABLED_FLAG_BIT | GUI_ENABLED_F
 /*------------------------------------------------------------------------------
  Static Functions
 ------------------------------------------------------------------------------*/
+
+/**
+* Callback function to handle SIGINTs and SIGTERMs from the user. Wraps @ref emulator_exit
+* @param dummy Dummy parameter to match the callback's expected signature.
+* @warning Do not call this function by itself.
+*/
 static void sigint_handler
     (
     int dummy
@@ -76,6 +80,9 @@ static void sigint_handler
 emulator_exit(0);
 } /* sigint_handler */
 
+/**
+* Helper function which prints information detailing how to use th emulator from the command line.
+*/
 static void print_args_help
     (
     void
@@ -88,6 +95,11 @@ printf("\t-h, --help              Displays this screen and exits\n");
 printf("\t--no-gui                Runs the emulator without the GUI (CLI only)\n");
 } /* pring_args_help */
 
+/**
+* Parses command line arguments.
+* @param argc The number of arguments
+* @param argv Array of arguments
+*/
 static void parse_args
     (
     int argc, 
@@ -178,15 +190,9 @@ void HAL_NVIC_EnableIRQ(IRQn_Type IRQn) {emulator_flags_set_bits(IRQ_ENABLED_FLA
  Procedures                                                     
 ------------------------------------------------------------------------------*/
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		main                                                                   *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Emulator application entry point.                                      *
-*                                                                              *
-*******************************************************************************/
+/**
+* Emulator application entry point.                                      
+*/                                                                              
 int main
     (
     int argc,
@@ -195,25 +201,18 @@ int main
 {
 
 parse_args(argc, argv);
-/*------------------------------------------------------------------------------
- Connect sigint handler
-------------------------------------------------------------------------------*/
+
+/* Connect sigint handler */
 signal(SIGINT, sigint_handler);
 signal(SIGTERM, sigint_handler);
 
-/*------------------------------------------------------------------------------
- Start software timers                                                    
-------------------------------------------------------------------------------*/
+/* Start software timers */
 emulator_start_timers();
 
-/*------------------------------------------------------------------------------
- Check for flash and create the blank file if it doesn't exist                                                  
-------------------------------------------------------------------------------*/
+/* Check for flash and create the blank file if it doesn't exist */                                                
 emulator_flash_init();
 
-/*------------------------------------------------------------------------------
- Seed RNG for noise generator                                                 
-------------------------------------------------------------------------------*/
+/* Seed RNG for noise generator */
 srand(time(NULL));
 
 printf("Emulator Init: Opening I2c interrupt listener.\n");
@@ -222,15 +221,11 @@ pthread_create( &it_thread, NULL, emulator_i2c_it_listener, NULL );
 printf("Emulator Init: Opening GPS interrupt listener.\n");
 pthread_create( &gps_thread, NULL, emulator_gps_it_listener, NULL );
 
-/*------------------------------------------------------------------------------
- Register Default Error Callback                                                   
-------------------------------------------------------------------------------*/
+/* Register Default Error Callback */                                                   
 printf("Emulator Init: Registering default error handler.\n");
 emulator_setup_error();
 
-/*------------------------------------------------------------------------------
- Select COM port
-------------------------------------------------------------------------------*/
+ /* Select COM port */
 if ( emulator_prompt_and_open_serial_port() )
     {
     printf("Emulator Init: Serial connection OK.\n");
@@ -240,36 +235,38 @@ else
     printf("Emulator Init: Serial connection failed. Continuing without.\n");
     
     }
-/*------------------------------------------------------------------------------
- Initialize GUI
-------------------------------------------------------------------------------*/
+
+/* Initialize GUI/Firmware */
 
 if ( emulator_flags_check_bits(GUI_ENABLED_FLAG_BIT) ) 
     {
 
-    /*------------------------------------------------------------------------------
-     Once setup is complete, run the firmware                                                    
-    ------------------------------------------------------------------------------*/
+    /* Once setup is complete, run the firmware */                                                    
     printf("Emulator Init: Starting firmware.\n");
 
     /* Ugly cast to correct function type (might be the worst cast I've ever seen) */
     /* Shouldn't happen in normal execution, but if main_fut returns, likely UB */
     pthread_create( &firmware_thread, NULL, (void*(*)(void*))main_fut, NULL );
 
-    /*------------------------------------------------------------------------------
-     Run and block until GUI termination
-    ------------------------------------------------------------------------------*/
+    /* Run and block until GUI termination */
     emulator_gui_main();
 
     }
 else 
     {
+    /* If GUI disabled, run firmware directly */
     main_fut();
     }
 
 emulator_exit(EXIT_SUCCESS);
 } /* main */
 
+/**
+ *
+ * Cleans up emulator state and exits the program
+ *
+ * @param exitCode The exit code passed to exit()
+ */
 void emulator_exit
     (
     int exitCode
@@ -290,8 +287,11 @@ exit(exitCode);
 
 }
 
-/*
+/**
  * Bitwise ORs the passed flags with the flag bitfield
+ *
+ * @param flags The list of flags to set.
+ * @note All flags passed to flags will be set in the emulator flags
  */
 void emulator_flags_set_bits
     (
@@ -302,9 +302,12 @@ emulator_flags |= flags;
 
 }
 
-/*
- * Bitwise ANDs the negation of the passed flags to set the passed flag bits to zero
- */
+/**
+* Bitwise ANDs the negation of the passed flags to set the passed flag bits to zero
+*
+* @param flags The list of flags to unset
+* @note All flags passed to flags will be unset in the emulator flags
+*/
 void emulator_flags_unset_bits
     (
     EMULATOR_FLAGS_TYPE flags
@@ -314,6 +317,11 @@ emulator_flags &= ~flags;
 
 }
 
+/**
+* Iterative helper function for @ref emulator_flags_check_bits
+*
+* @note Should only be called by @ref emulator_flags_check_bits
+*/
 static bool emulator_flags_check_bits_iter
     (
      EMULATOR_FLAGS_TYPE flags,
@@ -321,31 +329,39 @@ static bool emulator_flags_check_bits_iter
      EMULATOR_FLAGS_TYPE runner
     )
 {
-EMULATOR_FLAGS_TYPE mask = (flags & (~flags | 1 << bit_index));
+/* Isloates bit at bit_index */
+EMULATOR_FLAGS_TYPE mask = (flags & (~flags | 1u << bit_index));
+/* Check if bit is set in emulator_flags */
 bool thisFlag = emulator_flags & mask;
+/* If not set, and there are no more flags, return false early */
 if ( (emulator_flags & mask) == 0 && (flags & mask) == 1)
     {
     return false;
 
     }
 
+/* Set flag bit in runner */
 runner |= (thisFlag << bit_index);
 
 if (bit_index != 0)
     {
+    /* Perform next iteration if there are more bits to go */
     return emulator_flags_check_bits_iter(flags, --bit_index, runner);
 
     } 
 else
     {
+    /* Check if runner and flags are exactly equal to flags */
     return (flags & runner) == flags;
 
     }
 }
 
 /*
- * Returns TRUE only if all passed flags are enabled 
- */
+* Returns TRUE ONLY IF all passed flags are enabled internally, else false
+*
+* @param flags Bitfield of flags to check
+*/
 bool emulator_flags_check_bits
     (
     EMULATOR_FLAGS_TYPE flags
