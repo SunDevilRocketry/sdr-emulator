@@ -1,12 +1,9 @@
-/*******************************************************************************
+/**
+* @file emulator_uart.c
 *
-* FILE: 
-* 		emulator_uart.c
-*
-* DESCRIPTION: 
-* 		Mocks the functionality of UART peripherals on the FC.
+* Mocks the functionality of UART peripherals on the FC.
 *                                                                             
-* COPYRIGHT:                                                                  
+* @copyright
 *       Copyright (c) 2026 Sun Devil Rocketry.                                
 *       All rights reserved.                                                  
 *                                                                             
@@ -17,7 +14,7 @@
 *                                                                              
 *       https://opensource.org/license/bsd-3-clause                            
 *
-*******************************************************************************/
+*/
 
 /*------------------------------------------------------------------------------
  Includes                                                         
@@ -139,15 +136,9 @@ HAL_StatusTypeDef HAL_UART_Receive_IT(UART_HandleTypeDef *huart, uint8_t *pData,
  Procedures                                                     
 ------------------------------------------------------------------------------*/
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		emulator_prompt_and_open_serial_port                                   *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Set up the serial connection to SDEC.                                  *
-*                                                                              *
-*******************************************************************************/
+/**
+* Set up the serial connection to SDEC.                                  
+*/
 bool emulator_prompt_and_open_serial_port
     (
     void
@@ -245,15 +236,9 @@ return true;
 } /* emulator_prompt_and_open_serial_port */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		serial_write                                                           *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Write to the virtual serial port.                                      *
-*                                                                              *
-*******************************************************************************/
+/**
+* Write to the virtual serial port.                                      
+*/
 static void serial_write
     (
     const uint8_t* msg,
@@ -270,15 +255,9 @@ write( serial_port, msg, len );
 } /* serial_write */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		serial_read                                                            *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Read from the virtual serial port.                                     *
-*                                                                              *
-*******************************************************************************/
+/**
+* Read from the virtual serial port.                                     
+*/
 static USB_STATUS serial_read
     (
     void*    rx_data_ptr , /* Buffer to export data to        */
@@ -324,15 +303,9 @@ int n = read( serial_port, rx_data_ptr, rx_data_size );
 } /* serial_read */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		emulator_gps_it_listener                                               *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Listen for and fulfill UART GPS IT I/O.                                *
-*                                                                              *
-*******************************************************************************/
+/**
+* Listen for and fulfill UART GPS IT I/O.                                
+*/
 void* emulator_gps_it_listener
     (
     void* arg
@@ -378,15 +351,9 @@ return 0;
 } /* emulator_gps_it_listener */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		gps_read_handler_IT                                                    *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Interrupt the main thread with a new GPS message.                      *
-*                                                                              *
-*******************************************************************************/
+/**
+* Interrupt the main thread with a new GPS message.                      
+*/
 static void gps_read_handler_IT
     (
     int message_num

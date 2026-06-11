@@ -1,12 +1,10 @@
-/*******************************************************************************
+/**
+* @file emulator_error.c
 *
-* FILE: 
-* 		emulator_error.c
-*
-* DESCRIPTION: 
-* 		Procedures related to error handling in emulated applications.
+* 
+* Procedures related to error handling in emulated applications.
 *                                                                             
-* COPYRIGHT:                                                                  
+* @copyright
 *       Copyright (c) 2026 Sun Devil Rocketry.                                
 *       All rights reserved.                                                  
 *                                                                             
@@ -17,7 +15,7 @@
 *                                                                              
 *       https://opensource.org/license/bsd-3-clause                            
 *
-*******************************************************************************/
+*/
 
 /*------------------------------------------------------------------------------
  Includes                                                         
@@ -58,15 +56,9 @@ static void emulator_error_handler
  Procedures                                                     
 ------------------------------------------------------------------------------*/
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		emulator_debug_log                                                     *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Log to the console.                                                    *
-*                                                                              *
-*******************************************************************************/
+/**
+* Log to the console.                              
+*/
 void emulator_debug_log
     (
     const char* msg,
@@ -140,16 +132,10 @@ free(msg_buf);
 } /* emulator_debug_log */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		emulator_debug_logf                                                    *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Log to the console using a format string. Checks variadic arguments at *
-*       compile time. Thanks, GCC!                                             *
-*                                                                              *
-*******************************************************************************/
+/**
+* Log to the console using a format string. Checks variadic arguments at
+* compile time. Thanks, GCC!
+*/
 __attribute__((format(printf, 1, 3)))
 void emulator_debug_logf
     (
@@ -182,15 +168,9 @@ va_end(vargs);
 } /* emulator_debug_logf */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		emulator_setup_error                                                   *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Set up the error handler on the emulator.                              *
-*                                                                              *
-*******************************************************************************/
+/**
+* Set up the emulator's error handler
+*/
 void emulator_setup_error
     (
     void
@@ -203,15 +183,9 @@ default_error_handler = (ERROR_CALLBACK){ 0, emulator_error_handler };
 } /* emulator_setup_error */
 
 
-/*******************************************************************************
-*                                                                              *
-* PROCEDURE:                                                                   * 
-* 		emulator_error_handler                                                 *
-*                                                                              *
-* DESCRIPTION:                                                                 * 
-*       Handle an error in the emulator.                                       *
-*                                                                              *
-*******************************************************************************/
+/**
+* Handle an error in the emulator.
+*/
 static void emulator_error_handler
     (
     ERROR_CODE error_code

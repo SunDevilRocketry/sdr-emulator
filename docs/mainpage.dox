@@ -1,0 +1,9 @@
+/** @mainpage notitle
+*
+* @section proj_desc Project Description
+*
+* The firmware emulator mocks all hardware dependent functionality to allow
+* testing of the firmware without access to a board.
+*
+*
+*/
