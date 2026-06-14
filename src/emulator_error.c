@@ -178,8 +178,6 @@ void emulator_setup_error
 {
 default_error_handler = (ERROR_CALLBACK){ 0, emulator_error_handler };
 
-/* clear last logs */
-// TODO
 } /* emulator_setup_error */
 
 
