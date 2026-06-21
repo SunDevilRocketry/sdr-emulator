@@ -145,7 +145,9 @@ void emulator_debug_logf
     )
 {
 va_list vargs;
+va_list vargs_copy; /* va_lists are supposed to only be used once */
 va_start(vargs, from_subsystem); 
+va_copy(vargs_copy, vargs);
 
 size_t msg_len = vsnprintf(NULL, 0, msg, vargs) + 1; 
 char* new_msg = malloc(sizeof(char) * msg_len); 
@@ -153,12 +155,13 @@ char* new_msg = malloc(sizeof(char) * msg_len);
 if (new_msg == NULL)
     {
     va_end(vargs);
+    va_end(vargs_copy);
     const char failed_str[] = "Log message allocation failed\n";
     fwrite(failed_str, sizeof(char), sizeof(failed_str), stdout);
     return;
     }
 
-vsnprintf(new_msg, msg_len, msg, vargs); 
+vsnprintf(new_msg, msg_len, msg, vargs_copy); 
 emulator_debug_log( new_msg, msg_len, from_subsystem ); 
 
 free(new_msg);
