@@ -215,34 +215,36 @@ emulator_flash_init();
 /* Seed RNG for noise generator */
 srand(time(NULL));
 
-printf("Emulator Init: Opening I2c interrupt listener.\n");
+emulator_log("Opening I2c interrupt listener.", EMULATOR_SUBSYSTEM_INIT);
 pthread_create( &it_thread, NULL, emulator_i2c_it_listener, NULL );
 
-printf("Emulator Init: Opening GPS interrupt listener.\n");
+emulator_log("Opening GPS interrupt listener.", EMULATOR_SUBSYSTEM_INIT);
 pthread_create( &gps_thread, NULL, emulator_gps_it_listener, NULL );
 
-/* Register Default Error Callback */                                                   
-printf("Emulator Init: Registering default error handler.\n");
+/*------------------------------------------------------------------------------
+ Register Default Error Callback                                                   
+------------------------------------------------------------------------------*/
+emulator_log("Registering default error handler.", EMULATOR_SUBSYSTEM_INIT);
 emulator_setup_error();
 
  /* Select COM port */
 if ( emulator_prompt_and_open_serial_port() )
     {
-    printf("Emulator Init: Serial connection OK.\n");
+    emulator_log("Serial connection OK.", EMULATOR_SUBSYSTEM_INIT);
     }
 else
     {
-    printf("Emulator Init: Serial connection failed. Continuing without.\n");
-    
+    emulator_log("Serial connection failed -- continuing without.", EMULATOR_SUBSYSTEM_INIT);
     }
 
 /* Initialize GUI/Firmware */
 
 if ( emulator_flags_check_bits(GUI_ENABLED_FLAG_BIT) ) 
     {
-
-    /* Once setup is complete, run the firmware */                                                    
-    printf("Emulator Init: Starting firmware.\n");
+    /*------------------------------------------------------------------------------
+     Once setup is complete, run the firmware                                                    
+    ------------------------------------------------------------------------------*/
+    emulator_log("Starting firmware.", EMULATOR_SUBSYSTEM_INIT);
 
     /* Ugly cast to correct function type (might be the worst cast I've ever seen) */
     /* Shouldn't happen in normal execution, but if main_fut returns, likely UB */
@@ -272,8 +274,7 @@ void emulator_exit
     int exitCode
     )
 {
-
-printf("Emulator terminating with exit code %d\n", exitCode);
+emulator_logf("Emulator terminating with exit code %d.", EMULATOR_SUBSYSTEM_GUI_INFO, exitCode);
 if ( emulator_flags_check_bits(GUI_ENABLED_FLAG_BIT) )
     {
     emulator_gui_teardown();

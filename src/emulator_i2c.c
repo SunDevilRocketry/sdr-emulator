@@ -172,7 +172,7 @@ void* emulator_i2c_it_listener
 {
 bool listening = true;
 emulator_i2c_cal_init();
-printf("Listener thread opened.\n");
+emulator_log("Listener thread opened.", EMULATOR_SUBSYSTEM_I2C_THREAD);
 
 while ( listening )
     {

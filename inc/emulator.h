@@ -38,21 +38,31 @@ extern "C" {
  Project Includes  
 ------------------------------------------------------------------------------*/
 
-
 /*------------------------------------------------------------------------------
  Macros  
 ------------------------------------------------------------------------------*/
-typedef uint32_t EMULATOR_FLAGS_TYPE; 
-
 #define IGNITE_FLAG_BIT (1 << 0)
 #define IRQ_ENABLED_FLAG_BIT (1 << 1)
 #define GUI_ENABLED_FLAG_BIT (1 << 2)
 #define IGNITE_FAST_ARM_FLAG_BIT (1 << 3)
 
+#define EMULATOR_SUBSYSTEM_INIT "EM-INIT"
+#define EMULATOR_SUBSYSTEM_GUI_INIT "GUI-INIT"
+#define EMULATOR_SUBSYSTEM_GUI_INFO "EM-INFO"
+#define EMULATOR_SUBSYSTEM_I2C_THREAD "I2C-THREAD"
+#define EMULATOR_SUBSYSTEM_FLASH "FLASH"
+#define EMULATOR_SUBSYSTEM_BUZZER "BUZZER"
+#define EMULATOR_SUBSYSTEM_SERIAL "SERIAL"
+#define EMULATOR_SUBSYSTEM_GPS "GPS"
+#define EMULATOR_SUBSYSTEM_FIRMWARE "FW-DBG"
+#define EMULATOR_SUBSYSTEM_ERROR "ERROR"
+
 /*------------------------------------------------------------------------------
  Typedefs
 ------------------------------------------------------------------------------*/
-
+typedef uint32_t EMULATOR_FLAGS_TYPE; 
+/* forward decl from FW timer.h */
+typedef struct _SYSTEM_TIME SYSTEM_TIME;
 
 /*------------------------------------------------------------------------------
  Global Variables                                             
@@ -83,12 +93,34 @@ void emulator_start_timers
     void
     );
 
+/* emulator_timer.c */
+SYSTEM_TIME get_system_time
+    (
+    void
+    );
+
 void emulator_buzzer_beep_request(uint32_t duration);
 
 /* emulator_error.c */
 void emulator_setup_error
     (
     void
+    );
+
+/* emulator_error.c */
+void emulator_debug_log
+    (
+    const char* msg,
+    size_t msg_len,
+    const char* from_subsystem /* name of subsystem that logged the message */
+    );
+
+/* emulator_error.c */
+void emulator_debug_logf
+    (
+    const char* msg,
+    const char* from_subsystem, /* name of subsystem that logged the message */
+    ...
     );
 
 /* emulator_i2c.c */
@@ -178,7 +210,14 @@ bool emulator_flags_check_bits
     EMULATOR_FLAGS_TYPE flags
     );
 
+/*------------------------------------------------------------------------------
+ Alias Macros                                             
+------------------------------------------------------------------------------*/
+#define emulator_log( msg, subsystem )\
+        emulator_debug_log( msg, sizeof( msg ), subsystem )
 
+#define emulator_logf(msg, subsystem, ...)\
+        emulator_debug_logf(msg, subsystem, __VA_ARGS__)
 
 #ifdef __cplusplus
 }
