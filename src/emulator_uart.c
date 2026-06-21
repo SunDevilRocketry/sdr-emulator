@@ -47,7 +47,7 @@
 ------------------------------------------------------------------------------*/
 extern uint8_t            gps_mesg_byte;
 extern uint8_t            rx_buffer[GPSBUFSIZE];
-extern GPS_DATA           gps_data;
+extern RAW_GPS_DATA       gps_data;
 
 int serial_port = -1;
 volatile bool gps_data_it_flag = false;
