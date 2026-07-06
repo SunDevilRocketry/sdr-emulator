@@ -281,7 +281,7 @@ state_buf[ buf_ptr ].len = len;
 
 buf_ptr++;
 
-if( buf_ptr > 8 )
+if( buf_ptr > 7 )
     {
     buf_ptr = 0;
     }
