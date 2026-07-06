@@ -53,9 +53,11 @@ extern "C" {
 #define EMULATOR_SUBSYSTEM_FLASH "FLASH"
 #define EMULATOR_SUBSYSTEM_BUZZER "BUZZER"
 #define EMULATOR_SUBSYSTEM_SERIAL "SERIAL"
+#define EMULATOR_SUBSYSTEM_GS "GROUND-STATION"
 #define EMULATOR_SUBSYSTEM_GPS "GPS"
 #define EMULATOR_SUBSYSTEM_FIRMWARE "FW-DBG"
 #define EMULATOR_SUBSYSTEM_ERROR "ERROR"
+#define EMULATOR_SUBSYSTEM_LORA "LORA"
 
 /*------------------------------------------------------------------------------
  Typedefs
@@ -129,9 +131,45 @@ void* emulator_i2c_it_listener
     void* arg
     );
 
+/* emulator_lora.c */
+uint32_t emulator_lora_spi_transmit
+    (
+    void *hspi, 
+    uint8_t *pData, 
+    uint16_t Size, 
+    uint32_t Timeout
+    );
+
+uint32_t emulator_lora_spi_transmit_receive
+    (
+    void *hspi, 
+    const uint8_t *pTxData, 
+    uint8_t *pRxData, 
+    uint16_t Size, 
+    uint32_t Timeout
+    );
+
 /* emulator_spi.c */
 void emulator_flash_init
     (
+    void
+    );
+
+/* emulator_ground_station.c */
+bool emulator_prompt_and_open_serial_port_gs
+    (
+    void
+    );
+
+void emulator_gs_update_buf
+    (
+    void *data, 
+    size_t len, 
+    uint32_t time_to_tx_ms
+    );
+
+void emulator_gs_terminal_loop
+    ( 
     void
     );
 

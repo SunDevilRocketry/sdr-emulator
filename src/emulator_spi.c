@@ -67,13 +67,21 @@ static void flash_spi_delay
 
 HAL_StatusTypeDef HAL_SPI_Transmit_IT(SPI_HandleTypeDef *hspi, const uint8_t *pData, uint16_t Size)
 {
-return HAL_OK;
+    if (hspi == &( LORA_SPI )) {
+        return emulator_lora_spi_transmit(hspi, (uint8_t *)pData, Size, 0U);
+    }
+    return HAL_OK;
 }
 
 HAL_StatusTypeDef HAL_SPI_TransmitReceive_IT(SPI_HandleTypeDef *hspi, const uint8_t *pTxData, uint8_t *pRxData,
                                              uint16_t Size)
 {
-return HAL_OK;
+    if (hspi == &( LORA_SPI )) {
+        if (pTxData != NULL && pRxData != NULL) {
+            return emulator_lora_spi_transmit_receive(hspi, pTxData, pRxData, Size, 0U);
+        }
+    }
+    return HAL_OK;
 }
 
 HAL_StatusTypeDef HAL_SPI_Transmit(SPI_HandleTypeDef *hspi, const uint8_t *pData, uint16_t Size, uint32_t Timeout) {
@@ -82,9 +90,12 @@ HAL_StatusTypeDef HAL_SPI_Transmit(SPI_HandleTypeDef *hspi, const uint8_t *pData
     if( hspi == &( FLASH_SPI ) )
         {
         status = flash_spi_transmit(hspi, pData, Size, Timeout);
+        flash_spi_delay( Size );
         }
-    
-    flash_spi_delay( Size );
+    if( hspi == &( LORA_SPI ) )
+        {
+        status = emulator_lora_spi_transmit(hspi, pData, Size, Timeout);
+        }
 
     return status;
 }
@@ -95,9 +106,12 @@ HAL_StatusTypeDef HAL_SPI_Receive(SPI_HandleTypeDef *hspi, uint8_t *pData, uint1
     if( hspi == &( FLASH_SPI ) )
         {
         status = flash_spi_receive(hspi, pData, Size, Timeout);
+        flash_spi_delay( Size );
         }
-    
-    flash_spi_delay( Size );
+    if( hspi == &( LORA_SPI ) )
+        {
+        status = emulator_lora_spi_transmit(hspi, pData, Size, Timeout);
+        }
 
     return status;
 }

@@ -59,6 +59,7 @@ const char DEVICE_ID[] = "SW_EMULATOR";
 static pthread_t firmware_thread;
 static pthread_t it_thread;
 static pthread_t gps_thread;
+static pthread_t gs_thread;
 
 static EMULATOR_FLAGS_TYPE emulator_flags = IRQ_ENABLED_FLAG_BIT | GUI_ENABLED_FLAG_BIT;
 
@@ -237,8 +238,18 @@ else
     emulator_log("Serial connection failed -- continuing without.", EMULATOR_SUBSYSTEM_INIT);
     }
 
-/* Initialize GUI/Firmware */
+/* Select COM port -- ground station */
+if ( emulator_prompt_and_open_serial_port_gs() )
+    {
+    emulator_log("GS Serial connection OK.", EMULATOR_SUBSYSTEM_INIT);
+    pthread_create( &gs_thread, NULL, emulator_gs_terminal_loop, NULL );
+    }
+else
+    {
+    emulator_log("GS Serial connection failed -- continuing without.", EMULATOR_SUBSYSTEM_INIT);
+    }
 
+/* Initialize GUI/Firmware */
 if ( emulator_flags_check_bits(GUI_ENABLED_FLAG_BIT) ) 
     {
     /*------------------------------------------------------------------------------
