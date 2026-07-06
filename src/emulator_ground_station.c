@@ -293,14 +293,15 @@ pthread_mutex_unlock(&state_mutex);
 /**
   * @brief The worker thread for the ground station mock interface.
   */
-void emulator_gs_terminal_loop
-    ( 
-    void
+void* emulator_gs_terminal_loop
+    (
+    void* arg
     )
 {
 /*---------------------------------------------------------------------
  Local Variables                                                             
 ---------------------------------------------------------------------*/
+(void)arg;
 uint8_t tx_buf[ 256 ];
 uint8_t rx_buf[ 256 ];
 USB_STATUS rx_status = USB_OK;
@@ -355,7 +356,7 @@ while ( 1 )
         --------------------------------------------------------------*/
         case DASHBOARD_OP:
             {
-            emulator_debug_logf( "Dashboard OP received", EMULATOR_SUBSYSTEM_GS );
+            //emulator_debug_logf( "Dashboard OP received", EMULATOR_SUBSYSTEM_GS );
             bool tx_cplt = false;
             pthread_mutex_lock(&state_mutex);
             for( int i = 0; i < 8; i++ )
@@ -367,7 +368,7 @@ while ( 1 )
                     serial_write( tx_buf, len );
                     state_buf[i].timestamp_available = 0xFFFFFFFF;
                     tx_cplt = true;
-                    emulator_debug_logf( "Used an existing message: %d bytes", EMULATOR_SUBSYSTEM_GS, len );
+                    //emulator_debug_logf( "Used an existing message: %d bytes", EMULATOR_SUBSYSTEM_GS, len );
                     }
                 }
             pthread_mutex_unlock(&state_mutex);
@@ -375,7 +376,7 @@ while ( 1 )
                 {
                 memset( tx_buf, 0, 256 );
                 serial_write( tx_buf, TELEMETRY_MESSAGE_SIZE );
-                emulator_debug_logf( "Used a blank message: %d bytes", EMULATOR_SUBSYSTEM_GS, TELEMETRY_MESSAGE_SIZE );
+                //emulator_debug_logf( "Used a blank message: %d bytes", EMULATOR_SUBSYSTEM_GS, TELEMETRY_MESSAGE_SIZE );
                 }
             }
             break;
@@ -393,5 +394,7 @@ while ( 1 )
     } /* while(1) */
 
 emulator_debug_logf( "Ground station thread is exiting.", EMULATOR_SUBSYSTEM_GS );
+
+return NULL;
 
 } /* emulator_gs_terminal_loop */

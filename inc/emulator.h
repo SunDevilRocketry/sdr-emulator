@@ -168,9 +168,9 @@ void emulator_gs_update_buf
     uint32_t time_to_tx_ms
     );
 
-void emulator_gs_terminal_loop
+void* emulator_gs_terminal_loop
     ( 
-    void
+    void* arg
     );
 
 /* emulator_gui.c */

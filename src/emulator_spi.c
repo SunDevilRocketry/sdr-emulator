@@ -36,6 +36,7 @@
 #include "main.h"
 #include "stm32h7xx_hal.h"
 #include "flash.h"
+#include "debug_sdr.h"
 #include "sdr_pin_defines_A0002.h"
 
 #define FLASH_FILENAME "../../emulator/resources/emulator_flash.bin"
@@ -94,7 +95,9 @@ HAL_StatusTypeDef HAL_SPI_Transmit(SPI_HandleTypeDef *hspi, const uint8_t *pData
         }
     if( hspi == &( LORA_SPI ) )
         {
+        debug_ignore_emulator_warnings_start(); /* bad practice, but it works. the discarded const qualifer is necessary in the tx func */
         status = emulator_lora_spi_transmit(hspi, pData, Size, Timeout);
+        debug_ignore_emulator_warnings_stop();
         }
 
     return status;
