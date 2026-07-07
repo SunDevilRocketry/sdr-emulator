@@ -229,17 +229,17 @@ emulator_log("Registering default error handler.", EMULATOR_SUBSYSTEM_INIT);
 emulator_setup_error();
 
  /* Select COM port */
-if ( emulator_prompt_and_open_serial_port() )
+if ( emulator_serial_open_port( FC_SERIAL_PORT ) )
     {
-    emulator_log("Serial connection OK.", EMULATOR_SUBSYSTEM_INIT);
+    emulator_log("FC Serial connection OK.", EMULATOR_SUBSYSTEM_INIT);
     }
 else
     {
-    emulator_log("Serial connection failed -- continuing without.", EMULATOR_SUBSYSTEM_INIT);
+    emulator_log("FC Serial connection failed -- continuing without.", EMULATOR_SUBSYSTEM_INIT);
     }
 
 /* Select COM port -- ground station */
-if ( emulator_prompt_and_open_serial_port_gs() )
+if ( emulator_serial_open_port( GS_SERIAL_PORT ) )
     {
     emulator_log("GS Serial connection OK.", EMULATOR_SUBSYSTEM_INIT);
     pthread_create( &gs_thread, NULL, emulator_gs_terminal_loop, NULL );

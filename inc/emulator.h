@@ -58,6 +58,7 @@ extern "C" {
 #define EMULATOR_SUBSYSTEM_FIRMWARE "FW-DBG"
 #define EMULATOR_SUBSYSTEM_ERROR "ERROR"
 #define EMULATOR_SUBSYSTEM_LORA "LORA"
+#define EMULATOR_SUBSYSTEM_SERIAL "SERIAL"
 
 /*------------------------------------------------------------------------------
  Typedefs
@@ -65,6 +66,15 @@ extern "C" {
 typedef uint32_t EMULATOR_FLAGS_TYPE; 
 /* forward decl from FW timer.h */
 typedef struct _SYSTEM_TIME SYSTEM_TIME;
+
+typedef enum _SERIAL_PORT
+    {
+    FC_SERIAL_PORT,
+    GS_SERIAL_PORT,
+
+    /* Leave this as the last member */
+    SERIAL_PORT_COUNT
+    } SERIAL_PORT;
 
 /*------------------------------------------------------------------------------
  Global Variables                                             
@@ -147,6 +157,31 @@ uint32_t emulator_lora_spi_transmit_receive
     uint8_t *pRxData, 
     uint16_t Size, 
     uint32_t Timeout
+    );
+
+/* emulator_serial.c */
+bool emulator_serial_open_port
+    (
+    SERIAL_PORT port
+    );
+
+void emulator_serial_write
+    (
+    SERIAL_PORT     port,           /* The serial port to write to     */
+    const uint8_t*  tx_data_ptr,    /* Buffer to write from            */
+    size_t          tx_data_size    /* Size of the data to write       */
+    );
+
+uint32_t emulator_serial_read /* The return is aliased from USB_STATUS so the header doesnt kill itself */
+    (
+    SERIAL_PORT port,               /* The serial port to read from    */
+    void*    rx_data_ptr ,          /* Buffer to export data to        */
+	size_t   rx_data_size           /* Size of the data to be received */
+    );
+
+bool emulator_usb_detect
+    (
+    SERIAL_PORT port
     );
 
 /* emulator_spi.c */
