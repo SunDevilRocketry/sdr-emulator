@@ -70,7 +70,7 @@ bool emulator_serial_open_port
 {
 /* Prompt for serial port */
 char port_buf[12];
-emulator_log("Please enter your serial port in the format /dev/ttyXX or in the format COMX.", EMULATOR_SUBSYSTEM_SERIAL);
+emulator_log("Please enter your serial port in the format /dev/ttySXX or in the format COMX.", EMULATOR_SUBSYSTEM_SERIAL);
 printf("Input: \n");
 
 if(fgets(port_buf, sizeof(port_buf), stdin) == NULL){
