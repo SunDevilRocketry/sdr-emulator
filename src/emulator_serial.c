@@ -69,8 +69,8 @@ bool emulator_serial_open_port
     )
 {
 /* Prompt for serial port */
-char port_buf[16];
-emulator_log("Please enter your serial port (e.g /dev/ttySXX or COMX).", EMULATOR_SUBSYSTEM_SERIAL);
+char port_buf[12];
+emulator_log("Please enter your serial port in the format /dev/ttyXX or in the format COMX.", EMULATOR_SUBSYSTEM_SERIAL);
 printf("Input: \n");
 
 if(fgets(port_buf, sizeof(port_buf), stdin) == NULL){
@@ -79,6 +79,24 @@ if(fgets(port_buf, sizeof(port_buf), stdin) == NULL){
 }
 
 port_buf[strcspn(port_buf, "\n")] = '\0';
+
+char com_buf[4];
+int com_port_num;
+
+strncpy(com_buf, port_buf, 3);
+
+if(strncmp(com_buf, "COM", 3) == 0){
+    sscanf(port_buf+3, "%d", &com_port_num);
+    com_port_num--;
+    uint8_t last_two_digits = com_port_num % 100; /* least significant two digits */
+
+    /* we know this is safe, but we need to ignore the warning */
+    // ETS: THIS IS GROSS. Do not do this.
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wformat-truncation"
+    snprintf(port_buf, sizeof(port_buf), "/dev/ttyS%u", last_two_digits);
+    #pragma GCC diagnostic pop
+}
 
 serial_ports[ port ].port_handle = open(port_buf, O_RDWR | O_NOCTTY | O_NDELAY); // Open the port
 
