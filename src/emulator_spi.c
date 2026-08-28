@@ -2,7 +2,6 @@
 * @file: emulator_spi.c
 *
 * Mocks the functionality of SPI peripherals on the FC.
-*                                                                             
 *
 * @copyright:                                                                  
 *       Copyright (c) 2026 Sun Devil Rocketry.                                
@@ -40,6 +39,7 @@
 #include "sdr_pin_defines_A0002.h"
 
 #define FLASH_FILENAME "../../emulator/resources/emulator_flash.bin"
+#define FLASH_LOCAL_FILENAME "./emulator_flash.bin"
 #define FLASH_TMPFILENAME FLASH_FILENAME ".tmp"
 
 /* Note that this is implicitly in bytes because flash_memory is a byte array */
@@ -146,6 +146,12 @@ if (flashFileFd == -1 && errno == 2)
     /* Do note that the created file has full permissions */
     flashFileFd = open(FLASH_FILENAME, O_CREAT | O_RDWR, S_IRWXO | S_IRWXG | S_IRWXU);
     emulator_logf("Could not find %s, creating new.", EMULATOR_SUBSYSTEM_INIT, FLASH_FILENAME);
+
+    /* Try creating it in same directory in case we're running outside Flight Computer Firmware directory structure */
+    if (flashFileFd == -1 && errno == 2) {
+        flashFileFd = open(FLASH_LOCAL_FILENAME, O_CREAT | O_RDWR, S_IRWXO | S_IRWXG | S_IRWXU);
+        emulator_logf("Trying to use non-Flight Computer Firmware directory structure.", EMULATOR_SUBSYSTEM_INIT, FLASH_LOCAL_FILENAME);
+    }
 }
 
 if ( flashFileFd == -1 ) 
