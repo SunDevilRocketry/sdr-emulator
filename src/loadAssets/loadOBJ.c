@@ -31,9 +31,15 @@
 ------------------------------------------------------------------------------*/
 #include "containers/darr.h"
 #include "loadAssets/loadAssets.h"
-#ifndef NO_EMBED
-#include "emulator_files.h" /* Generated at build time by rev2 makefile */
-#endif
+
+/*------------------------------------------------------------------------------
+ Global Variables
+------------------------------------------------------------------------------*/
+extern unsigned char obj_data[];
+extern unsigned int obj_data_len;
+
+extern unsigned char mtl_data[];
+extern unsigned int mtl_data_len;
 
 /*------------------------------------------------------------------------------
  Macros
