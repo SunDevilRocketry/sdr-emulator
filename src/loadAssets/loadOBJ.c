@@ -35,11 +35,14 @@
 /*------------------------------------------------------------------------------
  Global Variables
 ------------------------------------------------------------------------------*/
+/* These externs are generated at build-time if NO_EMBED is disabled */
+#ifndef NO_EMBED
 extern unsigned char obj_data[];
 extern unsigned int obj_data_len;
 
 extern unsigned char mtl_data[];
 extern unsigned int mtl_data_len;
+#endif
 
 /*------------------------------------------------------------------------------
  Macros

@@ -37,6 +37,8 @@
 /*------------------------------------------------------------------------------
  Global Variables                                                         
 ------------------------------------------------------------------------------*/
+/* These externs are generated at build-time if NO_EMBED is disabled */
+#ifndef NO_EMBED
 extern unsigned char default_frag[];
 extern unsigned int default_frag_len;
 
@@ -48,6 +50,7 @@ extern unsigned int LED_frag_len;
 
 extern unsigned char LED_vert[];
 extern unsigned int LED_vert_len;
+#endif
 
 /*------------------------------------------------------------------------------
  Functions
@@ -78,19 +81,15 @@ unsigned char* contents;
 int contents_len;
 /* Determine correct resource array based on path */
 if (strcmp(path,MAKE_SHADER_PATH("default.vert")) == 0) {
-    printf("Requested: %s\nActual:    %s\n", path, MAKE_SHADER_PATH("default.vert"));
     contents = default_vert;
     contents_len = default_vert_len;
 } else if (strcmp(path,MAKE_SHADER_PATH("default.frag")) == 0) {
-    printf("Requested: %s\nActual:    %s\n", path, MAKE_SHADER_PATH("default.frag"));
     contents = default_frag;
     contents_len = default_frag_len;
 } else if (strcmp(path,MAKE_SHADER_PATH("LED.vert")) == 0) {
-    printf("Requested: %s\nActual:    %s\n", path, MAKE_SHADER_PATH("LED.vert"));
     contents = LED_vert;
     contents_len = LED_vert_len;
-} else if(strcmp(path,MAKE_SHADER_PATH("LED.frag")) == 0) {
-    printf("Requested: %s\nActual:    %s\n", path, MAKE_SHADER_PATH("LED.frag"));
+} else if (strcmp(path,MAKE_SHADER_PATH("LED.frag")) == 0) {
     contents = LED_frag;
     contents_len = LED_frag_len;
 } else {
@@ -99,13 +98,11 @@ if (strcmp(path,MAKE_SHADER_PATH("default.vert")) == 0) {
 
 if (contents != NULL) {
     FILE* temp = tmpfile();
-    printf("%s\n", contents);
 
     fwrite(contents, sizeof(char), contents_len, temp);
     fseek(temp, 0, SEEK_SET);
     
     shaderfd = fileno(temp);
-    printf("Fileno: %d", shaderfd);
 } else {
     shaderfd = -1;
 }
