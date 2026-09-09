@@ -46,8 +46,7 @@ typedef enum {
 
 typedef enum {
     EMULATOR_LORA_EVENT_NONE = 0,
-    EMULATOR_LORA_EVENT_REG_READ_CPLT,
-    EMULATOR_LORA_EVENT_WRITE_CPLT
+    EMULATOR_LORA_EVENT_DMA_CPLT
 } EMULATOR_LORA_EVENT;
 
 typedef struct {
@@ -60,13 +59,13 @@ typedef struct {
     uint8_t pending_reg;
     bool pending_reg_write;
     EMULATOR_LORA_SPI_STATE spi_state;
+    bool dma_op_is_tx; /* which async DMA op emulator_lora_it_listener() should complete */
 
     uint8_t fifo[256];
     uint8_t fifo_len;
     uint8_t fifo_tx_base_addr;
     uint8_t fifo_spi_pointer;
     uint8_t irq_flags;
-    uint8_t tx_payload_len;
     EMULATOR_LORA_EVENT pending_event;
 } EMULATOR_LORA_STATE;
 
@@ -88,6 +87,8 @@ static void emulator_lora_schedule_completion(EMULATOR_LORA_EVENT event);
 static void emulator_lora_start_thread_if_needed(void);
 static void *emulator_lora_it_listener(void *arg);
 static void lora_ota_transmit(void *data, size_t len, uint32_t time_to_tx_ms);
+uint32_t emulator_lora_spi_transmit_dma(void *hspi, const uint8_t *pData, uint16_t Size);
+uint32_t emulator_lora_spi_transmit_receive_dma(void *hspi, const uint8_t *pTxData, uint8_t *pRxData, uint16_t Size);
 
 /*------------------------------------------------------------------------------
  HAL interfaces                                                         
@@ -140,7 +141,6 @@ if ((pTxData[0] & 0x80U) == 0U) {
     emulator_lora_state.pending_reg = reg;
     emulator_lora_state.pending_reg_write = false;
     emulator_lora_state.spi_state = EMULATOR_LORA_SPI_IDLE;
-    emulator_lora_schedule_completion(EMULATOR_LORA_EVENT_REG_READ_CPLT);
     return HAL_OK;
 }
 
@@ -151,7 +151,6 @@ if (Size >= 2U) {
     emulator_lora_state.pending_reg = reg;
     emulator_lora_state.pending_reg_write = false;
     emulator_lora_state.spi_state = EMULATOR_LORA_SPI_IDLE;
-    emulator_lora_schedule_completion(EMULATOR_LORA_EVENT_WRITE_CPLT);
     return HAL_OK;
 }
 
@@ -213,7 +212,7 @@ if (emulator_lora_state.spi_state == EMULATOR_LORA_SPI_READ_REG) {
         }
 
         emulator_lora_state.registers[LORA_REG_FIFO_SPI_POINTER] = (uint8_t)(emulator_lora_state.fifo_spi_pointer + (uint8_t)bytes_to_read);
-        emulator_lora_state.registers[LORA_REG_NUM_RX_BYTES] = emulator_lora_state.fifo_len;
+        emulator_lora_state.registers[LORA_REG_FIFO_RX_NUM_BYTES] = emulator_lora_state.fifo_len;
     }
     else {
         for (uint16_t idx = 0; idx < Size; ++idx) {
@@ -222,7 +221,6 @@ if (emulator_lora_state.spi_state == EMULATOR_LORA_SPI_READ_REG) {
     }
 
     emulator_lora_state.spi_state = EMULATOR_LORA_SPI_IDLE;
-    emulator_lora_schedule_completion(EMULATOR_LORA_EVENT_REG_READ_CPLT);
     return HAL_OK;
 }
 
@@ -255,7 +253,6 @@ if (emulator_lora_state.pending_reg_write) {
     }
 
     emulator_lora_state.spi_state = EMULATOR_LORA_SPI_IDLE;
-    emulator_lora_schedule_completion(EMULATOR_LORA_EVENT_WRITE_CPLT);
     return HAL_OK;
 }
 
@@ -270,10 +267,117 @@ if ((pData[0] & 0x80U) != 0U) {
 }
 
 emulator_lora_state.spi_state = EMULATOR_LORA_SPI_IDLE;
-emulator_lora_schedule_completion(EMULATOR_LORA_EVENT_WRITE_CPLT);
 return HAL_OK;
 
 } /* emulator_lora_spi_transmit */
+
+
+/**
+ * @brief Async mock for lora_transmit_async()'s DMA payload burst.
+ * @note  The address byte (FIFO_RW | 0x80) was already sent through the
+ *        blocking path above, which armed pending_reg/pending_reg_write (pure payload)
+ *        
+ *        Completion is delivered via lora_process_async_cb() to match real
+ *        HAL_SPI_Transmit_DMA()/HAL_SPI_TxCpltCallback() semantics.
+ *
+ * @param hspi SPI handle (ignored)
+ * @param pData Pointer to the payload to transmit
+ * @param Size The size of the payload
+ * @return uint32_t The status of the peripheral
+ */
+uint32_t emulator_lora_spi_transmit_dma
+    (
+    void *hspi,
+    const uint8_t *pData,
+    uint16_t Size
+    )
+{
+(void)hspi;
+
+if (pData == NULL || Size == 0U) {
+    return HAL_OK;
+}
+
+if (!emulator_lora_state.initialized) {
+    emulator_lora_reset_state();
+    emulator_lora_state.initialized = true;
+}
+
+emulator_lora_start_thread_if_needed();
+
+emulator_lora_handle_payload(pData, Size);
+emulator_lora_state.pending_reg_write = false;
+emulator_lora_state.spi_state = EMULATOR_LORA_SPI_IDLE;
+emulator_lora_state.dma_op_is_tx = true;
+emulator_lora_schedule_completion(EMULATOR_LORA_EVENT_DMA_CPLT);
+
+return HAL_OK;
+
+} /* emulator_lora_spi_transmit_dma */
+
+
+/**
+ * @brief Async mock for lora_request_receive_async()'s DMA payload burst.
+ * @note  The address byte was sent through the blocking path above,
+ *        which armed pending_reg/spi_state==READ_REG.
+ *        Should mirror continuation's FIFO read, async. pTxData is the dummy clocking
+ *        bytes and carries no meaning on this side.
+ *
+ * @param hspi SPI handle (ignored)
+ * @param pTxData Dummy TX bytes (ignored)
+ * @param pRxData Destination buffer for the received payload
+ * @param Size The size of the payload to receive
+ * @return uint32_t The status of the peripheral
+ */
+uint32_t emulator_lora_spi_transmit_receive_dma
+    (
+    void *hspi,
+    const uint8_t *pTxData,
+    uint8_t *pRxData,
+    uint16_t Size
+    )
+{
+(void)hspi;
+(void)pTxData;
+
+if (pRxData == NULL || Size == 0U) {
+    return HAL_OK;
+}
+
+if (!emulator_lora_state.initialized) {
+    emulator_lora_reset_state();
+    emulator_lora_state.initialized = true;
+}
+
+emulator_lora_start_thread_if_needed();
+
+size_t bytes_to_read = (size_t)Size;
+if (bytes_to_read > emulator_lora_state.fifo_len) {
+    bytes_to_read = emulator_lora_state.fifo_len;
+}
+
+memcpy(pRxData, emulator_lora_state.fifo, bytes_to_read);
+if (bytes_to_read < (size_t)Size) {
+    memset(&pRxData[bytes_to_read], 0x00U, (size_t)Size - bytes_to_read);
+}
+
+if (bytes_to_read > 0U) {
+    memmove(emulator_lora_state.fifo,
+            &emulator_lora_state.fifo[bytes_to_read],
+            emulator_lora_state.fifo_len - (uint8_t)bytes_to_read);
+    emulator_lora_state.fifo_len = (uint8_t)(emulator_lora_state.fifo_len - bytes_to_read);
+}
+
+emulator_lora_state.registers[LORA_REG_FIFO_SPI_POINTER] = (uint8_t)(emulator_lora_state.fifo_spi_pointer + (uint8_t)bytes_to_read);
+emulator_lora_state.registers[LORA_REG_FIFO_RX_NUM_BYTES] = emulator_lora_state.fifo_len;
+
+emulator_lora_state.spi_state = EMULATOR_LORA_SPI_IDLE;
+emulator_lora_state.dma_op_is_tx = false;
+emulator_lora_schedule_completion(EMULATOR_LORA_EVENT_DMA_CPLT);
+
+return HAL_OK;
+
+} /* emulator_lora_spi_transmit_receive_dma */
 
 
 /**
@@ -335,15 +439,18 @@ for (;;) {
     emulator_lora_state.pending_event = EMULATOR_LORA_EVENT_NONE;
     pthread_mutex_unlock(&emulator_lora_it_mutex);
 
-    usleep(10000U);
+    if (event == EMULATOR_LORA_EVENT_DMA_CPLT) {
+        const bool was_tx = emulator_lora_state.dma_op_is_tx;
 
-    HAL_GPIO_WritePin(LORA_NSS_GPIO_PORT, LORA_NSS_PIN, GPIO_PIN_SET);
+        /* Simulated SPI DMA burst transfer time. */
+        usleep(10000U);
+        lora_process_async_cb();
 
-    if (event == EMULATOR_LORA_EVENT_REG_READ_CPLT) {
-        lora_fsm_update(LORA_FSM_EVENT_REG_READ_CPLT);
-    }
-    else if (event == EMULATOR_LORA_EVENT_WRITE_CPLT) {
-        lora_fsm_update(LORA_FSM_EVENT_WRITE_CPLT);
+        if (was_tx) {
+            /* The radio still needs real airtime before DIO0 signals TxDone. */  
+            usleep(20000U);
+            lora_process_dio0_cb();
+        }
     }
 }
 
@@ -369,8 +476,7 @@ emulator_lora_state.registers[LORA_REG_ID_VERSION] = 0x12U;
 emulator_lora_state.registers[LORA_REG_OPERATION_MODE] = LORA_SLEEP_MODE;
 emulator_lora_state.registers[LORA_REG_FIFO_TX_BASE_ADDR] = 0x00U;
 emulator_lora_state.registers[LORA_REG_FIFO_SPI_POINTER] = 0x00U;
-emulator_lora_state.registers[LORA_REG_RX_HEADER_INFO] = 0x00U;
-emulator_lora_state.registers[LORA_REG_NUM_RX_BYTES] = 0x00U;
+emulator_lora_state.registers[LORA_REG_FIFO_RX_NUM_BYTES] = 0x00U;
 emulator_lora_state.registers[LORA_REG_PA_CONFIG] = 0x7FU;
 emulator_lora_state.fifo_tx_base_addr = 0x00U;
 emulator_lora_state.fifo_spi_pointer = 0x00U;
@@ -411,9 +517,6 @@ else if (reg == LORA_REG_FIFO_TX_BASE_ADDR) {
 else if (reg == LORA_REG_FIFO_SPI_POINTER) {
     emulator_lora_state.fifo_spi_pointer = value;
 }
-else if (reg == LORA_REG_SIGNAL_TO_NOISE) {
-    emulator_lora_state.tx_payload_len = value;
-}
 
 } /* emulator_lora_set_register */
 
@@ -439,7 +542,7 @@ if (bytes_to_store > available_space) {
 memcpy(&emulator_lora_state.fifo[emulator_lora_state.fifo_len], data, bytes_to_store);
 emulator_lora_state.fifo_len = (uint8_t)(emulator_lora_state.fifo_len + bytes_to_store);
 emulator_lora_state.registers[LORA_REG_FIFO_SPI_POINTER] = (uint8_t)(emulator_lora_state.fifo_tx_base_addr + emulator_lora_state.fifo_len);
-emulator_lora_state.registers[LORA_REG_NUM_RX_BYTES] = emulator_lora_state.fifo_len;
+emulator_lora_state.registers[LORA_REG_FIFO_RX_NUM_BYTES] = emulator_lora_state.fifo_len;
 
 } /* emulator_lora_store_fifo_bytes */
 
@@ -493,7 +596,7 @@ lora_ota_transmit((void *)emulator_lora_state.last_payload, emulator_lora_state.
 
 memset(emulator_lora_state.fifo, 0x00U, sizeof(emulator_lora_state.fifo));
 emulator_lora_state.fifo_len = 0U;
-emulator_lora_state.registers[LORA_REG_NUM_RX_BYTES] = 0x00U;
+emulator_lora_state.registers[LORA_REG_FIFO_RX_NUM_BYTES] = 0x00U;
 emulator_lora_state.registers[LORA_REG_FIFO_SPI_POINTER] = emulator_lora_state.fifo_tx_base_addr;
 
 } /* emulator_lora_execute_tx */
