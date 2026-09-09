@@ -472,7 +472,7 @@ static void emulator_lora_reset_state
 emulator_debug_logf( "Resetting State", EMULATOR_SUBSYSTEM_LORA);
 memset(&emulator_lora_state, 0, sizeof(emulator_lora_state));
 
-emulator_lora_state.registers[LORA_REG_ID_VERSION] = 0x12U;
+emulator_lora_state.registers[LORA_REG_ID_VERSION] = LORA_ID_VERSION_VAL;
 emulator_lora_state.registers[LORA_REG_OPERATION_MODE] = LORA_SLEEP_MODE;
 emulator_lora_state.registers[LORA_REG_FIFO_TX_BASE_ADDR] = 0x00U;
 emulator_lora_state.registers[LORA_REG_FIFO_SPI_POINTER] = 0x00U;
