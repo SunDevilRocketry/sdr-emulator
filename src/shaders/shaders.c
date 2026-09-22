@@ -25,11 +25,32 @@
 #include <stddef.h>
 #include <errno.h>
 #include <unistd.h>
+#include <string.h>
+
 
 /*------------------------------------------------------------------------------
  Project Includes                                                         
 ------------------------------------------------------------------------------*/
 #include "shaders/shaders.h"
+#include "emulator.h"
+
+/*------------------------------------------------------------------------------
+ Global Variables                                                         
+------------------------------------------------------------------------------*/
+/* These externs are generated at build-time if NO_EMBED is disabled */
+#ifndef NO_EMBED
+extern unsigned char default_frag[];
+extern unsigned int default_frag_len;
+
+extern unsigned char default_vert[];
+extern unsigned int default_vert_len;
+
+extern unsigned char LED_frag[];
+extern unsigned int LED_frag_len;
+
+extern unsigned char LED_vert[];
+extern unsigned int LED_vert_len;
+#endif
 
 /*------------------------------------------------------------------------------
  Functions
@@ -51,8 +72,41 @@ char* readShaderSource
     const char* path
     ) 
 {
+int shaderfd;
+#ifdef NO_EMBED
+shaderfd = open(path, O_RDONLY);
+#else
+/* Create and population temporary file */
+unsigned char* contents;
+int contents_len;
+/* Determine correct resource array based on path */
+if (strcmp(path,MAKE_SHADER_PATH("default.vert")) == 0) {
+    contents = default_vert;
+    contents_len = default_vert_len;
+} else if (strcmp(path,MAKE_SHADER_PATH("default.frag")) == 0) {
+    contents = default_frag;
+    contents_len = default_frag_len;
+} else if (strcmp(path,MAKE_SHADER_PATH("LED.vert")) == 0) {
+    contents = LED_vert;
+    contents_len = LED_vert_len;
+} else if (strcmp(path,MAKE_SHADER_PATH("LED.frag")) == 0) {
+    contents = LED_frag;
+    contents_len = LED_frag_len;
+} else {
+    contents = NULL; /* Invalid path */
+}
 
-int shaderfd = open(path, O_RDONLY);
+if (contents != NULL) {
+    FILE* temp = tmpfile();
+
+    fwrite(contents, sizeof(char), contents_len, temp);
+    fseek(temp, 0, SEEK_SET);
+    
+    shaderfd = fileno(temp);
+} else {
+    shaderfd = -1;
+}
+#endif
 
 if (shaderfd == -1) {
     fprintf(stderr, "Failed to read shader source %s with errno %d\n", path, errno);

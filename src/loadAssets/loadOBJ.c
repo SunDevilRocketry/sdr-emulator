@@ -33,6 +33,18 @@
 #include "loadAssets/loadAssets.h"
 
 /*------------------------------------------------------------------------------
+ Global Variables
+------------------------------------------------------------------------------*/
+/* These externs are generated at build-time if NO_EMBED is disabled */
+#ifndef NO_EMBED
+extern unsigned char obj_data[];
+extern unsigned int obj_data_len;
+
+extern unsigned char mtl_data[];
+extern unsigned int mtl_data_len;
+#endif
+
+/*------------------------------------------------------------------------------
  Macros
 ------------------------------------------------------------------------------*/
 
@@ -130,6 +142,7 @@ struct meshObject* loadVertexDataFromOBJ
 /* Open obj file for reading */
 FILE *srcFile = NULL;
 
+#ifdef NO_EMBED
 srcFile = fopen(filepath, "rb");
 
 if ( srcFile == NULL ) 
@@ -137,7 +150,18 @@ if ( srcFile == NULL )
     printf("Failed to open %s\n", filepath);
     return NULL;
     }
+#else
+srcFile = tmpfile();
+if ( srcFile == NULL )
+    {
+    printf("Failed to create temporary resource file\n");
+    return NULL;
+    }
 
+/* Load byte array into temporary file */
+fwrite(obj_data, sizeof(char), obj_data_len, srcFile);
+fseek(srcFile, 0, SEEK_SET);
+#endif
 /* Initialize data needed for parsing */
 
 float* vertexPositionData = DARRAY_NEW(float, 100);
@@ -307,12 +331,19 @@ static void getMaterialFromMtl
     float retRGB[3]
     ) 
 {
-
+#ifdef NO_EMBED
 char actualFileName[FILE_NAME_SIZE + sizeof( "../../emulator/resources/" )] = "../../emulator/resources/";
 
 strcat(actualFileName, mtlFileName);
 
 FILE* mtlFile = fopen(actualFileName, "rb");
+#else
+FILE* mtlFile = tmpfile();
+
+/* Load binary data into temporary file */
+fwrite(mtl_data, sizeof(char), mtl_data_len, mtlFile);
+fseek(mtlFile, 0, SEEK_SET);
+#endif
 
 if ( mtlFile == NULL )
 {
