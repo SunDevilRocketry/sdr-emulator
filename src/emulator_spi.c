@@ -36,7 +36,7 @@
 #include "stm32h7xx_hal.h"
 #include "flash.h"
 #include "debug_sdr.h"
-#include "sdr_pin_defines_A0002.h"
+#include "pindefs.h"
 
 #define FLASH_FILENAME "../../emulator/resources/emulator_flash.bin"
 #define FLASH_LOCAL_FILENAME "./emulator_flash.bin"
