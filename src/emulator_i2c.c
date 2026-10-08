@@ -526,7 +526,7 @@ float raw = ( ut * 16.0f - (float)trim.dig_x1 * 8.0f ) * 32.0f / ( (float)trim.d
 if (raw > 4095) raw = 4095;
 if (raw < -4096) raw = -4096;
 
-return (int16_t)raw;
+return (int16_t)roundf(raw);
 
 } /* sensor_mag_x_inv */
 
@@ -543,7 +543,7 @@ float raw = ( ut * 16.0f - (float)trim.dig_y1 * 8.0f ) * 32.0f / ( (float)trim.d
 if (raw > 4095) raw = 4095;
 if (raw < -4096) raw = -4096;
 
-return (int16_t)raw;
+return (int16_t)roundf(raw);
 
 } /* sensor_mag_y_inv */
 
@@ -560,6 +560,9 @@ float rhall = trim.dig_xyz1;
 float inv_comp_z1 = (float)trim.dig_z1 * (float)rhall / 32768.0f;
 float inv_comp_z2 = (float)trim.dig_z2 + inv_comp_z1;
 float raw = ( ut * inv_comp_z2 * 64.0f / 131072.0f ) + (float)trim.dig_z4;
+
+if (raw > 32767) raw = 32767;
+if (raw < -32768) raw = -32768;
 
 return (int16_t)roundf(raw);
 
