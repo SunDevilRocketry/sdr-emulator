@@ -77,7 +77,8 @@ static void mag_read_handler_IT();
 static float sensor_add_random_noise(float readout_in, float noise_max);
 static uint16_t sensor_gyro_inv(float dps);
 static uint16_t sensor_acc_inv(float accel);
-static int16_t sensor_mag_xy_inv(float ut);
+static int16_t sensor_mag_x_inv(float ut);
+static int16_t sensor_mag_y_inv(float ut);
 static int16_t sensor_mag_z_inv(float ut);
 static uint32_t sensor_baro_temp_inv(float temp_c);
 static uint32_t sensor_baro_pres_inv(float pres_pa, float temp_c);
@@ -381,9 +382,9 @@ MAG_TRIM trim;
 
 memset(mag_data_ptr, 0, mag_data_size);
 
-mag_x_raw = sensor_mag_xy_inv( sensor_add_random_noise( -1.3f, 0.2f ) );
-mag_y_raw = sensor_mag_xy_inv( sensor_add_random_noise( 1.9f, 0.2f ) );
-mag_z_raw = sensor_mag_z_inv( sensor_add_random_noise( -60.0f, 2.0f ) );
+mag_x_raw = sensor_mag_x_inv( sensor_add_random_noise( -25.0f, 0.2f ) );
+mag_y_raw = sensor_mag_y_inv( sensor_add_random_noise( 25.0f, 0.2f ) );
+mag_z_raw = sensor_mag_z_inv( sensor_add_random_noise( -25.0f, 0.2f ) );
 sensor_mag_xy_pack( mag_x_raw, mag_data_ptr, mag_data_ptr + 1 );
 sensor_mag_xy_pack( mag_y_raw, mag_data_ptr + 2, mag_data_ptr + 3 );
 sensor_mag_z_pack( mag_z_raw, mag_data_ptr + 4, mag_data_ptr + 5 );
@@ -513,25 +514,38 @@ return (uint16_t)((int16_t)raw);
 
 } /* sensor_gyro_inv */
 
-
 /**
-* Convert a float value to BMM150 XY magnetometer raw (13-bit) format.   
-* Inverse of sensor_conv_mag XY scaling (mod/sensor/sensor.c).             
+* Convert a float value to BMM150 X magnetometer raw (13-bit) format.   
+* Inverse of sensor_conv_mag X scaling (mod/sensor/sensor.c).             
 */
-static int16_t sensor_mag_xy_inv(float ut)
+static int16_t sensor_mag_x_inv(float ut)
 {
 MAG_TRIM trim = imu_get_mag_trim();
-float process_comp_x4 = ((float)trim.dig_x2) + 160.0f;
-float mag_sens = process_comp_x4 / 5120.0f;
-
-int32_t raw = (int32_t)(ut / mag_sens);
+float raw = ( ut * 16.0f - (float)trim.dig_x1 * 8.0f ) * 32.0f / ( (float)trim.dig_x2 + 160.0f );
 
 if (raw > 4095) raw = 4095;
 if (raw < -4096) raw = -4096;
 
 return (int16_t)raw;
 
-} /* sensor_mag_xy_inv */
+} /* sensor_mag_x_inv */
+
+
+/**
+* Convert a float value to BMM150 Y magnetometer raw (13-bit) format.   
+* Inverse of sensor_conv_mag Y scaling (mod/sensor/sensor.c).             
+*/
+static int16_t sensor_mag_y_inv(float ut)
+{
+MAG_TRIM trim = imu_get_mag_trim();
+float raw = ( ut * 16.0f - (float)trim.dig_y1 * 8.0f ) * 32.0f / ( (float)trim.dig_y2 + 160.0f );
+
+if (raw > 4095) raw = 4095;
+if (raw < -4096) raw = -4096;
+
+return (int16_t)raw;
+
+} /* sensor_mag_y_inv */
 
 
 /**
@@ -541,23 +555,13 @@ return (int16_t)raw;
 static int16_t sensor_mag_z_inv(float ut)
 {
 MAG_TRIM trim = imu_get_mag_trim();
-float mag_sens;
+float rhall = trim.dig_xyz1;
 
-if (trim.dig_z2 == 0)
-    {
-    mag_sens = 40.0f;
-    }
-else
-    {
-    mag_sens = 40.0f * ((float)trim.dig_z2) / ((float)trim.dig_z1);
-    }
+float inv_comp_z1 = (float)trim.dig_z1 * (float)rhall / 32768.0f;
+float inv_comp_z2 = (float)trim.dig_z2 + inv_comp_z1;
+float raw = ( ut * inv_comp_z2 * 64.0f / 131072.0f ) + (float)trim.dig_z4;
 
-int32_t raw = (int32_t)(ut * mag_sens + ((float)trim.dig_z4) * 128.0f);
-
-if (raw > 32767) raw = 32767;
-if (raw < -32768) raw = -32768;
-
-return (int16_t)raw;
+return (int16_t)roundf(raw);
 
 } /* sensor_mag_z_inv */
 
