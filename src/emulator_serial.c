@@ -28,7 +28,7 @@
 /* Project */
 #include "emulator.h"
 #include "stm32h7xx_hal.h"
-#include "sdr_pin_defines_A0002.h"
+#include "pindefs.h"
 #include "usb.h"
 #include "math_sdr.h"
 #include "telemetry.h"
