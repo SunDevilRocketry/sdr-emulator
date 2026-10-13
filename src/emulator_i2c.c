@@ -107,13 +107,13 @@ if( hi2c == &( BARO_I2C ) )
     {
     return baro_read_handler( hi2c, DevAddress, MemAddress, MemAddSize, pData, Size, Timeout);
     }
-else if( ( hi2c == &( IMU_I2C ) ) 
-   && ( DevAddress == IMU_ADDR ) )
+else if( ( hi2c == &( IMU_MAG_I2C ) ) 
+   && ( DevAddress == IMU_I2C_ADDR ) )
     {
     return imu_read_handler( hi2c, DevAddress, MemAddress, MemAddSize, pData, Size, Timeout);
     }
-else if( ( hi2c == &( IMU_I2C ) ) 
-   && ( DevAddress == IMU_MAG_ADDR ) )
+else if( ( hi2c == &( IMU_MAG_I2C ) ) 
+   && ( DevAddress == MAG_I2C_ADDR ) )
     {
     return mag_read_handler( hi2c, DevAddress, MemAddress, MemAddSize, pData, Size, Timeout);
     }
@@ -133,8 +133,8 @@ if( hi2c == &( BARO_I2C ) )
     pthread_mutex_unlock(&it_mutex);
     return HAL_OK;
     }
-else if( ( hi2c == &( IMU_I2C ) ) 
-   && ( DevAddress == IMU_ADDR ) )
+else if( ( hi2c == &( IMU_MAG_I2C ) ) 
+   && ( DevAddress == IMU_I2C_ADDR ) )
     {
     pthread_mutex_lock(&it_mutex);
     imu_data_it_flag = true;
@@ -144,8 +144,8 @@ else if( ( hi2c == &( IMU_I2C ) )
     pthread_mutex_unlock(&it_mutex);
     return HAL_OK;
     }
-else if( ( hi2c == &( IMU_I2C ) ) 
-   && ( DevAddress == IMU_MAG_ADDR ) )
+else if( ( hi2c == &( IMU_MAG_I2C ) ) 
+   && ( DevAddress == MAG_I2C_ADDR ) )
     {
     pthread_mutex_lock(&it_mutex);
     mag_data_it_flag = true;
