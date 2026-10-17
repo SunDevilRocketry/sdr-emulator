@@ -45,6 +45,7 @@ extern "C" {
 #define IRQ_ENABLED_FLAG_BIT (1 << 1)
 #define GUI_ENABLED_FLAG_BIT (1 << 2)
 #define IGNITE_FAST_ARM_FLAG_BIT (1 << 3)
+#define SIM_FLIGHTPATH_BIT (1 << 4)
 
 #define EMULATOR_SUBSYSTEM_INIT "EM-INIT"
 #define EMULATOR_SUBSYSTEM_GUI_INIT "GUI-INIT"
@@ -59,6 +60,14 @@ extern "C" {
 #define EMULATOR_SUBSYSTEM_ERROR "ERROR"
 #define EMULATOR_SUBSYSTEM_LORA "LORA"
 #define EMULATOR_SUBSYSTEM_SERIAL "SERIAL"
+#define EMULATOR_SUBSYSTEM_FLIGHTPATH "FLIGHTPATH"
+
+/**
+ * @brief Concatenates the given string literal with the path to the emulator directory
+ * @param X string literal to concatenate
+ * @warning Don't test the limits of this macro, it will probably break
+ */
+#define MAKE_EMULATOR_PATH(X) "../../emulator/"X
 
 /**
  * @def MAKE_SHADER_PATH(X)
@@ -66,7 +75,7 @@ extern "C" {
  * @param X string literal to concatenate
  * @warning Don't test the limits of this macro, it will probably break
  */
-#define MAKE_SHADER_PATH(X) "../../emulator/src/shaders/"X
+#define MAKE_SHADER_PATH(X) MAKE_EMULATOR_PATH("shaders/"X)
 
 /*------------------------------------------------------------------------------
  Typedefs
@@ -289,6 +298,48 @@ void emulator_flags_unset_bits
 bool emulator_flags_check_bits
     (
     EMULATOR_FLAGS_TYPE flags
+    );
+
+/* emulator_flightpath.c */
+void flightpath_init
+    (
+    const char* filepath
+    );
+
+void flightpath_start
+    (
+    void
+    );
+
+void flightpath_stop
+    (
+    void
+    );
+
+void flightpath_update
+    (
+    float time
+    );
+
+void flightpath_get_accel
+    (
+    float* ax,
+    float* ay,
+    float* az
+    );
+
+float inverse_lerp
+    (
+    float x, 
+    float x1, 
+    float x2
+    );
+
+float lerp
+    (
+    float a,
+    float b,
+    float t
     );
 
 /*------------------------------------------------------------------------------
