@@ -75,7 +75,7 @@ extern "C" {
  * @param X string literal to concatenate
  * @warning Don't test the limits of this macro, it will probably break
  */
-#define MAKE_SHADER_PATH(X) MAKE_EMULATOR_PATH("shaders/"X)
+#define MAKE_SHADER_PATH(X) MAKE_EMULATOR_PATH("src/shaders/"X)
 
 /*------------------------------------------------------------------------------
  Typedefs
@@ -328,6 +328,13 @@ void flightpath_get_accel
     float* az
     );
 
+void flightpath_get_gyro
+    (
+    float* gx,
+    float* gy,
+    float* gz
+    );
+
 float inverse_lerp
     (
     float x, 
@@ -350,6 +357,9 @@ float lerp
 
 #define emulator_logf(msg, subsystem, ...)\
         emulator_debug_logf(msg, subsystem, __VA_ARGS__)
+
+#define flightpath_start_if_enabled()\
+        if ( emulator_flags_check_bits(SIM_FLIGHTPATH_BIT) ) { flightpath_start(); }
 
 #ifdef __cplusplus
 }

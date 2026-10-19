@@ -65,31 +65,27 @@ static SIM_SENSOR_DATA last_frame;
 static SIM_SENSOR_DATA next_frame;
 
 /** @brief Buffer for getting the next line of the flightpath csv */
-char file_read_buffer[MAX_LINE_SIZE];
+static char file_read_buffer[MAX_LINE_SIZE];
 
-FILE* flightpath_csv;
+static FILE* flightpath_csv = NULL;
 
-float fc_arm_time = -1; /* Reference point for timing in the csv */
+static float fc_arm_time = -1; /* Reference point for timing in the csv */
+static bool flightpath_running = false;
 
 /*------------------------------------------------------------------------------
  Static Prototypes                                                  
 ------------------------------------------------------------------------------*/
 
-static void get_values_in_line
+static bool get_values_in_line
     (
     char* line, 
-    SIM_SENSOR_DATA* data, 
-    size_t num_values
+    SIM_SENSOR_DATA* data
     );
 
-static int get_exponential
-    (
-    const char* token
-    );
 
-static float token_to_float
+static float time_helper
     (
-    const char* token
+    void
     );
 
 /*------------------------------------------------------------------------------
@@ -109,8 +105,7 @@ if ( !flightpath_csv )
     emulator_exit(1);
     }
 
-    fgets(file_read_buffer, sizeof(file_read_buffer), flightpath_csv); /* skip the first line */
-    emulator_log("Successfully opened flight path file.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
+emulator_log("Successfully opened flight path file.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
 }
 
 void flightpath_start
@@ -118,7 +113,19 @@ void flightpath_start
     void
     )
 {
-fc_arm_time = (float)HAL_GetTick() / (float)MILLISEC_PER_SEC;
+if ( !flightpath_running )
+    {
+    emulator_log("Starting simulated flight path.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
+    fc_arm_time = time_helper();
+    flightpath_running = true;
+
+    rewind(flightpath_csv);
+    if ( !fgets(file_read_buffer, sizeof(file_read_buffer), flightpath_csv) ) /* skip the first line */
+        {
+        emulator_log("Flight path file is empty", EMULATOR_SUBSYSTEM_FLIGHTPATH);
+        emulator_exit(1);
+        }
+    }
 }
 
 void flightpath_stop
@@ -126,11 +133,14 @@ void flightpath_stop
     void
     )
 {
-fc_arm_time = -INFINITY;
+emulator_log("Stopping simulated flight path.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
+flightpath_running = false;
+fc_arm_time = -1;
+fclose(flightpath_csv); // don't care about restarting flightpath so willfix later
+flightpath_csv = NULL;
 }
 
-// can get time in here, but should we?
-// this is really dumb as is right now
+
 void flightpath_get_accel
     (
     float* ax,
@@ -138,7 +148,9 @@ void flightpath_get_accel
     float* az
     )
 {
-float time = (float)HAL_GetTick() / (float)MILLISEC_PER_SEC; /* Kinda hacky but whatever */
+float time = time_helper();
+
+// TODO: thread safety
 flightpath_update(time);
 float point_between = inverse_lerp(time, last_frame.time, next_frame.time);
 
@@ -148,28 +160,45 @@ float point_between = inverse_lerp(time, last_frame.time, next_frame.time);
 }
 
 
-// needs to get called fairly often
+void flightpath_get_gyro
+    (
+    float* gx,
+    float* gy,
+    float* gz
+    )
+{
+float time = time_helper();
+
+// TODO: thread safety
+flightpath_update(time);
+float point_between = inverse_lerp(time, last_frame.time, next_frame.time);
+
+*gx = lerp(last_frame.gyro_x, next_frame.gyro_x, point_between);
+*gy = lerp(last_frame.gyro_y, next_frame.gyro_y, point_between);
+*gz = lerp(last_frame.gyro_z, next_frame.gyro_z, point_between);
+}
+
+
 void flightpath_update
     (
     float time
     )
 {
-    if ( fc_arm_time < 0 ) return;
-    float time_since_arm = time - fc_arm_time; 
+if ( !flightpath_running ) return;
 
-    /* If passed timestamp on next line, move to next line of csv */
-    if ( time_since_arm > next_frame.time )
+float time_since_arm = time - fc_arm_time; 
+
+/* If passed timestamp on next line, move to next line of csv */
+while ( time_since_arm > next_frame.time )
     {
-        memcpy(&last_frame, &next_frame, sizeof(SIM_SENSOR_DATA)); // has the problem that we might skip a line
-        if ( fgets(file_read_buffer, sizeof(file_read_buffer), flightpath_csv) != NULL ) 
-            {
-            get_values_in_line(file_read_buffer, &next_frame, FLOATS_PER_LINE);
-            }
-        else
-            {
-            emulator_log("Reached EOF for flightpath data.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
-            flightpath_stop();
-            }
+    memcpy(&last_frame, &next_frame, sizeof(SIM_SENSOR_DATA));
+    if ( !fgets(file_read_buffer, sizeof(file_read_buffer), flightpath_csv)
+        || !get_values_in_line(file_read_buffer, &next_frame) ) 
+        {
+        emulator_log("Reached EOF for flightpath data.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
+        flightpath_stop();
+        break;
+        }
     }
 }
 
@@ -199,49 +228,36 @@ return (1.0f - t) * a + t * b;
  Internal Procedures                                                     
 ------------------------------------------------------------------------------*/
 
-static int get_exponential
-    (
-    const char* token
-    ) 
-{
-int exponent = 0;
-
-char* e_ptr = strchr(token, 'e'); /* No uppercase E */
-if ( e_ptr != NULL )    
-    {
-    exponent = atoi(e_ptr + 1);
-    }
-
-return exponent;
-}
-
-static float token_to_float
-    (
-    const char* token
-    )
-{
-int exponent = get_exponential(token);
-float mantissa = strtof(token, NULL);
-
-return mantissa * powf(10, exponent);
-}
-
-static void get_values_in_line
+static bool get_values_in_line
     (
     char* line, 
-    SIM_SENSOR_DATA* data, 
-    size_t num_values
+    SIM_SENSOR_DATA* data
     ) 
 {
-float buffer[num_values];
+float buffer[FLOATS_PER_LINE];
 
 /* There won't be any commas or special characters in the strings */
 char* token = strtok(line, ",");
-for ( size_t i = 0; i < num_values; i++ )
+for ( size_t i = 0; i < FLOATS_PER_LINE; i++ )
     {
-    buffer[i] = token_to_float(token);            
+    if ( token == NULL ) return false;
+    buffer[i] = strtof(token, NULL);            
     token = strtok(NULL, ",");
     }
 
 memcpy(data, buffer, FLOATS_PER_LINE * sizeof(float));
+return true;
+
+}
+
+static float time_helper
+    (
+    void
+    )
+{
+SYSTEM_TIME systime = get_system_time();
+return (float)systime.millis / MILLISEC_PER_SEC
+        + (float)systime.secs
+        + (float)systime.mins * SEC_PER_MIN
+        + (float)systime.hours * SEC_PER_MIN * MIN_PER_HOUR;
 }

@@ -100,6 +100,7 @@ GPIO_PinState HAL_GPIO_ReadPin(const GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin) {
             {
             /* Skip the first check of readpin to avoid data hazard error, then ignite */
             emulator_flags_unset_bits(IGNITE_FAST_ARM_FLAG_BIT);
+            flightpath_start_if_enabled()
             emulator_flags_set_bits(IGNITE_FLAG_BIT);
             return false;
             }

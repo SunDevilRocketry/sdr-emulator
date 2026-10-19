@@ -229,7 +229,7 @@ srand(time(NULL));
 /* Initialize flight simulation */
 if ( emulator_flags_check_bits(SIM_FLIGHTPATH_BIT) )
     {
-    flightpath_init(MAKE_EMULATOR_PATH("resources/sim_flight_data.csv"));
+    flightpath_init(MAKE_EMULATOR_PATH("resources/sim_sensor_frames.csv"));
     }
 
 emulator_log("Opening I2c interrupt listener.", EMULATOR_SUBSYSTEM_INIT);

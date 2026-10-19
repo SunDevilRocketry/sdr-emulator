@@ -36,6 +36,13 @@
 #include "math/lin.h"
 #include "containers/darr.h"
 
+/**
+ * @def MAKE_RESOURCES_PATH(X)
+ * Concatenates the given string literal with the path to the emulator resource directory
+ * @param X string literal to concatenate
+ * @warning Don't test the limits of this macro, it will probably break
+ */
+#define MAKE_RESOURCES_PATH(X) "../../emulator/resources/"X
 
 /*------------------------------------------------------------------------------
  Structs 
@@ -181,7 +188,7 @@ glEnable(GL_DEPTH_TEST);
 glDebugMessageCallback(openGLErrorCallback, 0);
 
 /* Load FC obj */
-objData = loadVertexDataFromOBJ(MAKE_EMULATOR_PATH("resources/FC_REV2.obj"));
+objData = loadVertexDataFromOBJ(MAKE_RESOURCES_PATH("FC_REV2.obj"));
 emulator_log("FC obj read complete.", EMULATOR_SUBSYSTEM_GUI_INIT);
 
 /* Create the VAO for non-LED geometry */
@@ -438,6 +445,7 @@ static void glfwKeyCallback
     if ( key == GLFW_KEY_R && action == GLFW_PRESS && mods & GLFW_MOD_CONTROL ) 
     {
     emulator_log("Ignition input handled", EMULATOR_SUBSYSTEM_GUI_INFO);
+    flightpath_start_if_enabled()
     emulator_flags_set_bits(IGNITE_FLAG_BIT);
     }
 

@@ -349,16 +349,21 @@ static void imu_read_handler_IT()
 {
 memset(imu_data_ptr, 0, imu_data_size);
 /* accX, accY, accZ */
-uint16_t accX = sensor_acc_inv(sensor_add_random_noise( 9.8, 0.2 ));
-uint16_t accY = sensor_acc_inv(sensor_add_random_noise( 0, 0.2 ));
-uint16_t accZ = sensor_acc_inv(sensor_add_random_noise( 0, 0.2 ));
+float ax_actual, ay_actual, az_actual;
+flightpath_get_accel(&ax_actual, &ay_actual, &az_actual);
+uint16_t accX = sensor_acc_inv(sensor_add_random_noise( ax_actual, 0.2 ));
+uint16_t accY = sensor_acc_inv(sensor_add_random_noise( ay_actual, 0.2 ));
+uint16_t accZ = sensor_acc_inv(sensor_add_random_noise( az_actual, 0.2 ));
 memcpy( imu_data_ptr, &accX, 2 );
 memcpy( imu_data_ptr + 2, &accY, 2 );
 memcpy( imu_data_ptr + 4, &accZ, 2 );
+
 /* gyroX, gyroY, gyroZ */
-uint16_t gyroX = sensor_gyro_inv(sensor_add_random_noise( 0, 20 ));
-uint16_t gyroY = sensor_gyro_inv(sensor_add_random_noise( 0, 20 ));
-uint16_t gyroZ = sensor_gyro_inv(sensor_add_random_noise( 0, 20 ));
+float gx_actual, gy_actual, gz_actual;
+flightpath_get_gyro(&gx_actual, &gy_actual, &gz_actual);
+uint16_t gyroX = sensor_gyro_inv(sensor_add_random_noise( gx_actual, 2 ));
+uint16_t gyroY = sensor_gyro_inv(sensor_add_random_noise( gy_actual, 2 ));
+uint16_t gyroZ = sensor_gyro_inv(sensor_add_random_noise( gz_actual, 2 ));
 memcpy( imu_data_ptr + 6, &gyroX, 2 );
 memcpy( imu_data_ptr + 8, &gyroY, 2 );
 memcpy( imu_data_ptr + 10, &gyroZ, 2 );
