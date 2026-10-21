@@ -23,6 +23,9 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
+#include <errno.h>
+#include <time.h>
 
 #include "emulator.h"
 #include "timer.h"
@@ -69,8 +72,10 @@ static char file_read_buffer[MAX_LINE_SIZE];
 
 static FILE* flightpath_csv = NULL;
 
-static float fc_arm_time = -1; /* Reference point for timing in the csv */
+static double fc_arm_time = -1; /* Reference point for timing in the csv */
 static bool flightpath_running = false;
+
+static pthread_mutex_t file_update_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /*------------------------------------------------------------------------------
  Static Prototypes                                                  
@@ -83,7 +88,12 @@ static bool get_values_in_line
     );
 
 
-static float time_helper
+static float update_and_get_t
+    (
+    void
+    );
+
+static double time_helper
     (
     void
     );
@@ -101,11 +111,26 @@ flightpath_csv = fopen(filepath, "r");
 emulator_log("Initializing flightpath.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
 if ( !flightpath_csv )
     {
-    emulator_log("Error opening flight path file.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
+    emulator_logf("Error: failed to open flight path file with errno %d.", EMULATOR_SUBSYSTEM_FLIGHTPATH, errno);
     emulator_exit(1);
     }
 
+if ( !fgets(file_read_buffer, sizeof(file_read_buffer), flightpath_csv) ) /* skip the first line */
+    {
+    emulator_log("Error: flight path file is empty.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
+    emulator_exit(1);
+    }
+
+/* Use the first line of data before arm */
+if ( !fgets(file_read_buffer, sizeof(file_read_buffer), flightpath_csv)
+  || !get_values_in_line(file_read_buffer, &next_frame) ) 
+    {
+    emulator_log("Error: flight path file containts no data.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
+    }
+memcpy( &last_frame, &next_frame, sizeof(SIM_SENSOR_DATA) );
+
 emulator_log("Successfully opened flight path file.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
+
 }
 
 void flightpath_start
@@ -148,15 +173,11 @@ void flightpath_get_accel
     float* az
     )
 {
-float time = time_helper();
+float t = update_and_get_t();
 
-// TODO: thread safety
-flightpath_update(time);
-float point_between = inverse_lerp(time, last_frame.time, next_frame.time);
-
-*ax = lerp(last_frame.accel_x, next_frame.accel_x, point_between);
-*ay = lerp(last_frame.accel_y, next_frame.accel_y, point_between);
-*az = lerp(last_frame.accel_z, next_frame.accel_z, point_between);
+*ax = lerp(last_frame.accel_x, next_frame.accel_x, t);
+*ay = lerp(last_frame.accel_y, next_frame.accel_y, t);
+*az = lerp(last_frame.accel_z, next_frame.accel_z, t);
 }
 
 
@@ -167,26 +188,52 @@ void flightpath_get_gyro
     float* gz
     )
 {
-float time = time_helper();
+float t = update_and_get_t();
 
-// TODO: thread safety
-flightpath_update(time);
-float point_between = inverse_lerp(time, last_frame.time, next_frame.time);
+*gx = lerp(last_frame.gyro_x, next_frame.gyro_x, t);
+*gy = lerp(last_frame.gyro_y, next_frame.gyro_y, t);
+*gz = lerp(last_frame.gyro_z, next_frame.gyro_z, t);
+}
 
-*gx = lerp(last_frame.gyro_x, next_frame.gyro_x, point_between);
-*gy = lerp(last_frame.gyro_y, next_frame.gyro_y, point_between);
-*gz = lerp(last_frame.gyro_z, next_frame.gyro_z, point_between);
+
+void flightpath_get_mag
+    (
+    float* mag_x,
+    float* mag_y,
+    float* mag_z
+    )
+{
+float t = update_and_get_t();
+
+*mag_x = lerp(last_frame.mag_x, next_frame.mag_x, t);
+*mag_y = lerp(last_frame.mag_y, next_frame.mag_y, t);
+*mag_z = lerp(last_frame.mag_z, next_frame.mag_z, t);
+}
+
+
+void flightpath_get_baro
+    (
+    float* pres,
+    float* temp
+    )
+{
+float t = update_and_get_t();
+
+*pres = lerp(last_frame.baro_pres, next_frame.baro_pres, t);
+*temp = lerp(last_frame.baro_temp, next_frame.baro_temp, t);
 }
 
 
 void flightpath_update
     (
-    float time
+    double time
     )
 {
-if ( !flightpath_running ) return;
+// pthread_mutex_lock(&file_update_mutex);
 
-float time_since_arm = time - fc_arm_time; 
+if ( !flightpath_running ) goto exit;
+
+float time_since_arm = (float)(time - fc_arm_time); 
 
 /* If passed timestamp on next line, move to next line of csv */
 while ( time_since_arm > next_frame.time )
@@ -197,9 +244,12 @@ while ( time_since_arm > next_frame.time )
         {
         emulator_log("Reached EOF for flightpath data.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
         flightpath_stop();
-        break;
+        goto exit;
         }
     }
+
+exit:
+// pthread_mutex_unlock(&file_update_mutex);
 }
 
 
@@ -250,14 +300,25 @@ return true;
 
 }
 
-static float time_helper
+static float update_and_get_t
     (
     void
     )
 {
-SYSTEM_TIME systime = get_system_time();
-return (float)systime.millis / MILLISEC_PER_SEC
-        + (float)systime.secs
-        + (float)systime.mins * SEC_PER_MIN
-        + (float)systime.hours * SEC_PER_MIN * MIN_PER_HOUR;
+double time = time_helper();
+
+flightpath_update(time);
+if ( !flightpath_running ) return 1.0f;
+
+return inverse_lerp( (float)(time - fc_arm_time), last_frame.time, next_frame.time );
+}
+
+static double time_helper
+    (
+    void
+    )
+{
+struct timespec ts;
+clock_gettime(CLOCK_MONOTONIC, &ts);
+return (double)ts.tv_sec + (double)ts.tv_nsec * 1e-9;
 }

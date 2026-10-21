@@ -318,7 +318,7 @@ void flightpath_stop
 
 void flightpath_update
     (
-    float time
+    double time
     );
 
 void flightpath_get_accel
@@ -333,6 +333,19 @@ void flightpath_get_gyro
     float* gx,
     float* gy,
     float* gz
+    );
+
+void flightpath_get_mag
+    (
+    float* mag_x,
+    float* mag_y,
+    float* mag_z
+    );
+
+void flightpath_get_baro
+    (
+    float* pres,
+    float* temp
     );
 
 float inverse_lerp
