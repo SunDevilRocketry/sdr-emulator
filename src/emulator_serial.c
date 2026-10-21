@@ -247,3 +247,19 @@ bool emulator_usb_detect
 return (serial_ports[ port ].port_handle != -1);
 
 } /* emulator_usb_detect */
+
+
+/**
+ * @brief Flush the input and output buffers of a serial port on the emulator
+ * @param port The port to check.
+ * @retval 0 if OK
+ * @retval -1 if fail
+ */
+int emulator_flush_serial
+    (
+    SERIAL_PORT port
+    )
+{
+return tcflush( serial_ports[ port ].port_handle, TCIOFLUSH );
+
+} /* emulator_flush_serial */
