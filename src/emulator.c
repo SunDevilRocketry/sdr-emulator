@@ -118,7 +118,8 @@ while (1)
         { "help", no_argument, NULL, 0}, /* help me */
         { "verbose", no_argument, NULL, 0}, /* For misc info like emulator initialized X system */
         { "debug", no_argument, NULL, 0}, /* For prints such as address writing */
-        { "fast-arm", no_argument, NULL, 0} /* Arms the FC immediately on startup */
+        { "fast-arm", no_argument, NULL, 0}, /* Arms the FC immediately on startup */
+        { "recovery-reg", required_argument, NULL, 0} /* Sets the value of the error recovery register */
 
     };
 
@@ -143,6 +144,11 @@ while (1)
             else if ( option_index == 4 )
                 {
                 emulator_flags_set_bits(IGNITE_FAST_ARM_FLAG_BIT);
+                }
+            else if ( option_index == 5 )
+                {
+                emu_fault_recovery_register = (uint32_t)strtol(optarg, NULL, 0);
+                emulator_logf("Fault recovery register set to 0x%x\n", EMULATOR_SUBSYSTEM_INIT, emu_fault_recovery_register);
                 }
             break;
 

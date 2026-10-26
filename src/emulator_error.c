@@ -43,6 +43,7 @@
  Globals                                                       
 ------------------------------------------------------------------------------*/
 extern volatile ERROR_CALLBACK default_error_handler;
+uint32_t emu_fault_recovery_register = 0;
 
 /*------------------------------------------------------------------------------
  Static Prototypes                                                       
@@ -55,6 +56,30 @@ static void emulator_error_handler
 /*------------------------------------------------------------------------------
  Procedures                                                     
 ------------------------------------------------------------------------------*/
+
+/**
+ * @brief Stub the DisableBackupAccess function of the HAL
+ */
+void HAL_PWR_DisableBkUpAccess
+    (
+    void
+    )
+{
+
+} /* HAL_PWR_DisableBkUpAccess */
+
+
+/**
+ * @brief Stub the EnableBackupAccess function of the HAL
+ */
+void HAL_PWR_EnableBkUpAccess
+    (
+    void
+    )
+{
+    
+} /* HAL_PWR_EnableBkUpAccess */
+
 
 /**
 * Log to the console.                              
