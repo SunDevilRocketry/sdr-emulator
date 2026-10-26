@@ -381,7 +381,17 @@ memcpy( imu_data_ptr + 4, &accZ, 2 );
 
 /* gyroX, gyroY, gyroZ */
 float gx_actual, gy_actual, gz_actual;
-flightpath_get_gyro(&gx_actual, &gy_actual, &gz_actual);
+if ( emulator_flags_check_bits(SIM_FLIGHTPATH_BIT) )
+    {
+    flightpath_get_gyro(&gx_actual, &gy_actual, &gz_actual);
+    }
+else
+    {
+    gx_actual = 0.0f;
+    gy_actual = 0.0f;
+    gz_actual = 0.0f;
+    }
+
 uint16_t gyroX = sensor_gyro_inv(sensor_add_random_noise( gx_actual, 2 ));
 uint16_t gyroY = sensor_gyro_inv(sensor_add_random_noise( gy_actual, 2 ));
 uint16_t gyroZ = sensor_gyro_inv(sensor_add_random_noise( gz_actual, 2 ));
