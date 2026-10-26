@@ -1,20 +1,23 @@
 /**
-* @file emulator_flightpath.c
-*
-* Simulates a flight path by reading and interpolating a csv.
-*                                                                             
-* @copyright
-*       Copyright (c) 2026 Sun Devil Rocketry.                                
-*       All rights reserved.                                                  
-*                                                                             
-*       This software is licensed under terms that can be found in the LICENSE
-*       file in the root directory of this software component.                 
-*       If no LICENSE file comes with this software, it is covered under the   
-*       BSD-3-Clause.                                                          
-*                                                                              
-*       https://opensource.org/license/bsd-3-clause                            
-*
-*/
+ * @file emulator_flightpath.c
+ *
+ * Simulates a flight path by reading and interpolating a CSV. At least a 
+ * second of simulated time on the pad is required for calibration.
+ *                                        
+ * @note The flight path cannot be restarted after being stopped.
+ *                                      
+ * @copyright
+ *       Copyright (c) 2026 Sun Devil Rocketry.                                
+ *       All rights reserved.                                                  
+ *                                                                             
+ *       This software is licensed under terms that can be found in the LICENSE
+ *       file in the root directory of this software component.                 
+ *       If no LICENSE file comes with this software, it is covered under the   
+ *       BSD-3-Clause.                                                          
+ *                                                                              
+ *       https://opensource.org/license/bsd-3-clause                            
+ *
+ */
 
 /*------------------------------------------------------------------------------
  Includes                                                         
@@ -23,7 +26,6 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pthread.h>
 #include <errno.h>
 #include <time.h>
 
@@ -58,7 +60,7 @@ typedef struct _SIM_SENSOR_DATA
     float latitude;
     float longitude;
 } SIM_SENSOR_DATA;
-_Static_assert(sizeof(SIM_SENSOR_DATA) == FLOATS_PER_LINE * 4, "Sim sensor data size invalid");
+_Static_assert( sizeof(SIM_SENSOR_DATA) == FLOATS_PER_LINE * sizeof(float), "Sim sensor data size invalid" );
 
 /*------------------------------------------------------------------------------
  Static Variables                                                     
@@ -67,15 +69,14 @@ _Static_assert(sizeof(SIM_SENSOR_DATA) == FLOATS_PER_LINE * 4, "Sim sensor data 
 static SIM_SENSOR_DATA last_frame;
 static SIM_SENSOR_DATA next_frame;
 
-/** @brief Buffer for getting the next line of the flightpath csv */
+/** @brief Buffer for getting the next line of the flightpath CSV */
 static char file_read_buffer[MAX_LINE_SIZE];
 
 static FILE* flightpath_csv = NULL;
 
-static double fc_arm_time = -1; /* Reference point for timing in the csv */
+/** @brief Reference point for flightpath timing */
+static double fc_arm_time = -1; 
 static bool flightpath_running = false;
-
-static pthread_mutex_t file_update_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /*------------------------------------------------------------------------------
  Static Prototypes                                                  
@@ -102,6 +103,11 @@ static double time_helper
  Procedures                                                     
 ------------------------------------------------------------------------------*/
 
+/**
+ * @brief Initializes the flightpath by loading the file.
+ * 
+ * @param[in] filepath Path to CSV with the simulated data.
+ */
 void flightpath_init
     (
     const char* filepath
@@ -120,12 +126,12 @@ if ( !fgets(file_read_buffer, sizeof(file_read_buffer), flightpath_csv) ) /* ski
     emulator_log("Error: flight path file is empty.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
     emulator_exit(1);
     }
-
 /* Use the first line of data before arm */
 if ( !fgets(file_read_buffer, sizeof(file_read_buffer), flightpath_csv)
   || !get_values_in_line(file_read_buffer, &next_frame) ) 
     {
     emulator_log("Error: flight path file containts no data.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
+    emulator_exit(1);
     }
 memcpy( &last_frame, &next_frame, sizeof(SIM_SENSOR_DATA) );
 
@@ -133,11 +139,22 @@ emulator_log("Successfully opened flight path file.", EMULATOR_SUBSYSTEM_FLIGHTP
 
 }
 
+/**
+ * @brief Starts the simulated flightpath.
+ * 
+ * @note Must be called after @ref flightpath_init.
+ */
 void flightpath_start
     (
     void
     )
 {
+if ( !flightpath_csv )
+    {
+    emulator_log("Error: Flightpath file was NULL.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
+    emulator_exit(1);
+    }
+
 if ( !flightpath_running )
     {
     emulator_log("Starting simulated flight path.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
@@ -153,6 +170,9 @@ if ( !flightpath_running )
     }
 }
 
+/**
+ * @brief Stops the simulated flightpath.
+ */
 void flightpath_stop
     (
     void
@@ -161,11 +181,17 @@ void flightpath_stop
 emulator_log("Stopping simulated flight path.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
 flightpath_running = false;
 fc_arm_time = -1;
-fclose(flightpath_csv); // don't care about restarting flightpath so willfix later
+fclose(flightpath_csv);
 flightpath_csv = NULL;
 }
 
-
+/**
+ * @brief Getter for simulated accelerometer values.
+ * 
+ * @param[out] ax Simulated accel X.
+ * @param[out] ay Simulated accel Y.
+ * @param[out] az Simulated accel Z.
+ */
 void flightpath_get_accel
     (
     float* ax,
@@ -180,7 +206,13 @@ float t = update_and_get_t();
 *az = lerp(last_frame.accel_z, next_frame.accel_z, t);
 }
 
-
+/**
+ * @brief Getter for simulated gyroscope values.
+ * 
+ * @param[out] gx Simulated gyro X.
+ * @param[out] gy Simulated gyro Y.
+ * @param[out] gz Simulated gyro Z.
+ */
 void flightpath_get_gyro
     (
     float* gx,
@@ -195,7 +227,13 @@ float t = update_and_get_t();
 *gz = lerp(last_frame.gyro_z, next_frame.gyro_z, t);
 }
 
-
+/**
+ * @brief Getter for simulated magnetometer values.
+ * 
+ * @param[out] mag_x Simulated mag X.
+ * @param[out] mag_y Simulated mag Y.
+ * @param[out] mag_z Simulated mag Z.
+ */
 void flightpath_get_mag
     (
     float* mag_x,
@@ -210,7 +248,12 @@ float t = update_and_get_t();
 *mag_z = lerp(last_frame.mag_z, next_frame.mag_z, t);
 }
 
-
+/**
+ * @brief Getter for simulated barometer values.
+ * 
+ * @param[out] pres Simulated pressure.
+ * @param[out] temp Simulated temperature.
+ */
 void flightpath_get_baro
     (
     float* pres,
@@ -223,15 +266,20 @@ float t = update_and_get_t();
 *temp = lerp(last_frame.baro_temp, next_frame.baro_temp, t);
 }
 
-
+/**
+ * @brief Updates sensor frames by advancing the line in the flightpath CSV.
+ * 
+ * @param time Time to update to.
+ * 
+ * A mutex lock might be required if this is called from multiple threads like
+ * I2C and GPS.
+ */
 void flightpath_update
     (
     double time
     )
 {
-// pthread_mutex_lock(&file_update_mutex);
-
-if ( !flightpath_running ) goto exit;
+if ( !flightpath_running ) return;
 
 float time_since_arm = (float)(time - fc_arm_time); 
 
@@ -244,26 +292,41 @@ while ( time_since_arm > next_frame.time )
         {
         emulator_log("Reached EOF for flightpath data.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
         flightpath_stop();
-        goto exit;
+        return;
         }
     }
 
-exit:
-// pthread_mutex_unlock(&file_update_mutex);
 }
 
-
+/**
+ * @brief Calculates the proportional position of @p x between two endpoints.
+ * 
+ * @param x Interpolated value.
+ * @param a First endpoint.
+ * @param b Second endpoint.
+ * 
+ * @return The interpolation parameter, typically between 0 and 1. 
+ */
 float inverse_lerp
     (
     float x, 
-    float x1, 
-    float x2
+    float a, 
+    float b
     )
 {
-if (x2 == x1) return 0.0f;
-return (x - x1) / (x2 - x1);
+if (b == a) return 0.0f;
+return (x - a) / (b - a);
 }
 
+/**
+ * @brief Linearly interpolates between two values.
+ * 
+ * @param a First value.
+ * @param b Second value.
+ * @param t Interpolation parameter from 0 to 1.
+ * 
+ * @return The interpolated value. 
+ */
 float lerp
     (
     float a,

@@ -351,8 +351,8 @@ void flightpath_get_baro
 float inverse_lerp
     (
     float x, 
-    float x1, 
-    float x2
+    float a, 
+    float b
     );
 
 float lerp
