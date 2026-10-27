@@ -445,7 +445,6 @@ static void glfwKeyCallback
     if ( key == GLFW_KEY_R && action == GLFW_PRESS && mods & GLFW_MOD_CONTROL ) 
     {
     emulator_log("Ignition input handled", EMULATOR_SUBSYSTEM_GUI_INFO);
-    flightpath_start_if_enabled()
     emulator_flags_set_bits(IGNITE_FLAG_BIT);
     }
 
