@@ -48,7 +48,7 @@
 ------------------------------------------------------------------------------*/
 
 typedef struct _SIM_SENSOR_DATA 
-{
+    {
     float time;
     float accel_x;
     float accel_y;
@@ -63,7 +63,7 @@ typedef struct _SIM_SENSOR_DATA
     float baro_temp;
     float latitude;
     float longitude;
-} SIM_SENSOR_DATA;
+    } SIM_SENSOR_DATA;
 _Static_assert( sizeof(SIM_SENSOR_DATA) == FLOATS_PER_LINE * sizeof(float), "Sim sensor data size invalid" );
 
 /*------------------------------------------------------------------------------
@@ -117,7 +117,7 @@ void flightpath_init
     const char* filepath
     )
 {
-if ( flightpath_csv != NULL)
+if ( flightpath_csv != NULL )
     {
     emulator_log("Warning: Stop the last flight sim before reinitalizing.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
     return;
@@ -383,7 +383,7 @@ for ( size_t i = 0; i < FLOATS_PER_LINE; i++ )
     token = strtok(NULL, ","); /* switch to strtok_r if multithreading */
     }
 
-/* Yes, this this sketchy. */
+/* Yes, this is sketchy. */
 memcpy(data, buffer, FLOATS_PER_LINE * sizeof(float));
 return true;
 

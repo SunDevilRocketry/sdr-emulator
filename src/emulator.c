@@ -157,14 +157,13 @@ while (1)
                 if ( optarg != NULL && optarg[0] != '\0' )
                     {
                     size_t len = strlen(RESOURCES_PATH) + strlen(optarg) + 1;
-
                     char* path = malloc(len);
-
-                    if (path == NULL)
+                    if ( path == NULL )
                         {
                         emulator_log("Failed to malloc flightpath file string.", EMULATOR_SUBSYSTEM_INIT);
                         emulator_exit(1);
                         }
+                        
                     snprintf(path, len, "%s%s", RESOURCES_PATH, optarg);
                     flightpath_file = path;
                     }
@@ -172,6 +171,7 @@ while (1)
                     {
                     flightpath_file = RESOURCES_PATH DEFAULT_FLIGHTPATH_FILE;
                     }
+
                 emulator_flags_set_bits(SIM_FLIGHTPATH_BIT);
                 }
             break;
