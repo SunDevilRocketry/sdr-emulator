@@ -63,6 +63,8 @@ static pthread_t gs_thread;
 
 static EMULATOR_FLAGS_TYPE emulator_flags = IRQ_ENABLED_FLAG_BIT | GUI_ENABLED_FLAG_BIT;
 
+static const char* flightpath_file; /* Do not free */
+
 /*------------------------------------------------------------------------------
  Static Functions
 ------------------------------------------------------------------------------*/
@@ -119,8 +121,8 @@ while (1)
         { "verbose", no_argument, NULL, 0}, /* For misc info like emulator initialized X system */
         { "debug", no_argument, NULL, 0}, /* For prints such as address writing */
         { "fast-arm", no_argument, NULL, 0}, /* Arms the FC immediately on startup */
-        { "recovery-reg", required_argument, NULL, 0} /* Sets the value of the error recovery register */
-
+        { "recovery-reg", required_argument, NULL, 0}, /* Sets the value of the error recovery register */
+        { "flightpath", optional_argument, NULL, 0} /* Simulates a flightpath; call a custom file with --flightpath=[file] */
     };
 
     c = getopt_long(argc, argv, "-:h", long_options, &option_index);
@@ -149,6 +151,28 @@ while (1)
                 {
                 emu_fault_recovery_register = (uint32_t)strtol(optarg, NULL, 0);
                 emulator_logf("Fault recovery register set to 0x%x\n", EMULATOR_SUBSYSTEM_INIT, emu_fault_recovery_register);
+                }
+            else if ( option_index == 6 )
+                {
+                if ( optarg != NULL && optarg[0] != '\0' )
+                    {
+                    size_t len = strlen(RESOURCES_PATH) + strlen(optarg) + 1;
+                    char* path = malloc(len);
+                    if ( path == NULL )
+                        {
+                        emulator_log("Failed to malloc flightpath file string.", EMULATOR_SUBSYSTEM_INIT);
+                        emulator_exit(1);
+                        }
+                        
+                    snprintf(path, len, "%s%s", RESOURCES_PATH, optarg);
+                    flightpath_file = path;
+                    }
+                else
+                    {
+                    flightpath_file = RESOURCES_PATH DEFAULT_FLIGHTPATH_FILE;
+                    }
+
+                emulator_flags_set_bits(SIM_FLIGHTPATH_BIT);
                 }
             break;
 
@@ -221,6 +245,12 @@ emulator_flash_init();
 
 /* Seed RNG for noise generator */
 srand(time(NULL));
+
+/* Initialize flight simulation */
+if ( emulator_flags_check_bits(SIM_FLIGHTPATH_BIT) )
+    {
+    flightpath_init(flightpath_file);
+    }
 
 emulator_log("Opening I2c interrupt listener.", EMULATOR_SUBSYSTEM_INIT);
 pthread_create( &it_thread, NULL, emulator_i2c_it_listener, NULL );
