@@ -1,10 +1,9 @@
 /**
  * @file emulator_flightpath.c
  *
- * Simulates a flight path by reading and interpolating a CSV. At least a 
- * second of simulated time on the pad is required for calibration.
- *                                        
- * @note The flight path cannot be restarted after being stopped.
+ * Simulates a flight path by reading and interpolating a CSV. In theory the
+ * sim can be restarted if you reinitialize the flightpath and start again,
+ * but that isn't officially supported.
  *                                      
  * @copyright
  *       Copyright (c) 2026 Sun Devil Rocketry.                                
@@ -38,6 +37,11 @@
 
 #define MAX_LINE_SIZE (256) /* Longest line we could expect from the csv */
 #define FLOATS_PER_LINE (14)
+
+#define _FLIGTPATH_EXIT_EMPTY() \
+    do { emulator_log("Error: flight path file is empty or does not contain enough data.", EMULATOR_SUBSYSTEM_FLIGHTPATH); \
+         emulator_exit(1); } \
+    while (0)
 
 /*------------------------------------------------------------------------------
  Private Typedefs                                                         
@@ -113,6 +117,12 @@ void flightpath_init
     const char* filepath
     )
 {
+if ( flightpath_csv != NULL)
+    {
+    emulator_log("Warning: Stop the last flight sim before reinitalizing.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
+    return;
+    }
+
 flightpath_csv = fopen(filepath, "r");
 emulator_log("Initializing flightpath.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
 if ( !flightpath_csv )
@@ -123,19 +133,17 @@ if ( !flightpath_csv )
 
 if ( !fgets(file_read_buffer, sizeof(file_read_buffer), flightpath_csv) ) /* skip the first line */
     {
-    emulator_log("Error: flight path file is empty.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
-    emulator_exit(1);
+    _FLIGTPATH_EXIT_EMPTY();   
     }
 /* Use the first line of data before arm */
 if ( !fgets(file_read_buffer, sizeof(file_read_buffer), flightpath_csv)
   || !get_values_in_line(file_read_buffer, &next_frame) ) 
     {
-    emulator_log("Error: flight path file containts no data.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
-    emulator_exit(1);
+    _FLIGTPATH_EXIT_EMPTY();
     }
 memcpy( &last_frame, &next_frame, sizeof(SIM_SENSOR_DATA) );
 
-emulator_log("Successfully opened flight path file.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
+emulator_logf("Successfully opened flight path file %s", EMULATOR_SUBSYSTEM_FLIGHTPATH, filepath);
 
 }
 
@@ -162,10 +170,24 @@ if ( !flightpath_running )
     flightpath_running = true;
 
     rewind(flightpath_csv);
-    if ( !fgets(file_read_buffer, sizeof(file_read_buffer), flightpath_csv) ) /* skip the first line */
+
+    /* Skip first line*/
+    if ( !fgets(file_read_buffer, sizeof(file_read_buffer), flightpath_csv) )
         {
-        emulator_log("Flight path file is empty", EMULATOR_SUBSYSTEM_FLIGHTPATH);
-        emulator_exit(1);
+        _FLIGTPATH_EXIT_EMPTY();
+        }
+
+    /* Read first frame */
+    if ( !fgets(file_read_buffer, sizeof(file_read_buffer), flightpath_csv)
+      || !get_values_in_line(file_read_buffer, &last_frame) )  
+        {
+        _FLIGTPATH_EXIT_EMPTY();
+        }
+    /* Read second frame*/
+    if ( !fgets(file_read_buffer, sizeof(file_read_buffer), flightpath_csv)
+      || !get_values_in_line(file_read_buffer, &last_frame) )  
+        {
+        _FLIGTPATH_EXIT_EMPTY();
         }
     }
 }
@@ -181,8 +203,11 @@ void flightpath_stop
 emulator_log("Stopping simulated flight path.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
 flightpath_running = false;
 fc_arm_time = -1;
-fclose(flightpath_csv);
-flightpath_csv = NULL;
+if ( flightpath_csv != NULL )
+    {
+    fclose(flightpath_csv);
+    flightpath_csv = NULL;
+    }
 }
 
 /**
@@ -288,7 +313,7 @@ while ( time_since_arm > next_frame.time )
     {
     memcpy(&last_frame, &next_frame, sizeof(SIM_SENSOR_DATA));
     if ( !fgets(file_read_buffer, sizeof(file_read_buffer), flightpath_csv)
-        || !get_values_in_line(file_read_buffer, &next_frame) ) 
+      || !get_values_in_line(file_read_buffer, &next_frame) ) 
         {
         emulator_log("Reached EOF for flightpath data.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
         flightpath_stop();
@@ -355,9 +380,10 @@ for ( size_t i = 0; i < FLOATS_PER_LINE; i++ )
     {
     if ( token == NULL ) return false;
     buffer[i] = strtof(token, NULL);            
-    token = strtok(NULL, ",");
+    token = strtok(NULL, ","); /* switch to strtok_r if multithreading */
     }
 
+/* Yes, this this sketchy. */
 memcpy(data, buffer, FLOATS_PER_LINE * sizeof(float));
 return true;
 
@@ -373,7 +399,13 @@ double time = time_helper();
 flightpath_update(time);
 if ( !flightpath_running ) return 1.0f;
 
-return inverse_lerp( (float)(time - fc_arm_time), last_frame.time, next_frame.time );
+float t = inverse_lerp( (float)(time - fc_arm_time), last_frame.time, next_frame.time );
+
+if ( t < 0.0f ) t = 0.0f;
+if ( t > 1.0f ) t = 1.0f;
+
+return t;
+
 }
 
 static double time_helper

@@ -63,19 +63,26 @@ extern "C" {
 #define EMULATOR_SUBSYSTEM_FLIGHTPATH "FLIGHTPATH"
 
 /**
- * @brief Concatenates the given string literal with the path to the emulator directory
- * @param X string literal to concatenate
- * @warning Don't test the limits of this macro, it will probably break
+ * @brief Concatenates the given string literal with the path to the emulator directory.
+ * @param X string literal to concatenate.
+ * @warning Don't test the limits of this macro, it will probably break.
  */
 #define MAKE_EMULATOR_PATH(X) "../../emulator/"X
 
 /**
  * @def MAKE_SHADER_PATH(X)
- * Concatenates the given string literal with the path to the emulator shader directory
- * @param X string literal to concatenate
- * @warning Don't test the limits of this macro, it will probably break
+ * @brief Concatenates the given string literal with the path to the emulator shader directory.
+ * @param X string literal to concatenate.
+ * @warning Don't test the limits of this macro, it will probably break.
  */
 #define MAKE_SHADER_PATH(X) MAKE_EMULATOR_PATH("src/shaders/"X)
+
+/** @brief Path to the emulator resources directory. */
+#define RESOURCES_PATH MAKE_EMULATOR_PATH("resources/")
+
+/** @brief Default path to the file containing simulated flight data. */
+#define DEFAULT_FLIGHTPATH_FILE "K400_sim_flight.csv"
+
 
 /*------------------------------------------------------------------------------
  Typedefs
