@@ -53,6 +53,11 @@ static void emulator_error_handler
     ERROR_CODE error_code
     );
 
+static SYSTEM_TIME get_system_time
+    (
+    void
+    );
+
 /*------------------------------------------------------------------------------
  Procedures                                                     
 ------------------------------------------------------------------------------*/
@@ -99,14 +104,6 @@ const char* fmt_string = "[%02u:%02u:%02u.%03u] [%s] %s\n";
 if ( from_subsystem == NULL )
     {
     from_subsystem = "EMULATOR";
-    }
-else if ( strcmp(EMULATOR_SUBSYSTEM_FIRMWARE, from_subsystem) == 0 )
-    {
-    /* The firmware computes its own timestamp, but we can override this since
-    the async circular buffer goes unused in the emulator case. */
-    size_t offset = sizeof("[XX:XX:XX.XXX");
-    msg += offset;
-    fmt_string = "[%02u:%02u:%02u.%03u] [%s] [%s"; // skip trailing newline -- handled in dbg module
     }
 
 SYSTEM_TIME curr_time = get_system_time();
@@ -221,3 +218,23 @@ emulator_logf("The emulator has encountered a fatal error and will now exit. Cod
 exit(0);
 
 } /* emulator_error_handler */
+
+/**
+ * @brief Gets the current time since epoch (startup).
+ */
+SYSTEM_TIME get_system_time
+    (
+    void
+    )
+{
+uint32_t systick = HAL_GetTick();
+SYSTEM_TIME retval;
+
+retval.millis = (uint16_t)(systick % MILLISEC_PER_SEC);
+retval.secs = (uint8_t)((systick / MILLISEC_PER_SEC) % SEC_PER_MIN);
+retval.mins = (uint8_t)((systick / (MILLISEC_PER_SEC * SEC_PER_MIN)) % MIN_PER_HOUR);
+retval.hours = (uint16_t)((systick / (MILLISEC_PER_SEC * SEC_PER_MIN * MIN_PER_HOUR)));
+
+return retval;
+
+} /* get_system_time */

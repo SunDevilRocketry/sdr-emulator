@@ -72,8 +72,6 @@ extern "C" {
  Typedefs
 ------------------------------------------------------------------------------*/
 typedef uint32_t EMULATOR_FLAGS_TYPE; 
-/* forward decl from FW timer.h */
-typedef struct _SYSTEM_TIME SYSTEM_TIME;
 
 typedef enum _SERIAL_PORT
     {
@@ -114,11 +112,6 @@ void emulator_start_timers
     );
 
 /* emulator_timer.c */
-SYSTEM_TIME get_system_time
-    (
-    void
-    );
-
 void emulator_buzzer_beep_request(uint32_t duration);
 
 /* emulator_error.c */
@@ -245,7 +238,6 @@ uint32_t emulator_flash_write
     uint32_t address,
     uint16_t size
     );
-
 
 uint32_t emulator_flash_read
     (
