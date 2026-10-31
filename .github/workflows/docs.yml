@@ -1,0 +1,52 @@
+name: Emulator Documentation Generator
+run-name: ${{ github.actor }} is running emulator CI 🤖
+# Temporarily disabled while we bring this up
+on:
+  push:
+    branches:
+    - main
+jobs:
+  emu-documentation:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Check out emulator submodule to this ref
+        uses: actions/checkout@v6
+        with:
+          path: emulator/
+          submodules: 'recursive'
+
+      - name: Checkout docs site
+        uses: actions/checkout@v6
+        with:
+          repository: SunDevilRocketry/docs-site
+          token: ${{ secrets.DOCS_SITE_TOKEN }}
+          path: docs
+          ref: main
+
+      - name: Install doxygen
+        run: sudo apt-get update && sudo apt-get install -y doxygen graphviz
+
+      - name: Generate or modify files
+        run: |
+          cd emulator
+          doxygen
+
+      - name: Copy files
+        run: |
+          rm -rf docs/avionics/emulator
+          mkdir -p docs/avionics/emulator
+          cp -r emulator/_doc/html/* docs/avionics/emulator
+
+      - name: Commit and push
+        run: |
+          cd docs
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A avionics/emulator
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "emulator CI automation: update documentation"
+            git push
+          fi
