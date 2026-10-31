@@ -45,6 +45,7 @@ extern "C" {
 #define IRQ_ENABLED_FLAG_BIT (1 << 1)
 #define GUI_ENABLED_FLAG_BIT (1 << 2)
 #define IGNITE_FAST_ARM_FLAG_BIT (1 << 3)
+#define SIM_FLIGHTPATH_BIT (1 << 4)
 
 #define EMULATOR_SUBSYSTEM_INIT "EM-INIT"
 #define EMULATOR_SUBSYSTEM_GUI_INIT "GUI-INIT"
@@ -59,14 +60,29 @@ extern "C" {
 #define EMULATOR_SUBSYSTEM_ERROR "ERROR"
 #define EMULATOR_SUBSYSTEM_LORA "LORA"
 #define EMULATOR_SUBSYSTEM_SERIAL "SERIAL"
+#define EMULATOR_SUBSYSTEM_FLIGHTPATH "FLIGHTPATH"
+
+/**
+ * @brief Concatenates the given string literal with the path to the emulator directory.
+ * @param X string literal to concatenate.
+ * @warning Don't test the limits of this macro, it will probably break.
+ */
+#define MAKE_EMULATOR_PATH(X) "../../emulator/"X
 
 /**
  * @def MAKE_SHADER_PATH(X)
- * Concatenates the given string literal with the path to the emulator shader directory
- * @param X string literal to concatenate
- * @warning Don't test the limits of this macro, it will probably break
+ * @brief Concatenates the given string literal with the path to the emulator shader directory.
+ * @param X string literal to concatenate.
+ * @warning Don't test the limits of this macro, it will probably break.
  */
-#define MAKE_SHADER_PATH(X) "../../emulator/src/shaders/"X
+#define MAKE_SHADER_PATH(X) MAKE_EMULATOR_PATH("src/shaders/"X)
+
+/** @brief Path to the emulator resources directory. */
+#define RESOURCES_PATH MAKE_EMULATOR_PATH("resources/")
+
+/** @brief Default path to the file containing simulated flight data. */
+#define DEFAULT_FLIGHTPATH_FILE "K400_sim_flight.csv"
+
 
 /*------------------------------------------------------------------------------
  Typedefs
@@ -291,6 +307,68 @@ bool emulator_flags_check_bits
     EMULATOR_FLAGS_TYPE flags
     );
 
+/* emulator_flightpath.c */
+void emulator_flightpath_init
+    (
+    const char* filepath
+    );
+
+void emulator_flightpath_start
+    (
+    void
+    );
+
+void emulator_flightpath_stop
+    (
+    void
+    );
+
+void emulator_flightpath_update
+    (
+    double time
+    );
+
+void emulator_flightpath_get_accel
+    (
+    float* ax,
+    float* ay,
+    float* az
+    );
+
+void emulator_flightpath_get_gyro
+    (
+    float* gx,
+    float* gy,
+    float* gz
+    );
+
+void emulator_flightpath_get_mag
+    (
+    float* mag_x,
+    float* mag_y,
+    float* mag_z
+    );
+
+void emulator_flightpath_get_baro
+    (
+    float* pres,
+    float* temp
+    );
+
+float inverse_lerp
+    (
+    float x, 
+    float a, 
+    float b
+    );
+
+float lerp
+    (
+    float a,
+    float b,
+    float t
+    );
+
 /*------------------------------------------------------------------------------
  Alias Macros                                             
 ------------------------------------------------------------------------------*/
@@ -299,6 +377,9 @@ bool emulator_flags_check_bits
 
 #define emulator_logf(msg, subsystem, ...)\
         emulator_debug_logf(msg, subsystem, __VA_ARGS__)
+
+#define flightpath_start_if_enabled()\
+        if ( emulator_flags_check_bits(SIM_FLIGHTPATH_BIT) ) { emulator_flightpath_start(); }
 
 #ifdef __cplusplus
 }
