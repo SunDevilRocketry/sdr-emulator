@@ -329,7 +329,7 @@ uint32_t raw_temp;
 
 if ( emulator_flags_check_bits(SIM_FLIGHTPATH_BIT) )
     {
-    flightpath_get_baro( &pres_pa, &temp_c );
+    emulator_flightpath_get_baro( &pres_pa, &temp_c );
     }
 else
     {
@@ -363,7 +363,7 @@ memset(imu_data_ptr, 0, imu_data_size);
 float ax_actual, ay_actual, az_actual;
 if ( emulator_flags_check_bits(SIM_FLIGHTPATH_BIT) )
     {
-    flightpath_get_accel( &ax_actual, &ay_actual, &az_actual );
+    emulator_flightpath_get_accel( &ax_actual, &ay_actual, &az_actual );
     }
 else
     {
@@ -383,7 +383,7 @@ memcpy( imu_data_ptr + 4, &accZ, 2 );
 float gx_actual, gy_actual, gz_actual;
 if ( emulator_flags_check_bits(SIM_FLIGHTPATH_BIT) )
     {
-    flightpath_get_gyro(&gx_actual, &gy_actual, &gz_actual);
+    emulator_flightpath_get_gyro(&gx_actual, &gy_actual, &gz_actual);
     }
 else
     {
@@ -419,7 +419,7 @@ MAG_TRIM trim;
 
 if ( emulator_flags_check_bits(SIM_FLIGHTPATH_BIT) )
     {
-    flightpath_get_mag( &mag_x, &mag_y, &mag_z );
+    emulator_flightpath_get_mag( &mag_x, &mag_y, &mag_z );
     }
 else
     {

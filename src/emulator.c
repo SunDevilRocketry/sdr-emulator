@@ -63,8 +63,6 @@ static pthread_t gs_thread;
 
 static EMULATOR_FLAGS_TYPE emulator_flags = IRQ_ENABLED_FLAG_BIT | GUI_ENABLED_FLAG_BIT;
 
-static const char* flightpath_file; /* Do not free */
-
 /*------------------------------------------------------------------------------
  Static Functions
 ------------------------------------------------------------------------------*/
@@ -165,13 +163,14 @@ while (1)
                         }
                         
                     snprintf(path, len, "%s%s", RESOURCES_PATH, optarg);
-                    flightpath_file = path;
+                    emulator_flightpath_init(path);
+                    free(path);
                     }
                 else
                     {
-                    flightpath_file = RESOURCES_PATH DEFAULT_FLIGHTPATH_FILE;
+                    emulator_flightpath_init(RESOURCES_PATH DEFAULT_FLIGHTPATH_FILE);
                     }
-
+                
                 emulator_flags_set_bits(SIM_FLIGHTPATH_BIT);
                 }
             break;
@@ -245,12 +244,6 @@ emulator_flash_init();
 
 /* Seed RNG for noise generator */
 srand(time(NULL));
-
-/* Initialize flight simulation */
-if ( emulator_flags_check_bits(SIM_FLIGHTPATH_BIT) )
-    {
-    flightpath_init(flightpath_file);
-    }
 
 emulator_log("Opening I2c interrupt listener.", EMULATOR_SUBSYSTEM_INIT);
 pthread_create( &it_thread, NULL, emulator_i2c_it_listener, NULL );

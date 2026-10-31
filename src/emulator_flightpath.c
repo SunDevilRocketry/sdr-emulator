@@ -38,7 +38,7 @@
 #define MAX_LINE_SIZE (256) /* Longest line we could expect from the csv */
 #define FLOATS_PER_LINE (14)
 
-#define _FLIGTPATH_EXIT_EMPTY() \
+#define _FLIGHTPATH_EXIT_EMPTY() \
     do { emulator_log("Error: flight path file is empty or does not contain enough data.", EMULATOR_SUBSYSTEM_FLIGHTPATH); \
          emulator_exit(1); } \
     while (0)
@@ -112,7 +112,7 @@ static double time_helper
  * 
  * @param[in] filepath Path to CSV with the simulated data.
  */
-void flightpath_init
+void emulator_flightpath_init
     (
     const char* filepath
     )
@@ -133,13 +133,13 @@ if ( !flightpath_csv )
 
 if ( !fgets(file_read_buffer, sizeof(file_read_buffer), flightpath_csv) ) /* skip the first line */
     {
-    _FLIGTPATH_EXIT_EMPTY();   
+    _FLIGHTPATH_EXIT_EMPTY();   
     }
 /* Use the first line of data before arm */
 if ( !fgets(file_read_buffer, sizeof(file_read_buffer), flightpath_csv)
   || !get_values_in_line(file_read_buffer, &next_frame) ) 
     {
-    _FLIGTPATH_EXIT_EMPTY();
+    _FLIGHTPATH_EXIT_EMPTY();
     }
 memcpy( &last_frame, &next_frame, sizeof(SIM_SENSOR_DATA) );
 
@@ -150,9 +150,9 @@ emulator_logf("Successfully opened flight path file %s", EMULATOR_SUBSYSTEM_FLIG
 /**
  * @brief Starts the simulated flightpath.
  * 
- * @note Must be called after @ref flightpath_init.
+ * @note Must be called after @ref emulator_flightpath_init.
  */
-void flightpath_start
+void emulator_flightpath_start
     (
     void
     )
@@ -174,20 +174,20 @@ if ( !flightpath_running )
     /* Skip first line*/
     if ( !fgets(file_read_buffer, sizeof(file_read_buffer), flightpath_csv) )
         {
-        _FLIGTPATH_EXIT_EMPTY();
+        _FLIGHTPATH_EXIT_EMPTY();
         }
 
     /* Read first frame */
     if ( !fgets(file_read_buffer, sizeof(file_read_buffer), flightpath_csv)
       || !get_values_in_line(file_read_buffer, &last_frame) )  
         {
-        _FLIGTPATH_EXIT_EMPTY();
+        _FLIGHTPATH_EXIT_EMPTY();
         }
     /* Read second frame*/
     if ( !fgets(file_read_buffer, sizeof(file_read_buffer), flightpath_csv)
       || !get_values_in_line(file_read_buffer, &last_frame) )  
         {
-        _FLIGTPATH_EXIT_EMPTY();
+        _FLIGHTPATH_EXIT_EMPTY();
         }
     }
 }
@@ -195,7 +195,7 @@ if ( !flightpath_running )
 /**
  * @brief Stops the simulated flightpath.
  */
-void flightpath_stop
+void emulator_flightpath_stop
     (
     void
     )
@@ -217,7 +217,7 @@ if ( flightpath_csv != NULL )
  * @param[out] ay Simulated accel Y.
  * @param[out] az Simulated accel Z.
  */
-void flightpath_get_accel
+void emulator_flightpath_get_accel
     (
     float* ax,
     float* ay,
@@ -238,7 +238,7 @@ float t = update_and_get_t();
  * @param[out] gy Simulated gyro Y.
  * @param[out] gz Simulated gyro Z.
  */
-void flightpath_get_gyro
+void emulator_flightpath_get_gyro
     (
     float* gx,
     float* gy,
@@ -259,7 +259,7 @@ float t = update_and_get_t();
  * @param[out] mag_y Simulated mag Y.
  * @param[out] mag_z Simulated mag Z.
  */
-void flightpath_get_mag
+void emulator_flightpath_get_mag
     (
     float* mag_x,
     float* mag_y,
@@ -279,7 +279,7 @@ float t = update_and_get_t();
  * @param[out] pres Simulated pressure.
  * @param[out] temp Simulated temperature.
  */
-void flightpath_get_baro
+void emulator_flightpath_get_baro
     (
     float* pres,
     float* temp
@@ -299,7 +299,7 @@ float t = update_and_get_t();
  * A mutex lock might be required if this is called from multiple threads like
  * I2C and GPS.
  */
-void flightpath_update
+void emulator_flightpath_update
     (
     double time
     )
@@ -316,7 +316,7 @@ while ( time_since_arm > next_frame.time )
       || !get_values_in_line(file_read_buffer, &next_frame) ) 
         {
         emulator_log("Reached EOF for flightpath data.", EMULATOR_SUBSYSTEM_FLIGHTPATH);
-        flightpath_stop();
+        emulator_flightpath_stop();
         return;
         }
     }
@@ -396,7 +396,7 @@ static float update_and_get_t
 {
 double time = time_helper();
 
-flightpath_update(time);
+emulator_flightpath_update(time);
 if ( !flightpath_running ) return 1.0f;
 
 float t = inverse_lerp( (float)(time - fc_arm_time), last_frame.time, next_frame.time );

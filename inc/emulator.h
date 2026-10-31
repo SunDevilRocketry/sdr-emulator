@@ -308,48 +308,48 @@ bool emulator_flags_check_bits
     );
 
 /* emulator_flightpath.c */
-void flightpath_init
+void emulator_flightpath_init
     (
     const char* filepath
     );
 
-void flightpath_start
+void emulator_flightpath_start
     (
     void
     );
 
-void flightpath_stop
+void emulator_flightpath_stop
     (
     void
     );
 
-void flightpath_update
+void emulator_flightpath_update
     (
     double time
     );
 
-void flightpath_get_accel
+void emulator_flightpath_get_accel
     (
     float* ax,
     float* ay,
     float* az
     );
 
-void flightpath_get_gyro
+void emulator_flightpath_get_gyro
     (
     float* gx,
     float* gy,
     float* gz
     );
 
-void flightpath_get_mag
+void emulator_flightpath_get_mag
     (
     float* mag_x,
     float* mag_y,
     float* mag_z
     );
 
-void flightpath_get_baro
+void emulator_flightpath_get_baro
     (
     float* pres,
     float* temp
@@ -379,7 +379,7 @@ float lerp
         emulator_debug_logf(msg, subsystem, __VA_ARGS__)
 
 #define flightpath_start_if_enabled()\
-        if ( emulator_flags_check_bits(SIM_FLIGHTPATH_BIT) ) { flightpath_start(); }
+        if ( emulator_flags_check_bits(SIM_FLIGHTPATH_BIT) ) { emulator_flightpath_start(); }
 
 #ifdef __cplusplus
 }
