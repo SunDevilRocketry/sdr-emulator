@@ -92,7 +92,6 @@ static bool get_values_in_line
     SIM_SENSOR_DATA* data
     );
 
-
 static float update_and_get_t
     (
     void
