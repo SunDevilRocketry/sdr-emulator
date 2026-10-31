@@ -36,7 +36,7 @@ jobs:
         run: |
           rm -rf docs/avionics/emulator
           mkdir -p docs/avionics/emulator
-          cp -r emulator/_doc/html/* docs/avionics/emulator
+          cp -r emulator/docs/build/html/* docs/avionics/emulator
 
       - name: Commit and push
         run: |
