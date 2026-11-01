@@ -67,6 +67,7 @@ typedef struct {
     uint8_t fifo_spi_pointer;
     uint8_t irq_flags;
     EMULATOR_LORA_EVENT pending_event;
+    uint32_t dma_gen; /* bumped by every DMA schedule and abort */
 } EMULATOR_LORA_STATE;
 
 static EMULATOR_LORA_STATE emulator_lora_state = {0};
@@ -89,6 +90,7 @@ static void *emulator_lora_it_listener(void *arg);
 static void lora_ota_transmit(void *data, size_t len, uint32_t time_to_tx_ms);
 uint32_t emulator_lora_spi_transmit_dma(void *hspi, const uint8_t *pData, uint16_t Size);
 uint32_t emulator_lora_spi_transmit_receive_dma(void *hspi, const uint8_t *pTxData, uint8_t *pRxData, uint16_t Size);
+void emulator_lora_spi_abort(void);
 
 /*------------------------------------------------------------------------------
  HAL interfaces                                                         
@@ -392,10 +394,27 @@ static void emulator_lora_schedule_completion
 {
 pthread_mutex_lock(&emulator_lora_it_mutex);
 emulator_lora_state.pending_event = event;
+emulator_lora_state.dma_gen++;
 pthread_cond_signal(&emulator_lora_it_cond);
 pthread_mutex_unlock(&emulator_lora_it_mutex);
 
 } /* emulator_lora_schedule_completion */
+
+
+/**
+ * @brief Mock for HAL_SPI_Abort() on the LoRa SPI. The aborted DMA never calls back.
+ */
+void emulator_lora_spi_abort
+    (
+    void
+    )
+{
+pthread_mutex_lock(&emulator_lora_it_mutex);
+emulator_lora_state.pending_event = EMULATOR_LORA_EVENT_NONE;
+emulator_lora_state.dma_gen++;
+pthread_mutex_unlock(&emulator_lora_it_mutex);
+
+} /* emulator_lora_spi_abort */
 
 
 /**
@@ -436,6 +455,7 @@ for (;;) {
     }
 
     const EMULATOR_LORA_EVENT event = emulator_lora_state.pending_event;
+    const uint32_t gen = emulator_lora_state.dma_gen;
     emulator_lora_state.pending_event = EMULATOR_LORA_EVENT_NONE;
     pthread_mutex_unlock(&emulator_lora_it_mutex);
 
@@ -444,6 +464,14 @@ for (;;) {
 
         /* Simulated SPI DMA burst transfer time. */
         usleep(10000U);
+
+        /* Aborted during the transfer, a retry may already have scheduled a new DMA */
+        pthread_mutex_lock(&emulator_lora_it_mutex);
+        const bool aborted = (gen != emulator_lora_state.dma_gen);
+        pthread_mutex_unlock(&emulator_lora_it_mutex);
+        if (aborted) {
+            continue;
+        }
         lora_process_async_cb();
 
         if (was_tx) {

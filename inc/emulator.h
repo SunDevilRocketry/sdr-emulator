@@ -182,6 +182,11 @@ uint32_t emulator_lora_spi_transmit_receive_dma
     uint16_t Size
     );
 
+void emulator_lora_spi_abort
+    (
+    void
+    );
+
 /* emulator_serial.c */
 bool emulator_serial_open_port
     (

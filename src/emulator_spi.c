@@ -125,6 +125,15 @@ HAL_StatusTypeDef HAL_SPI_TransmitReceive_DMA(SPI_HandleTypeDef *hspi, const uin
     return status;
 }
 
+HAL_StatusTypeDef HAL_SPI_Abort(SPI_HandleTypeDef *hspi) {
+    if( hspi == &( LORA_SPI ) )
+        {
+        emulator_lora_spi_abort();
+        }
+
+    return HAL_OK;
+}
+
 HAL_StatusTypeDef HAL_SPI_Receive(SPI_HandleTypeDef *hspi, uint8_t *pData, uint16_t Size, uint32_t Timeout) {
     HAL_StatusTypeDef status = HAL_OK;
 
