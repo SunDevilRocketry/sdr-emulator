@@ -327,11 +327,22 @@ float temp_c;
 uint32_t raw_pres;
 uint32_t raw_temp;
 
+if ( emulator_flags_check_bits(SIM_FLIGHTPATH_BIT) )
+    {
+    emulator_flightpath_get_baro( &pres_pa, &temp_c );
+    }
+else
+    {
+    /* 97.077 kPa and 32 degC */
+    pres_pa = 97077.0f;
+    temp_c = 32.0f;
+    }
+
 memset(baro_data_ptr, 0, baro_data_size);
 
-/* 97.077 kPa and 32 degC with sensor noise (driver/baro IT buffer layout) */
-pres_pa = sensor_add_random_noise( 97077.0f, 5.0f );
-temp_c  = sensor_add_random_noise( 32.0f, 0.1f );
+/* sensor noise (driver/baro IT buffer layout) */
+pres_pa = sensor_add_random_noise( pres_pa, 5.0f );
+temp_c  = sensor_add_random_noise( temp_c, 0.1f );
 raw_temp = sensor_baro_temp_inv( temp_c );
 raw_pres = sensor_baro_pres_inv( pres_pa, temp_c );
 sensor_baro_raw_store( raw_pres, baro_data_ptr );
@@ -349,16 +360,41 @@ static void imu_read_handler_IT()
 {
 memset(imu_data_ptr, 0, imu_data_size);
 /* accX, accY, accZ */
-uint16_t accX = sensor_acc_inv(sensor_add_random_noise( 9.8, 0.2 ));
-uint16_t accY = sensor_acc_inv(sensor_add_random_noise( 0, 0.2 ));
-uint16_t accZ = sensor_acc_inv(sensor_add_random_noise( 0, 0.2 ));
+float ax_actual, ay_actual, az_actual;
+if ( emulator_flags_check_bits(SIM_FLIGHTPATH_BIT) )
+    {
+    emulator_flightpath_get_accel( &ax_actual, &ay_actual, &az_actual );
+    }
+else
+    {
+    ax_actual = 9.81f;
+    ay_actual = 0.0f;
+    az_actual = 0.0f;
+    }
+
+uint16_t accX = sensor_acc_inv(sensor_add_random_noise( ax_actual, 0.2 ));
+uint16_t accY = sensor_acc_inv(sensor_add_random_noise( ay_actual, 0.2 ));
+uint16_t accZ = sensor_acc_inv(sensor_add_random_noise( az_actual, 0.2 ));
 memcpy( imu_data_ptr, &accX, 2 );
 memcpy( imu_data_ptr + 2, &accY, 2 );
 memcpy( imu_data_ptr + 4, &accZ, 2 );
+
 /* gyroX, gyroY, gyroZ */
-uint16_t gyroX = sensor_gyro_inv(sensor_add_random_noise( 0, 20 ));
-uint16_t gyroY = sensor_gyro_inv(sensor_add_random_noise( 0, 20 ));
-uint16_t gyroZ = sensor_gyro_inv(sensor_add_random_noise( 0, 20 ));
+float gx_actual, gy_actual, gz_actual;
+if ( emulator_flags_check_bits(SIM_FLIGHTPATH_BIT) )
+    {
+    emulator_flightpath_get_gyro(&gx_actual, &gy_actual, &gz_actual);
+    }
+else
+    {
+    gx_actual = 0.0f;
+    gy_actual = 0.0f;
+    gz_actual = 0.0f;
+    }
+
+uint16_t gyroX = sensor_gyro_inv(sensor_add_random_noise( gx_actual, 2 ));
+uint16_t gyroY = sensor_gyro_inv(sensor_add_random_noise( gy_actual, 2 ));
+uint16_t gyroZ = sensor_gyro_inv(sensor_add_random_noise( gz_actual, 2 ));
 memcpy( imu_data_ptr + 6, &gyroX, 2 );
 memcpy( imu_data_ptr + 8, &gyroY, 2 );
 memcpy( imu_data_ptr + 10, &gyroZ, 2 );
@@ -374,17 +410,31 @@ imu_it_handler();
 */
 static void mag_read_handler_IT()
 {
+float mag_x, mag_y, mag_z;
 int16_t mag_x_raw;
 int16_t mag_y_raw;
 int16_t mag_z_raw;
 uint16_t rhall;
 MAG_TRIM trim;
 
+if ( emulator_flags_check_bits(SIM_FLIGHTPATH_BIT) )
+    {
+    emulator_flightpath_get_mag( &mag_x, &mag_y, &mag_z );
+    }
+else
+    {
+    /* Approx field in Phoenix (NED) */
+    /* This doesn't account for the FC facing any direction */
+    mag_x = 23.3f;
+    mag_y = 3.96f;
+    mag_z = 39.9f;
+    }
+
 memset(mag_data_ptr, 0, mag_data_size);
 
-mag_x_raw = sensor_mag_x_inv( sensor_add_random_noise( -25.0f, 0.2f ) );
-mag_y_raw = sensor_mag_y_inv( sensor_add_random_noise( 25.0f, 0.2f ) );
-mag_z_raw = sensor_mag_z_inv( sensor_add_random_noise( -25.0f, 0.2f ) );
+mag_x_raw = sensor_mag_x_inv( sensor_add_random_noise( mag_x, 0.2f ) );
+mag_y_raw = sensor_mag_y_inv( sensor_add_random_noise( mag_y, 0.2f ) );
+mag_z_raw = sensor_mag_z_inv( sensor_add_random_noise( mag_z, 0.2f ) );
 sensor_mag_xy_pack( mag_x_raw, mag_data_ptr, mag_data_ptr + 1 );
 sensor_mag_xy_pack( mag_y_raw, mag_data_ptr + 2, mag_data_ptr + 3 );
 sensor_mag_z_pack( mag_z_raw, mag_data_ptr + 4, mag_data_ptr + 5 );
