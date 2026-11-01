@@ -208,6 +208,11 @@ bool emulator_usb_detect
     SERIAL_PORT port
     );
 
+int emulator_flush_serial
+    (
+    SERIAL_PORT port
+    );
+
 /* emulator_spi.c */
 void emulator_flash_init
     (
