@@ -176,11 +176,31 @@ uint32_t emulator_lora_spi_transmit
 
 uint32_t emulator_lora_spi_transmit_receive
     (
-    void *hspi, 
-    const uint8_t *pTxData, 
-    uint8_t *pRxData, 
-    uint16_t Size, 
+    void *hspi,
+    const uint8_t *pTxData,
+    uint8_t *pRxData,
+    uint16_t Size,
     uint32_t Timeout
+    );
+
+uint32_t emulator_lora_spi_transmit_dma
+    (
+    void *hspi,
+    const uint8_t *pData,
+    uint16_t Size
+    );
+
+uint32_t emulator_lora_spi_transmit_receive_dma
+    (
+    void *hspi,
+    const uint8_t *pTxData,
+    uint8_t *pRxData,
+    uint16_t Size
+    );
+
+void emulator_lora_spi_abort
+    (
+    void
     );
 
 /* emulator_serial.c */
