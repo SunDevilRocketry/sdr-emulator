@@ -26,6 +26,7 @@
 #include <stdbool.h>
 
 /* Project */
+#include "commands.h"
 #include "emulator.h"
 #include "stm32h7xx_hal.h"
 #include "pindefs.h"
